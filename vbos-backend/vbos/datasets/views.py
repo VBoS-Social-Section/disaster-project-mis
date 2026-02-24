@@ -1,4 +1,6 @@
 import django_filters.rest_framework
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from drf_excel.mixins import XLSXFileMixin
 from drf_excel.renderers import XLSXRenderer
 from rest_framework.generics import ListAPIView, RetrieveAPIView
@@ -41,6 +43,7 @@ from .serializers import (
 )
 
 
+@method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class ClusterListView(ListAPIView):
     queryset = Cluster.objects.all()
     serializer_class = ClusterSerializer
@@ -48,6 +51,7 @@ class ClusterListView(ListAPIView):
     pagination_class = StandardResultsSetPagination
 
 
+@method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class ProvinceListView(ListAPIView):
     queryset = Province.objects.all()
     serializer_class = ProvinceSerializer
@@ -55,6 +59,7 @@ class ProvinceListView(ListAPIView):
     pagination_class = GeoJsonPagination
 
 
+@method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class AreaCouncilListView(ListAPIView):
     serializer_class = AreaCouncilSerializer
     permission_classes = [IsAuthenticated]

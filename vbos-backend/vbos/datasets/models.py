@@ -211,3 +211,6 @@ class TabularItem(models.Model):
 
     class Meta:
         ordering = ["id"]
+        indexes = [
+            models.Index(fields=["dataset", "province", "area_council"]),
+        ]

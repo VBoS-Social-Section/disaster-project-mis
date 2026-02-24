@@ -186,6 +186,22 @@ class Common(Configuration):
     # Custom user app
     AUTH_USER_MODEL = "users.User"
 
+    # Caching - LocMem for dev; set DJANGO_CACHE_BACKEND for production
+    # Options: django.core.cache.backends.db.DatabaseCache (LOCATION=vbos_cache)
+    #          django.core.cache.backends.redis.RedisCache (LOCATION=redis://...)
+    # For DatabaseCache: run "python manage.py createcachetable" before use
+    _cache_backend = os.getenv(
+        "DJANGO_CACHE_BACKEND",
+        "django.core.cache.backends.locmem.LocMemCache",
+    )
+    CACHES = {
+        "default": {
+            "BACKEND": _cache_backend,
+            "LOCATION": os.getenv("DJANGO_CACHE_LOCATION", "vbos-default"),
+            "TIMEOUT": int(os.getenv("DJANGO_CACHE_TIMEOUT", 300)),  # 5 min default
+        }
+    }
+
     # Django Rest Framework
     REST_FRAMEWORK = {
         "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
@@ -214,4 +230,22 @@ class Common(Configuration):
         "DESCRIPTION": "VBoS Management Information System API",
         "VERSION": "1.0.0",
         "SERVE_INCLUDE_SCHEMA": False,
+        "APPEND_COMPONENTS": {
+            "securitySchemes": {
+                "TokenAuth": {
+                    "type": "apiKey",
+                    "in": "header",
+                    "name": "Authorization",
+                    "description": (
+                        "Token authentication. Obtain a token via POST /api-token-auth/ "
+                        "with username and password. Use: 'Token <your-token>'"
+                    ),
+                },
+            },
+        },
+        "SECURITY": [{"TokenAuth": []}],
+        "SWAGGER_UI_SETTINGS": {
+            "deepLinking": True,
+            "persistAuthorization": True,
+        },
     }
