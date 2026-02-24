@@ -1,0 +1,5 @@
+.maplibregl-popup-content {
+  font-family: var(--chakra-fonts-body);
+  padding: var(--chakra-spacing-2);
+  border-radius: var(--chakra-radii-l3);
+}

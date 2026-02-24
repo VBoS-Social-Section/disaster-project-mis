@@ -1,0 +1,78 @@
+services:
+  postgres:
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=vbos
+    image: postgis/postgis:17-3.5
+    platform: linux/x86_64
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+  web:
+    working_dir: /code
+    restart: always
+    environment:
+      - DJANGO_CONFIGURATION=Local
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_AWS_ACCESS_KEY_ID=${DJANGO_AWS_ACCESS_KEY_ID}
+      - DJANGO_AWS_SECRET_ACCESS_KEY=${DJANGO_AWS_SECRET_ACCESS_KEY}
+      - DJANGO_AWS_STORAGE_BUCKET_NAME=${DJANGO_AWS_STORAGE_BUCKET_NAME}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=vbos
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    build: ./
+    command: >
+      bash -c "python3 wait_for_postgres.py &&
+               ./manage.py migrate &&
+               ./manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+  documentation:
+    restart: always
+    build: ./
+    command: "python3 -m mkdocs serve"
+    volumes:
+      - ./:/code
+    ports:
+      - "8001:8001"
+  titiler:
+    image: ghcr.io/developmentseed/vbos-titiler:main
+    command:
+      [
+        "uvicorn",
+        "app:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--workers",
+        "1",
+      ]
+    container_name: titiler
+    platform: linux/amd64
+    environment:
+      CPL_TMPDIR: /tmp
+      GDAL_CACHEMAX: 75%
+      VSI_CACHE: TRUE
+      VSI_CACHE_SIZE: 1073741824
+      GDAL_DISABLE_READDIR_ON_OPEN: EMPTY_DIR
+      GDAL_HTTP_MERGE_CONSECUTIVE_RANGES: YES
+      GDAL_HTTP_MULTIPLEX: YES
+      GDAL_HTTP_VERSION: 2
+      PYTHONWARNINGS: ignore
+      WEB_CONCURRENCY: 4
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./data:/data # Optional: mount local directory with your raster files
+    restart: unless-stopped
