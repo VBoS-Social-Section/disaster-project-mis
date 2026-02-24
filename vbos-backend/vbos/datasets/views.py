@@ -26,7 +26,7 @@ from .models import (
     VectorDataset,
     VectorItem,
 )
-from .pagination import StandardResultsSetPagination
+from .pagination import DataResultsSetPagination, StandardResultsSetPagination
 from .serializers import (
     AreaCouncilSerializer,
     ClusterSerializer,
@@ -141,9 +141,12 @@ class TabularDatasetDataView(ListAPIView):
     filterset_class = TabularItemFilter
     permission_classes = [IsAuthenticated]
     serializer_class = TabularItemSerializer
+    pagination_class = DataResultsSetPagination
 
     def get_queryset(self):
-        return TabularItem.objects.filter(dataset=self.kwargs.get("pk"))
+        return TabularItem.objects.filter(
+            dataset=self.kwargs.get("pk")
+        ).select_related("province", "area_council")
 
 
 class TabularDatasetXSLXDataView(XLSXFileMixin, TabularDatasetDataView):

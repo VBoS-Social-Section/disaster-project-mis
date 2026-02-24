@@ -95,7 +95,7 @@ export async function getDatasetData(
 ) {
   let allResults: PaginatedVectorData | ListApiResponse | null = null;
   const queryString = filters ? new URLSearchParams(filters).toString() : "";
-  const url = `/api/v1/${dataType}/${id}/data/?page_size=500${queryString ? `&${queryString}` : ""}`;
+  const url = `/api/v1/${dataType}/${id}/data/?page_size=2000${queryString ? `&${queryString}` : ""}`;
 
   let currentUrl: string | null = url;
 
