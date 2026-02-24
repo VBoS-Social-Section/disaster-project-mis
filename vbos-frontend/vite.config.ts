@@ -15,9 +15,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["MISLogo.svg", "favicon.ico"],
       manifest: {
-        name: "VBoS MIS",
-        short_name: "VBoS MIS",
-        description: "Vanuatu Bureau of Statistics Management Information System",
+        name: "Disaster Risk Management Information system",
+        short_name: "DRMIS",
+        description: "Disaster Risk Management Information system",
         theme_color: "#2563EB",
         background_color: "#ffffff",
         display: "standalone",

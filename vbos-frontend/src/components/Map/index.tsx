@@ -40,7 +40,7 @@ export interface PopupInfo extends PopupProps {
 function Map(props: MapProps, ref: Ref<MapRef | undefined>) {
   const [map, setMap] = useState<MapRef>();
   const setMapRef = (m: MapRef) => setMap(m);
-  const { viewState, setViewState } = useMapStore();
+  const { viewState, setViewState, syncToUrl } = useMapStore();
   const { ac, acGeoJSON } = useAreaStore();
   const { layers, getLayerMetadata } = useLayerStore();
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
@@ -70,6 +70,10 @@ function Map(props: MapProps, ref: Ref<MapRef | undefined>) {
     },
     [setViewState],
   );
+
+  const onMoveEnd = useCallback(() => {
+    syncToUrl();
+  }, [syncToUrl]);
   const onClick = useCallback(
     (evt: MapLayerMouseEvent) => {
       if (!map) return;
@@ -148,6 +152,7 @@ function Map(props: MapProps, ref: Ref<MapRef | undefined>) {
       initialViewState={viewState}
       ref={setMapRef}
       onMove={onMove}
+      onMoveEnd={onMoveEnd}
       mapStyle="https://tiles.openfreemap.org/styles/positron"
       touchPitch={false}
       dragRotate={false}

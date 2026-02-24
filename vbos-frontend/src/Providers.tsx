@@ -1,6 +1,7 @@
 import "@fontsource/work-sans/index.css";
 import { ChakraProvider } from "@chakra-ui/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ColorModeProvider } from "@/components/ui/color-mode";
 
 import theme from "./Theme";
 
@@ -20,7 +21,9 @@ const queryClient = new QueryClient({
 function Providers({ children }: React.PropsWithChildren) {
   return (
     <ChakraProvider value={theme}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <ColorModeProvider attribute="class" storageKey="vbos-color-mode">
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </ColorModeProvider>
     </ChakraProvider>
   );
 }

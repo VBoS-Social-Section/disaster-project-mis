@@ -78,6 +78,13 @@ All notable changes to the VBoS Management Information System project.
 - **Docker**: `docker-compose run --rm -e DJANGO_DEBUG=false web python manage.py check --deploy`
 - Documented in README Deployment section.
 
+#### Modern Features
+
+- **Dark mode**: Chakra color-mode toggle (sun/moon) in header; `ColorModeProvider` via next-themes; preference stored in `vbos-color-mode`. UI uses semantic tokens (`bg.panel`, `bg.subtle`, `bg`) for automatic light/dark adaptation.
+- **Export to PDF**: "Export PDF" button in header; captures map canvas and stats section (chart/table) via jspdf + html2canvas; downloads `disaster-risk-report-YYYY-MM-DD.pdf`.
+- **Shareable URLs**: Map view state (`lng`, `lat`, `zoom`) synced to URL; share links restore layers, province, area council, year, and map position. `syncToUrl` on map move-end; `syncFromUrl` on mount and popstate.
+- **Mobile layout**: Map-first on tablets/phones; sidebars default to collapsed on viewports &lt; 768px; collapsible panels overlay the map (position absolute) with slide-out; grid `0 1fr 0` on base so map gets full width.
+
 ---
 
 ## Setup Notes (for new deployments)

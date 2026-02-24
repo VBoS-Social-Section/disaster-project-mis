@@ -51,7 +51,7 @@ export function Login() {
       display="flex"
       alignItems="center"
       justifyContent="center"
-      bg="gray.50"
+      bg="bg.subtle"
       p={4}
       role="main"
       aria-label="Sign in"
@@ -61,7 +61,7 @@ export function Login() {
         onSubmit={handleSubmit}
         w="full"
         maxW="400px"
-        bg="white"
+        bg="bg"
         p={8}
         borderRadius="lg"
         shadow="lg"
@@ -70,16 +70,16 @@ export function Login() {
           <Box textAlign="center">
             <Image
               src="/MISLogo.svg"
-              alt="VBoS MIS Logo"
+              alt="Disaster Risk Management Information system Logo"
               boxSize="16"
               mx="auto"
               mb={4}
             />
             <Heading size="xl" color="blue.700">
-              VBoS MIS
+              Disaster Risk Management Information system
             </Heading>
             <Text color="fg.muted" mt={2} fontSize="sm">
-              Management Information System
+              Disaster & Climate Risk Data
             </Text>
           </Box>
 

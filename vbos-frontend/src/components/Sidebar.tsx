@@ -9,7 +9,10 @@ type Props = {
 };
 
 export const Sidebar = ({ title, direction, children }: Props) => {
-  const [sideBarVisible, setSideBarVisible] = useState(true);
+  // On mobile, default to collapsed for map-first layout
+  const [sideBarVisible, setSideBarVisible] = useState(
+    () => typeof window !== "undefined" && window.innerWidth >= 768,
+  );
   const isLeftSidebar = direction === "left";
   return (
     <Box
@@ -19,22 +22,28 @@ export const Sidebar = ({ title, direction, children }: Props) => {
       borderColor="border"
       borderLeftWidth={isLeftSidebar ? 0 : 1}
       borderRightWidth={isLeftSidebar ? 1 : 0}
-      bg="white"
+      bg="bg.panel"
     >
       <Flex
         flexDir="column"
         w={{
-          base: "full",
+          base: sideBarVisible ? "min(20rem, 85vw)" : "0px",
           md: !sideBarVisible ? "0px" : isLeftSidebar ? "20rem" : "28rem",
         }}
+        maxW={{ base: "85vw", md: "none" }}
         h="full"
         maxH="calc(100vh - 3.75rem)"
         overflow="hidden"
         opacity={sideBarVisible ? 1 : 0}
         transition="all 0.24s"
         willChange="width, opacity"
-        position="relative"
+        position={{ base: "absolute", md: "relative" }}
+        top={0}
+        bottom={0}
+        left={isLeftSidebar ? { base: 0, md: "auto" } : undefined}
+        right={!isLeftSidebar ? { base: 0, md: "auto" } : undefined}
         zIndex="10"
+        shadow={{ base: sideBarVisible ? "lg" : "none", md: "none" }}
       >
         {sideBarVisible && (
           <>
@@ -57,7 +66,7 @@ export const Sidebar = ({ title, direction, children }: Props) => {
       <IconButton
         size="xs"
         variant="plain"
-        bg="white"
+        bg="bg.panel"
         position="absolute"
         top={10}
         zIndex={10}

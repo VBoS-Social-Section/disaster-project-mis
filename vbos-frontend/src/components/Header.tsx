@@ -13,10 +13,11 @@ import {
   Portal,
 } from "@chakra-ui/react";
 import { ReactNode, useState } from "react";
-import { LuCircleHelp, LuLockKeyhole, LuLogOut, LuShare2 } from "react-icons/lu";
+import { LuCircleHelp, LuFileDown, LuLockKeyhole, LuLogOut, LuShare2 } from "react-icons/lu";
+import { ColorModeButton } from "@/components/ui/color-mode";
 import { useAuthStore } from "@/store/auth-store";
 
-export const Header = () => {
+export const Header = ({ onExportPdf }: HeaderProps) => {
   const [shareDialogIsOpen, setShareDialogIsOpen] = useState(false);
   const { user, clearAuth } = useAuthStore();
   return (
@@ -25,12 +26,12 @@ export const Header = () => {
       display="flex"
       alignItems="center"
       gap="3"
-      bg="white"
+      bg="bg.panel"
       px="4"
       py="3"
       shadow="base"
     >
-      <Image src="/MISLogo.svg" alt="VBoS MIS Logo" boxSize="9" />
+      <Image src="/MISLogo.svg" alt="Disaster Risk Management Information system Logo" boxSize="9" />
       <Heading
         font="Work Sans"
         fontWeight="700"
@@ -38,9 +39,10 @@ export const Header = () => {
         color="blue.700"
         as="h1"
       >
-        VBoS MIS
+        Disaster Risk Management Information system
       </Heading>
-      <Box as="nav" ml="auto">
+      <Box as="nav" ml="auto" display="flex" alignItems="center" gap="1">
+        <ColorModeButton />
         <List.Root
           display="flex"
           flexDirection="row"
@@ -54,6 +56,12 @@ export const Header = () => {
             <LuShare2 />
             Share
           </NavButton>
+          {onExportPdf && (
+            <NavButton onClick={onExportPdf} title="Export map and stats to PDF">
+              <LuFileDown />
+              Export PDF
+            </NavButton>
+          )}
           {user?.is_staff && (
             <Link href={`${import.meta.env.VITE_API_HOST}/admin/`}>
               <NavButton solid colorPalette="blue">
@@ -102,6 +110,10 @@ const NavButton = ({ solid, onClick, children, ...props }: NavButtonProps) => (
 type ShareDialogProps = {
   isOpen: boolean;
   setIsOpen: (v: boolean) => void;
+};
+
+type HeaderProps = {
+  onExportPdf?: () => void;
 };
 
 const ShareDialog = ({ isOpen, setIsOpen }: ShareDialogProps) => {

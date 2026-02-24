@@ -108,6 +108,7 @@ export function Stats() {
         borderWidth={2}
         borderRadius={5}
         overflow="hidden"
+        data-pdf-stats
       >
         <Box
           backgroundColor="gray.100"
