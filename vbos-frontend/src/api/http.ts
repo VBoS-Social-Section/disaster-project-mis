@@ -1,5 +1,6 @@
 import { useAuthStore } from "@/store/auth-store";
 import { DeviceOfflineError } from "@/errors";
+import { toast } from "@/utils/toast";
 
 enum HttpMethod {
   GET = "GET",
@@ -33,8 +34,10 @@ function request(
   }).then((response) => {
     if (response.status === 401) {
       useAuthStore.getState().clearAuth();
+      toast.warning("Session expired", "Please sign in again.");
     }
     if (response.status === 599) {
+      toast.error("You're offline", "Please check your connection and try again.");
       throw new DeviceOfflineError();
     }
     return response;

@@ -156,6 +156,7 @@ export function Stats() {
                 variant="ghost"
                 _hover={{ color: "fg.error" }}
                 onClick={() => switchLayer(tabularLayerId)}
+                aria-label="Remove layer from map"
               >
                 <LuCircleX />
               </IconButton>

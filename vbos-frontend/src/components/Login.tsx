@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -11,6 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { useAuthStore } from "@/store/auth-store";
 import { login } from "@/api/auth";
+import { toast } from "@/utils/toast";
 
 export function Login() {
   const [username, setUsername] = useState("");
@@ -18,6 +19,11 @@ export function Login() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const setAuth = useAuthStore((s) => s.setAuth);
+  const usernameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    usernameInputRef.current?.focus();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,8 +35,11 @@ export function Login() {
       const { getCurrentUser: fetchUser } = await import("@/api/auth");
       const user = await fetchUser(token);
       setAuth(token, user);
+      toast.success("Signed in successfully");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      const message = err instanceof Error ? err.message : "Login failed";
+      setError(message);
+      toast.error("Sign in failed", message);
     } finally {
       setIsLoading(false);
     }
@@ -44,6 +53,8 @@ export function Login() {
       justifyContent="center"
       bg="gray.50"
       p={4}
+      role="main"
+      aria-label="Sign in"
     >
       <Box
         as="form"
@@ -75,12 +86,14 @@ export function Login() {
           <Field.Root invalid={!!error}>
             <Field.Label>Username</Field.Label>
             <Input
+              ref={usernameInputRef}
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter your username"
               required
               autoComplete="username"
+              aria-label="Username"
             />
           </Field.Root>
 
@@ -93,6 +106,7 @@ export function Login() {
               placeholder="Enter your password"
               required
               autoComplete="current-password"
+              aria-label="Password"
             />
             {error && (
               <Field.ErrorText color="red.500" fontSize="sm" mt={1}>

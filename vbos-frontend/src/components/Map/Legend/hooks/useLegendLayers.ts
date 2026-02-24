@@ -24,6 +24,7 @@ import type {
   VectorLegendLayer,
 } from "@/components/Map/Legend/types";
 import type { PaginatedVectorData } from "@/types/api";
+import type { AreaCouncilGeoJSON, ProvincesGeoJSON } from "@/types/data";
 import { mapColors } from "../../../colors";
 
 /**
@@ -56,10 +57,9 @@ export function useLegendLayers(): LegendLayer[] {
   const isFetching = useIsFetching();
 
   // Stable empty fallback - prevents useAdminAreaStats infinite loop when provincesGeojson is undefined
-  const emptyGeoJSON = useMemo(() => featureCollection([]), []);
-  const adminAreaGeoJSON = province
-    ? acGeoJSON
-    : provincesGeojson ?? emptyGeoJSON;
+  const emptyGeoJSON = useMemo(() => featureCollection([]) as ProvincesGeoJSON, []);
+  const adminAreaGeoJSON: ProvincesGeoJSON | AreaCouncilGeoJSON =
+    province && acGeoJSON ? acGeoJSON : (provincesGeojson ?? emptyGeoJSON);
 
   // Get min/max values from the same source as the map rendering
   const { minValue, maxValue } = useAdminAreaStats(adminAreaGeoJSON);

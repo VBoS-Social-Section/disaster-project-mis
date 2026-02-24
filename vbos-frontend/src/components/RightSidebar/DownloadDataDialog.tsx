@@ -20,6 +20,7 @@ import {
   sanitizeFilename,
 } from "@/utils/downloadHelpers";
 import { useVectorDatasetFromCache } from "@/hooks/useVectorDatasetFromCache";
+import { toast } from "@/utils/toast";
 import { useDateStore } from "@/store/date-store";
 
 type DownloadDataDialogProps = {
@@ -90,13 +91,14 @@ export const DownloadDataDialog = ({
 
       // Trigger the download
       downloadFile(result.blob, filename);
+      toast.success("Download started", filename);
     } catch (error) {
       // Error occurred during download
       const message =
         error instanceof Error
           ? error.message
           : "Failed to download dataset. Please try again.";
-      alert(message);
+      toast.error("Download failed", message);
     } finally {
       // Remove from downloading set
       setDownloadingIds((prev) => {

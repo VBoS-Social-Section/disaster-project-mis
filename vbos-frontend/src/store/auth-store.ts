@@ -36,7 +36,7 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user }),
     }),
     {
-      name: "vbos-auth",
+      name: AUTH_TOKEN_KEY,
       partialize: (state) => ({ token: state.token, user: state.user }),
     }
   )

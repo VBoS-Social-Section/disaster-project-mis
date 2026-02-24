@@ -7,21 +7,21 @@ import { useLayerStore } from "@/store/layer-store";
 import { useOpacityStore } from "@/store/opacity-store";
 import { useAdminAreaStats } from "@/hooks/useAdminAreaStats";
 import { mapColors } from "../colors";
+import type { AreaCouncilGeoJSON, ProvincesGeoJSON } from "@/types/data";
 
 type AdminAreaMapLayers = {
   fitBounds?: MapRef["fitBounds"];
 };
 
-const EMPTY_GEOJSON = featureCollection([]);
+const EMPTY_GEOJSON = featureCollection([]) as ProvincesGeoJSON;
 
 export function AdminAreaMapLayers({ fitBounds }: AdminAreaMapLayers) {
   const { data: provincesGeojson, isPending, error } = useProvinces();
   const { ac, province, acGeoJSON } = useAreaStore();
   const { layers } = useLayerStore();
   const { getOpacity } = useOpacityStore();
-  const adminAreaGeoJSON = province
-    ? acGeoJSON
-    : provincesGeojson ?? EMPTY_GEOJSON;
+  const adminAreaGeoJSON: ProvincesGeoJSON | AreaCouncilGeoJSON =
+    province && acGeoJSON ? acGeoJSON : (provincesGeojson ?? EMPTY_GEOJSON);
   const {
     geojson: adminAreaStatsGeojson,
     maxValue,

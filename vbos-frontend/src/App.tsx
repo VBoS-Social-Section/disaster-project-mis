@@ -1,9 +1,10 @@
-import { Box, Grid, Spinner } from "@chakra-ui/react";
+import { Box, Grid, Skeleton } from "@chakra-ui/react";
 import { Header } from "./components/Header";
 import { MapRef } from "react-map-gl/maplibre";
 import { useRef, lazy, Suspense } from "react";
 import { useUrlSync } from "./hooks/useUrlSync";
 import { useAuth } from "./hooks/useAuth";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { LeftSidebar } from "./components/LeftSidebar";
 import { RightSidebar } from "./components/RightSidebar";
 import BottomDrawer from "./components/BottomDrawer";
@@ -12,10 +13,19 @@ import { Login } from "./components/Login";
 // Lazy-load Map (MapLibre, pmtiles, layers) for faster initial paint
 const Map = lazy(() => import("./components/Map").then((m) => ({ default: m.default })));
 
+function MapLoadingSkeleton() {
+  return (
+    <Box flex={1} display="flex" flexDir="column" bg="gray.50" p={4}>
+      <Skeleton height="100%" borderRadius="md" />
+    </Box>
+  );
+}
+
 function App() {
   const mapRef = useRef<MapRef>(null);
   const { isAuthenticated } = useAuth();
   useUrlSync();
+  useKeyboardShortcuts();
 
   if (!isAuthenticated) {
     return <Login />;
@@ -29,19 +39,7 @@ function App() {
         </Box>
         <Box>
           <Box position="relative" h="100%" maxH="full" display="flex" flexDir="column">
-            <Suspense
-              fallback={
-                <Box
-                  flex={1}
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  bg="gray.50"
-                >
-                  <Spinner size="xl" />
-                </Box>
-              }
-            >
+            <Suspense fallback={<MapLoadingSkeleton />}>
               <Map ref={mapRef} />
             </Suspense>
             <BottomDrawer />

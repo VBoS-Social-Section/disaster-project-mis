@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Box, Spinner, Text } from "@chakra-ui/react";
+import { Box, Skeleton, Text } from "@chakra-ui/react";
 import { useDataset } from "@/hooks/useDataset";
 import { useAreaStore } from "@/store/area-store";
 import { useLayerStore } from "@/store/layer-store";
@@ -45,11 +45,13 @@ function TabularDatasetMapLayer({ id }: TabularDatasetMapLayerProps) {
         display="inline-block"
         p={2}
         m={1}
-        opacity={0.8}
+        opacity={0.95}
         bgColor="white"
+        borderRadius="md"
+        shadow="sm"
       >
-        <Spinner size="sm" />
-        <Text display="inline" pl={1}>
+        <Skeleton height={4} width="140px" mb={1} />
+        <Text fontSize="xs" color="fg.muted">
           Loading dataset layer {id}
         </Text>
       </Box>
