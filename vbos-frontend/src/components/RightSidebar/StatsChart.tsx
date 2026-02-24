@@ -29,8 +29,8 @@ export function StatsChart({ stats, unit }: StatsChartType) {
   });
 
   return (
-    <Box minH="240px" w="100%" mt={4} mb={12}>
-      <Chart.Root maxH="sm" chart={chart}>
+    <Box h="240px" minW={0} w="100%" mt={4} mb={12}>
+      <Chart.Root h="100%" w="100%" chart={chart}>
       <BarChart data={chart.data}>
         <CartesianGrid stroke={chart.color("border.muted")} vertical={false} />
         <XAxis

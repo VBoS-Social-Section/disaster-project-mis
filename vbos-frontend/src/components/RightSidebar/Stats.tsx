@@ -174,6 +174,7 @@ export function Stats() {
               {/* Only show top 4 stat items */}
               {sortedAttributes.slice(0, 4).map((attr: string) => (
                 <Stat.Root
+                  key={attr}
                   size="sm"
                   gap={0}
                   flex="1"
