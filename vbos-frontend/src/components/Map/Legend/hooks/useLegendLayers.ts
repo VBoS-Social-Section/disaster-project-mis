@@ -11,6 +11,7 @@
  * - Returns array of LegendLayer objects ready for display
  */
 
+import { useMemo } from "react";
 import { useQueryClient, useIsFetching } from "@tanstack/react-query";
 import { useLayerStore } from "@/store/layer-store";
 import { useAreaStore } from "@/store/area-store";
@@ -54,10 +55,14 @@ export function useLegendLayers(): LegendLayer[] {
   const queryClient = useQueryClient();
   const isFetching = useIsFetching();
 
+  // Stable empty fallback - prevents useAdminAreaStats infinite loop when provincesGeojson is undefined
+  const emptyGeoJSON = useMemo(() => featureCollection([]), []);
+  const adminAreaGeoJSON = province
+    ? acGeoJSON
+    : provincesGeojson ?? emptyGeoJSON;
+
   // Get min/max values from the same source as the map rendering
-  const { minValue, maxValue } = useAdminAreaStats(
-    province ? acGeoJSON : provincesGeojson || featureCollection([]),
-  );
+  const { minValue, maxValue } = useAdminAreaStats(adminAreaGeoJSON);
 
   // Parse active layer IDs from the store
   const activeLayerIds = layerString

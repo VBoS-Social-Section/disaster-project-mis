@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Layer, Source, LayerProps, MapRef } from "react-map-gl/maplibre";
+import { featureCollection } from "@turf/helpers";
 import useProvinces from "@/hooks/useProvinces";
 import { useAreaStore } from "@/store/area-store";
 import { useLayerStore } from "@/store/layer-store";
@@ -11,16 +12,21 @@ type AdminAreaMapLayers = {
   fitBounds?: MapRef["fitBounds"];
 };
 
+const EMPTY_GEOJSON = featureCollection([]);
+
 export function AdminAreaMapLayers({ fitBounds }: AdminAreaMapLayers) {
   const { data: provincesGeojson, isPending, error } = useProvinces();
   const { ac, province, acGeoJSON } = useAreaStore();
   const { layers } = useLayerStore();
   const { getOpacity } = useOpacityStore();
+  const adminAreaGeoJSON = province
+    ? acGeoJSON
+    : provincesGeojson ?? EMPTY_GEOJSON;
   const {
     geojson: adminAreaStatsGeojson,
     maxValue,
     minValue,
-  } = useAdminAreaStats(province ? acGeoJSON : provincesGeojson);
+  } = useAdminAreaStats(adminAreaGeoJSON);
 
   useEffect(() => {
     if (fitBounds && !province)
