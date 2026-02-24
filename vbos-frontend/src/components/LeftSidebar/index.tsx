@@ -59,6 +59,7 @@ const LeftSidebar = () => {
     <Sidebar direction="left" title="Data Layers">
       <Accordion.Root
         multiple
+        lazyMount
         defaultValue={defaultOpenCluster ? [String(defaultOpenCluster)] : []}
         overflowY="scroll"
       >
