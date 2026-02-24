@@ -56,6 +56,19 @@ All notable changes to the VBoS Management Information System project.
 - **Keyboard shortcuts**: Escape closes the time series panel (BottomDrawer).
 - **Focus management**: Login form auto-focuses on username; `aria-label`s on login fields and layer remove button.
 
+#### Build & Performance (Vite)
+
+- **Compression** (`vite-plugin-compression`): Gzip and Brotli compression of JS/CSS assets during build for smaller transfer sizes.
+- **Chunk splitting**: Vendor code split into `map`, `react`, `chakra`, `charts`, and `vendor` chunks to improve caching and parallel loading.
+- **Bundle analysis** (`rollup-plugin-visualizer`): `pnpm build` generates `dist/stats.html` with treemap of bundle composition (gzip/Brotli sizes). Open it to track bundle size.
+- **Image optimization**: When adding images, use responsive formats (WebP, AVIF) and appropriate sizing for better performance.
+
+#### Django Production Checks
+
+- **`scripts/check-deploy.sh`**: Runs `python manage.py check --deploy` with `DEBUG=False` before production builds.
+- **Docker**: `docker-compose run --rm -e DJANGO_DEBUG=false web python manage.py check --deploy`
+- Documented in README Deployment section.
+
 ---
 
 ## Setup Notes (for new deployments)

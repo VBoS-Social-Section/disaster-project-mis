@@ -1,7 +1,10 @@
- import { defineConfig } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { VitePWA } from "vite-plugin-pwa";
+import type { Plugin } from "vite";
+import viteCompression from "vite-plugin-compression";
+import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -27,7 +30,7 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
+        workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [
           {
@@ -42,5 +45,44 @@ export default defineConfig({
         ],
       },
     }),
+    viteCompression({
+      algorithm: "gzip",
+      ext: ".gz",
+      filter: (file) => !file.endsWith("stats.html"),
+    }),
+    viteCompression({
+      algorithm: "brotliCompress",
+      ext: ".br",
+      filter: (file) => !file.endsWith("stats.html"),
+    }),
+    visualizer({
+      filename: "dist/stats.html",
+      gzipSize: true,
+      brotliSize: true,
+      open: false,
+    }) as Plugin,
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes("node_modules")) {
+            if (id.includes("maplibre-gl") || id.includes("react-map-gl") || id.includes("pmtiles")) {
+              return "map";
+            }
+            if (id.includes("react") || id.includes("react-dom") || id.includes("scheduler")) {
+              return "react";
+            }
+            if (id.includes("@chakra-ui") || id.includes("@emotion") || id.includes("framer-motion")) {
+              return "chakra";
+            }
+            if (id.includes("recharts") || id.includes("d3-")) {
+              return "charts";
+            }
+            return "vendor";
+          }
+        },
+      },
+    },
+  },
 });

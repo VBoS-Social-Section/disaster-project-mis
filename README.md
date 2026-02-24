@@ -141,11 +141,13 @@ VITE_TITILER_API=http://localhost:8002
 ```bash
 pnpm install
 pnpm dev      # Vite dev server
-pnpm build    # tsc && vite build
+pnpm build    # tsc && vite build (produces gzip/Brotli assets and dist/stats.html for bundle analysis)
 pnpm preview  # Preview production build
 pnpm test     # Vitest
 pnpm lint     # ESLint
 ```
+
+Open `dist/stats.html` after `pnpm build` to analyze bundle size (treemap, gzip/Brotli estimates).
 
 ### Authentication Flow
 
@@ -172,6 +174,15 @@ Backend is deployable via Docker; a Caddy-based setup lives in `vbos-backend/dep
 - `deploy/vbos/docker-compose.yml` – Application image, TiTiler, DB URL, S3 credentials.
 
 Health check endpoint: `/health` (configured in deploy compose).
+
+**Before production builds**, run Django's deploy checks:
+
+```bash
+cd vbos-backend
+./scripts/check-deploy.sh
+# Or with Docker:
+docker-compose run --rm -e DJANGO_DEBUG=false web python manage.py check --deploy
+```
 
 Frontend: build with `pnpm build` and serve the `dist/` output via any static host (Nginx, S3, Netlify, etc.).
 
