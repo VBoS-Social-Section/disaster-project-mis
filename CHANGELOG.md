@@ -6,6 +6,15 @@ All notable changes to the VBoS Management Information System project.
 
 ## [Unreleased] – 2026-02-24
 
+### Documentation & Onboarding
+
+- **CONTRIBUTING.md**: Setup instructions, code conventions, pull request process.
+- **Architecture diagram**: Mermaid diagram in README showing SPA, API, DB, TiTiler, PMTiles, and S3.
+- **Environment templates**: `.env.example` with commented placeholders for all backend and frontend variables (Django, Postgres, AWS/S3, cache, API).
+- **Changelog**: `CHANGELOG.md` maintained for releases and notable changes.
+
+---
+
 ### Backend
 
 #### API Response Caching

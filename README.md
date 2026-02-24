@@ -2,6 +2,8 @@
 
 A geospatial Management Information System for climate change and natural disaster data in Vanuatu. The system provides a web-based interface for visualizing, querying, and exporting baseline, hazard damage, response resources, and financial damage datasets—including raster imagery, vector layers, PMTiles basemaps, and tabular statistics.
 
+**Contributing?** See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, conventions, and PR process.
+
 ---
 
 ## Architecture
@@ -16,6 +18,32 @@ A geospatial Management Information System for climate change and natural disast
 | **State** | Zustand, TanStack React Query |
 
 The backend exposes a REST API with token authentication. The frontend is a single-page application (SPA) that consumes the API and renders interactive maps with layer switching, filtering, and data export.
+
+### Architecture Diagram
+
+```mermaid
+flowchart TB
+    subgraph Client["Client (Browser)"]
+        SPA["React SPA<br/>(Vite, Chakra UI)"]
+    end
+
+    subgraph Backend["vbos-backend"]
+        API["Django REST API<br/>(port 8000)"]
+        DB[(PostgreSQL<br/>PostGIS)]
+        API --> DB
+    end
+
+    subgraph External["External Services"]
+        TiTiler["TiTiler<br/>(port 8002)<br/>COG/GeoTIFF tiles"]
+        PMTiles["PMTiles URLs<br/>(remote)"]
+        S3["S3/Spaces<br/>(optional storage)"]
+    end
+
+    SPA -->|"REST (auth, datasets, vector, tabular)"| API
+    SPA -->|"Tile requests"| TiTiler
+    SPA -->|"PMTiles"| PMTiles
+    API -.->|"File storage"| S3
+```
 
 ---
 
