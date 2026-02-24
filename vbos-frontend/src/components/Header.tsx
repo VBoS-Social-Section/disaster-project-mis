@@ -11,15 +11,62 @@ import {
   Link,
   List,
   Portal,
+  Popover,
+  Stack,
 } from "@chakra-ui/react";
 import { ReactNode, useState } from "react";
-import { LuCircleHelp, LuFileDown, LuLockKeyhole, LuLogOut, LuShare2 } from "react-icons/lu";
-import { ColorModeButton } from "@/components/ui/color-mode";
+import {
+  LuCircleHelp,
+  LuFileDown,
+  LuLockKeyhole,
+  LuLogOut,
+  LuMenu,
+  LuShare2,
+} from "react-icons/lu";
 import { useAuthStore } from "@/store/auth-store";
 
 export const Header = ({ onExportPdf }: HeaderProps) => {
   const [shareDialogIsOpen, setShareDialogIsOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { user, clearAuth } = useAuthStore();
+
+  const closeMenu = () => setMenuOpen(false);
+
+  const navActions = (
+    <>
+      <NavButton>
+        <LuCircleHelp />
+        Help
+      </NavButton>
+      <NavButton onClick={() => setShareDialogIsOpen(true)}>
+        <LuShare2 />
+        Share
+      </NavButton>
+      {onExportPdf && (
+        <NavButton onClick={onExportPdf} title="Export map and stats to PDF">
+          <LuFileDown />
+          Export PDF
+        </NavButton>
+      )}
+      {user?.is_staff && (
+        <Link href={`${import.meta.env.VITE_API_HOST}/admin/`}>
+          <NavButton solid colorPalette="blue">
+            <LuLockKeyhole />
+            Admin
+          </NavButton>
+        </Link>
+      )}
+      <NavButton
+        onClick={() => clearAuth()}
+        aria-label="Logout"
+        title={`Logout (${user?.username})`}
+      >
+        <LuLogOut />
+        Logout
+      </NavButton>
+    </>
+  );
+
   return (
     <Box
       as="header"
@@ -30,55 +77,130 @@ export const Header = ({ onExportPdf }: HeaderProps) => {
       px="4"
       py="3"
       shadow="base"
+      minW="0"
+      overflow="hidden"
     >
-      <Image src="/MISLogo.svg" alt="Disaster Risk Management Information system Logo" boxSize="9" />
+      <Image
+        src="/MISLogo.svg"
+        alt="Disaster Risk Management Information system Logo"
+        boxSize="9"
+        flexShrink={0}
+      />
       <Heading
         font="Work Sans"
         fontWeight="700"
-        size="xl"
+        size={{ base: "md", sm: "xl" }}
         color="blue.700"
         as="h1"
+        truncate
+        flex="1"
+        minW="0"
       >
-        Disaster Risk Management Information system
+        <Box as="span" display={{ base: "inline", md: "none" }}>
+          DRMIS
+        </Box>
+        <Box as="span" display={{ base: "none", md: "inline" }}>
+          Disaster Risk Management Information system
+        </Box>
       </Heading>
-      <Box as="nav" ml="auto" display="flex" alignItems="center" gap="1">
-        <ColorModeButton />
+      {/* Desktop: inline buttons */}
+      <Box as="nav" ml="auto" display={{ base: "none", md: "block" }}>
         <List.Root
           display="flex"
           flexDirection="row"
-          gap={{ base: "2", md: "4" }}
+          gap="4"
         >
-          <NavButton>
-            <LuCircleHelp />
-            Help
-          </NavButton>
-          <NavButton onClick={() => setShareDialogIsOpen(true)}>
-            <LuShare2 />
-            Share
-          </NavButton>
-          {onExportPdf && (
-            <NavButton onClick={onExportPdf} title="Export map and stats to PDF">
-              <LuFileDown />
-              Export PDF
-            </NavButton>
-          )}
-          {user?.is_staff && (
-            <Link href={`${import.meta.env.VITE_API_HOST}/admin/`}>
-              <NavButton solid colorPalette="blue">
-                <LuLockKeyhole />
-                Admin
-              </NavButton>
-            </Link>
-          )}
-          <NavButton
-            onClick={() => clearAuth()}
-            aria-label="Logout"
-            title={`Logout (${user?.username})`}
-          >
-            <LuLogOut />
-            Logout
-          </NavButton>
+          {navActions}
         </List.Root>
+      </Box>
+      {/* Mobile/tablet: floating action button with popover */}
+      <Box
+        display={{ base: "block", md: "none" }}
+        position="fixed"
+        bottom="1.5rem"
+        right="1rem"
+        zIndex={9999}
+      >
+        <Popover.Root
+          open={menuOpen}
+          onOpenChange={(e) => setMenuOpen(e.open)}
+          positioning={{ placement: "top-end", strategy: "fixed" }}
+          size="sm"
+        >
+          <Popover.Trigger asChild>
+            <IconButton
+              aria-label="Open menu"
+              size="lg"
+              borderRadius="full"
+              colorPalette="blue"
+              shadow="lg"
+              _hover={{ shadow: "xl" }}
+            >
+              <LuMenu />
+            </IconButton>
+          </Popover.Trigger>
+          <Popover.Positioner>
+            <Popover.Content>
+              <Popover.Arrow>
+                <Popover.ArrowTip />
+              </Popover.Arrow>
+              <Popover.Body>
+                <Stack direction="column" gap="1" py="2">
+                  <MobileNavItem icon={<LuCircleHelp />} onClick={closeMenu}>
+                    Help
+                  </MobileNavItem>
+                  <MobileNavItem
+                    icon={<LuShare2 />}
+                    onClick={() => {
+                      setShareDialogIsOpen(true);
+                      closeMenu();
+                    }}
+                  >
+                    Share
+                  </MobileNavItem>
+                  {onExportPdf && (
+                    <MobileNavItem
+                      icon={<LuFileDown />}
+                      onClick={() => {
+                        onExportPdf();
+                        closeMenu();
+                      }}
+                    >
+                      Export PDF
+                    </MobileNavItem>
+                  )}
+                  {user?.is_staff && (
+                    <Link
+                      href={`${import.meta.env.VITE_API_HOST}/admin/`}
+                      display="flex"
+                      alignItems="center"
+                      gap="3"
+                      px="3"
+                      py="2"
+                      fontSize="sm"
+                      borderRadius="md"
+                      bg="blue.50"
+                      color="blue.700"
+                      _hover={{ bg: "blue.100" }}
+                    >
+                      <LuLockKeyhole />
+                      Admin
+                    </Link>
+                  )}
+                  <MobileNavItem
+                    icon={<LuLogOut />}
+                    onClick={() => {
+                      clearAuth();
+                      closeMenu();
+                    }}
+                  >
+                    Logout
+                  </MobileNavItem>
+                </Stack>
+              </Popover.Body>
+            </Popover.Content>
+          </Popover.Positioner>
+        </Popover.Root>
       </Box>
       <ShareDialog
         isOpen={shareDialogIsOpen}
@@ -105,6 +227,27 @@ const NavButton = ({ solid, onClick, children, ...props }: NavButtonProps) => (
   >
     {children}
   </IconButton>
+);
+
+interface MobileNavItemProps {
+  icon: ReactNode;
+  children: ReactNode;
+  onClick?: () => void;
+}
+
+const MobileNavItem = ({ icon, children, onClick }: MobileNavItemProps) => (
+  <Button
+    justifyContent="flex-start"
+    gap="3"
+    variant="ghost"
+    colorPalette="gray"
+    size="sm"
+    w="full"
+    onClick={onClick}
+  >
+    {icon}
+    {children}
+  </Button>
 );
 
 type ShareDialogProps = {

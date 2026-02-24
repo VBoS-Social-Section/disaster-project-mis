@@ -4,6 +4,7 @@ import { MapRef } from "react-map-gl/maplibre";
 import { useRef, lazy, Suspense, useCallback } from "react";
 import { useUrlSync } from "./hooks/useUrlSync";
 import { useAuth } from "./hooks/useAuth";
+import { useUiStore } from "@/store/ui-store";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { LeftSidebar } from "./components/LeftSidebar";
 import { RightSidebar } from "./components/RightSidebar";
@@ -26,6 +27,7 @@ function MapLoadingSkeleton() {
 function App() {
   const mapRef = useRef<MapRef>(null);
   const { isAuthenticated } = useAuth();
+  const { isMobile, mobileOpenPanel, setMobileOpenPanel } = useUiStore();
   useUrlSync();
   useKeyboardShortcuts();
 
@@ -42,16 +44,29 @@ function App() {
     return <Login />;
   }
   return (
-    <Grid h="100vh" maxH="100vh" templateRows="max-content 1fr">
+    <Grid
+      h="100vh"
+      maxH="100vh"
+      templateRows="max-content 1fr"
+      overflow="hidden"
+      minW="0"
+    >
       <Header onExportPdf={handleExportPdf} />
       <Grid
         templateColumns={{ base: "0 1fr 0", md: "auto 1fr auto" }}
         height="calc(100vh - 3.75rem)"
+        minW="0"
+        overflow="hidden"
       >
         <Box>
           <LeftSidebar />
         </Box>
-        <Box>
+        <Box
+          position="relative"
+          onClick={() => {
+            if (isMobile && mobileOpenPanel) setMobileOpenPanel(null);
+          }}
+        >
           <Box position="relative" h="100%" maxH="full" display="flex" flexDir="column">
             <Suspense fallback={<MapLoadingSkeleton />}>
               <Map ref={mapRef} />

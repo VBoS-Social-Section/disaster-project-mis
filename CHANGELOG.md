@@ -80,10 +80,17 @@ All notable changes to the VBoS Management Information System project.
 
 #### Modern Features
 
-- **Dark mode**: Chakra color-mode toggle (sun/moon) in header; `ColorModeProvider` via next-themes; preference stored in `vbos-color-mode`. UI uses semantic tokens (`bg.panel`, `bg.subtle`, `bg`) for automatic light/dark adaptation.
+- **Dark mode**: `ColorModeProvider` via next-themes for system preference; UI uses semantic tokens (`bg.panel`, `bg.subtle`, `bg`). Manual toggle removed.
 - **Export to PDF**: "Export PDF" button in header; captures map canvas and stats section (chart/table) via jspdf + html2canvas; downloads `disaster-risk-report-YYYY-MM-DD.pdf`.
 - **Shareable URLs**: Map view state (`lng`, `lat`, `zoom`) synced to URL; share links restore layers, province, area council, year, and map position. `syncToUrl` on map move-end; `syncFromUrl` on mount and popstate.
 - **Mobile layout**: Map-first on tablets/phones; sidebars default to collapsed on viewports &lt; 768px; collapsible panels overlay the map (position absolute) with slide-out; grid `0 1fr 0` on base so map gets full width.
+
+#### Mobile UX Refinements
+
+- **Floating action button (FAB)**: On mobile/tablet, header actions (Help, Share, Export PDF, Admin, Logout) move to a bottom-right FAB; tap to open popover menu.
+- **Header**: System name shortens to "DRMIS" on small screens; full name on desktop.
+- **Panel management**: Only one panel (Data Layers or Analysis) open at a time on mobile; tap outside (map) to close; close (X) button in panel header; toggle at top when closed, side toggle preserved on desktop.
+- **Z-index fixes**: FAB (9999), panels (1000), toggles (1001) so controls stay above map.
 
 ---
 
