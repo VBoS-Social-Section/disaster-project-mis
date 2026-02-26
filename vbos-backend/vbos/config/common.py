@@ -70,6 +70,8 @@ class Common(Configuration):
 
     # General
     APPEND_SLASH = False
+    # Allow bulk delete of many TabularItems in admin (one POST field per selected item)
+    DATA_UPLOAD_MAX_NUMBER_FIELDS = 50000
     TIME_ZONE = "UTC"
     LANGUAGE_CODE = "en-us"
     # If you set this to False, Django will make some optimizations so as not

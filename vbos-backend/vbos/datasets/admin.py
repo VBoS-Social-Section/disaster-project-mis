@@ -3,6 +3,7 @@ import json
 from io import TextIOWrapper
 
 from adminsortable2.admin import SortableAdminMixin
+from django.contrib.admin import SimpleListFilter
 from django.contrib import messages
 from django.contrib.gis import admin
 from django.contrib.gis.geos.geometry import GEOSGeometry
@@ -33,6 +34,23 @@ from .utils import (
     create_tabular_item,
     import_wide_format_csv,
 )
+
+
+class YearListFilter(SimpleListFilter):
+    title = "Year"
+    parameter_name = "year"
+
+    def lookups(self, request, model_admin):
+        years = (
+            TabularItem.objects.filter(date__isnull=False)
+            .dates("date", "year", order="DESC")
+        )
+        return [(d.year, str(d.year)) for d in years]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(date__year=self.value())
+        return queryset
 
 
 @admin.register(Cluster)
@@ -187,8 +205,27 @@ class TabularDatasetAdmin(admin.ModelAdmin):
 
 @admin.register(TabularItem)
 class TabularItemAdmin(admin.GISModelAdmin):
-    list_display = ["id", "dataset", "province", "area_council", "attribute", "value"]
-    list_filter = ["dataset", "province", "area_council"]
+    list_display = [
+        "id",
+        "dataset",
+        "province",
+        "area_council",
+        "attribute",
+        "value",
+        "year_column",
+    ]
+    list_filter = [
+        "dataset__cluster",
+        "dataset",
+        YearListFilter,
+        "province",
+        "area_council",
+        "attribute",
+    ]
+
+    @admin.display(description="Year")
+    def year_column(self, obj):
+        return obj.date.year if obj.date else None
 
     def get_urls(self):
         urls = super().get_urls()

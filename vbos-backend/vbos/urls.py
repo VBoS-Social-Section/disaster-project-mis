@@ -2,6 +2,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.authtoken import views
 
@@ -20,6 +21,7 @@ api_urls = [
 ]
 
 urlpatterns = [
+    path("admin", RedirectView.as_view(url="/admin/", permanent=True)),
     path("admin/", admin.site.urls),
     path("", include(api_urls)),
     path("api-token-auth/", views.obtain_auth_token),
