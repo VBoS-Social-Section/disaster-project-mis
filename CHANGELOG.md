@@ -24,6 +24,37 @@ All notable changes to the VBoS Management Information System project.
 
 ---
 
+### CSV Import (Admin)
+
+- **Multi-select files**: *Before*: One file per row; users had to click "Add another file" repeatedly. *After*: Single "Select CSV files..." button allows multiple selection at once. *Why*: Faster workflow when importing many files.
+- **Auto-match dataset**: *Before*: User picked a dataset manually for every file. *After*: Dataset suggested from filename (e.g. `Education_01_baseline.csv` → "Education 01 baseline"). *Why*: Filenames and dataset names are similar; auto-match reduces manual selection.
+- **Upload progress modal**: *Before*: No feedback during upload; users did not know if import was still running. *After*: Progress popup shows percentage and bytes during POST. *Why*: Clear feedback when uploading many large CSVs.
+- **Backend format**: *Before*: Django formset (`form-0-file`, `form-0-dataset`, …). *After*: Simple format (`file_0`, `dataset_0`, …) posted via AJAX. *Why*: Simpler handling and better fit for dynamic multi-file selection.
+
+### Admin (Tabular Items)
+
+- **Year column**: *Before*: No year shown in the tabular items list. *After*: Year column added from `date` field. *Why*: Year is often needed for filtering and review.
+- **Filters**: *Before*: Limited filters (dataset, province, area council). *After*: Added filters for Cluster, Dataset, Year, Province, Area Council, Attribute. *Why*: Easier to find and filter large tabular datasets.
+- **Year filter**: *Before*: Using `date__year` in `list_filter` caused `admin.E116` SystemCheckError and crashed the server. *After*: Custom `YearListFilter` (SimpleListFilter). *Why*: `date__year` is a lookup, not a field; custom filter is required.
+- **Bulk delete**: *Before*: `DATA_UPLOAD_MAX_NUMBER_FIELDS` default (1000) caused `TooManyFieldsSent` when selecting many items. *After*: Set to 50000. *Why*: Allows bulk delete of many tabular items at once.
+- **Admin URL**: *Before*: Visiting `/admin` (no trailing slash) returned 404 because `APPEND_SLASH=False`. *After*: Redirect from `/admin` to `/admin/`. *Why*: Both URLs work regardless of slash.
+
+### VM Deployment
+
+- **Deployment guide**: *Before*: No documented VM migration path. *After*: `docs/DEPLOYMENT_VM.md` with steps for Docker install, transfer, env config, build, and run. *Why*: Clear path to deploy on self-hosted VMs.
+- **Vm config**: *Before*: Production config required S3; Local config was for dev only. *After*: `vbos/config/vm.py` for self-hosted use (local storage, relaxed CORS). *Why*: Deploy without S3 on internal VMs.
+- **Docker Compose**: *Before*: Only backend dev compose; production used external images. *After*: `deploy/vm/docker-compose.yml` with postgres, web, titiler, nginx. *Why*: Self-contained stack for VM deployment.
+- **Titiler optional**: *Before*: Titiler required; deployment failed when `ghcr.io` unreachable (firewall, no internet). *After*: Titiler in `raster` profile; omit with `docker compose up -d` (no profile). *Why*: Deploy tabular/vector without raster when network is restricted.
+- **Docker install**: *Before*: `chmod a644` failed on some systems; "no installation candidate" after adding repo. *After*: Use `gpg --dearmor`, `chmod 644`, and correct repo setup. *Why*: Docker installs reliably on Ubuntu.
+- **Nginx port**: *Before*: Nginx on port 80 conflicted with existing system nginx. *After*: App nginx on port 8080. *Why*: Run alongside existing web server.
+- **Source volume**: *Before*: `vbos-backend` mounted into container; slow I/O on every request. *After*: Code baked into image; only static/media volumes. *Why*: Better production performance.
+
+### Bug Fixes
+
+- **Frontend build (getDatasets.ts)**: *Before*: `TS2322` on `pnpm build` – `Record<string, unknown>[]` not assignable to `Dataset[]`. *After*: Type assertion `as Dataset[]` on mapped array. *Why*: Frontend builds on VM for deployment.
+
+---
+
 ### Documentation & Onboarding
 
 - **CONTRIBUTING.md**: Setup instructions, code conventions, pull request process.
