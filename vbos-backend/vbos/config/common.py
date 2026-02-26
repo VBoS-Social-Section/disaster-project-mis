@@ -23,6 +23,7 @@ class Common(Configuration):
         "drf_spectacular",  # api-docs
         "django_filters",  # for filtering rest endpoints
         "corsheaders",
+        "adminsortable2",  # drag-and-drop reordering in admin
         # Your apps
         "vbos.users",
         "vbos.datasets",

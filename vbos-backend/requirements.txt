@@ -25,6 +25,9 @@ django-storages==1.14.6
 boto3==1.40.26
 whitenoise
 
+# Admin
+django-admin-sortable2==2.2.6
+
 # Developer Tools
 ipdb==0.13.13
 ipython==8.30.0

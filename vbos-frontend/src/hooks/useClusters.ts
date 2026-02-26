@@ -7,6 +7,7 @@ function useClusters() {
   const { isPending, error, data } = useQuery({
     queryKey: ["clusters"],
     queryFn: () => API.getClusters(),
+    staleTime: 0, // Always refetch so new clusters show after admin changes
   });
 
   return {

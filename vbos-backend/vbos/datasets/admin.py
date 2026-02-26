@@ -2,6 +2,7 @@ import csv
 import json
 from io import TextIOWrapper
 
+from adminsortable2.admin import SortableAdminMixin
 from django.contrib import messages
 from django.contrib.gis import admin
 from django.contrib.gis.geos.geometry import GEOSGeometry
@@ -31,7 +32,7 @@ from .utils import (
 
 
 @admin.register(Cluster)
-class ClusterAdmin(admin.ModelAdmin):
+class ClusterAdmin(SortableAdminMixin, admin.ModelAdmin):
     list_display = ["id", "name"]
 
 

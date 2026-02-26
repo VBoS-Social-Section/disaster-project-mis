@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.contrib.gis.db import models
+from django.core.cache import cache
 from django.core.validators import FileExtensionValidator
 from django.db.models.fields.files import default_storage
-from django.db.models.signals import pre_delete
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
@@ -18,12 +19,24 @@ TYPE_CHOICES = {
 
 class Cluster(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    order = models.PositiveIntegerField(default=0, db_index=True)
 
     def __str__(self):
         return self.name
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["order"]
+
+
+def _invalidate_cluster_cache(sender, **kwargs):
+    """Clear cache so cluster list and datasets endpoints reflect admin changes."""
+    cache.clear()
+
+
+@receiver(post_save, sender=Cluster)
+@receiver(post_delete, sender=Cluster)
+def invalidate_cluster_cache(sender, **kwargs):
+    _invalidate_cluster_cache(sender, **kwargs)
 
 
 class Province(models.Model):

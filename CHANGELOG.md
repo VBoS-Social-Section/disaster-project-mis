@@ -37,6 +37,8 @@ All notable changes to the VBoS Management Information System project.
 
 #### API Response Caching
 - **Caching for reference data endpoints**: `ClusterListView`, `ProvinceListView`, and `AreaCouncilListView` now use 15-minute response caching (`cache_page`) to reduce load on frequently accessed data.
+- **Cache invalidation on cluster changes**: When Cluster is saved or deleted in admin, cache is cleared so the frontend shows changes immediately.
+- **`clear_cache` management command**: Run `python manage.py clear_cache` to manually clear cache after admin changes.
 - **Configurable cache backend**: `CACHES` in `vbos/config/common.py` uses:
   - **Default**: `LocMemCache` for local development
   - **Production**: Set `DJANGO_CACHE_BACKEND` to `django.core.cache.backends.db.DatabaseCache` or `django.core.cache.backends.redis.RedisCache`

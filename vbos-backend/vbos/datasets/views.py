@@ -95,6 +95,12 @@ class ClusterListView(ListAPIView):
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
 
+    def finalize_response(self, request, response, *args, **kwargs):
+        # Prevent browser from caching so admin changes (e.g. cluster add/delete) show after clear_cache
+        response = super().finalize_response(request, response, *args, **kwargs)
+        response["Cache-Control"] = "no-store, must-revalidate"
+        return response
+
 
 @method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class ProvinceListView(ListAPIView):
