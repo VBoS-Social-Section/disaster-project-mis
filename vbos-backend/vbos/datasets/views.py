@@ -90,7 +90,7 @@ class ClusterDatasetsView(APIView):
 
 @method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class ClusterListView(ListAPIView):
-    queryset = Cluster.objects.all()
+    queryset = Cluster.objects.all().order_by("order")
     serializer_class = ClusterSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
