@@ -16,15 +16,26 @@ This guide covers migrating the Disaster Project MIS (VBoS) to your VM server (e
 ```bash
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a644 /etc/apt/keyrings/docker.asc
 
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+# Add Docker's GPG key
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod 644 /etc/apt/keyrings/docker.gpg
+
+# Add Docker repository (Ubuntu 24.04 = noble)
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
+# Important: update apt cache before installing
 sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+If you get "no installation candidate", remove conflicting packages first:
+```bash
+sudo apt-get remove -y docker.io docker-doc podman-docker 2>/dev/null || true
+sudo apt-get update
+# Then retry the install
 ```
 
 ### Add your user to the docker group

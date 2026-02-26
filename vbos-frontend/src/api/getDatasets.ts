@@ -22,7 +22,7 @@ export async function getDatasets(cluster: string): Promise<ClusterDatasets[]> {
 
   const data: ClusterDatasetsResponse = await response.json();
 
-  const allDatasets: Dataset[] = [
+  const allDatasets = [
     ...(data.tabular ?? []).map((d) => ({ ...d, dataType: "tabular" as const })),
     ...(data.raster ?? []).map((d) => ({ ...d, dataType: "raster" as const })),
     ...(data.vector ?? []).map((d) => ({ ...d, dataType: "vector" as const })),
@@ -30,7 +30,7 @@ export async function getDatasets(cluster: string): Promise<ClusterDatasets[]> {
       ...d,
       dataType: "pmtiles" as const,
     })),
-  ];
+  ] as Dataset[];
 
   const groupedByType: ClusterDatasets[] = allDatasets.reduce(
     (acc: ClusterDatasets[], item: Dataset) => {
