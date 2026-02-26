@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from "react";
 import { Accordion, Box, Skeleton, Stack } from "@chakra-ui/react";
 import { Sidebar } from "../Sidebar";
 import { useClusters } from "@/hooks/useClusters";
@@ -9,6 +10,15 @@ const LeftSidebar = () => {
     isPending: clustersLoading,
     error: clustersError,
   } = useClusters();
+  const [expandedValue, setExpandedValue] = useState<string[]>([]);
+  const hasSetInitial = useRef(false);
+
+  useEffect(() => {
+    if (clusters?.length && !hasSetInitial.current) {
+      hasSetInitial.current = true;
+      setExpandedValue([String(clusters[0].id)]);
+    }
+  }, [clusters]);
 
   if (clustersError) {
     return (
@@ -23,7 +33,7 @@ const LeftSidebar = () => {
   if (clustersLoading) {
     return (
       <Sidebar direction="left" title="Data Layers">
-        <Stack gap={4} py={2} overflowY="scroll">
+        <Stack gap={4} py={2} overflowY="auto">
           {[1, 2, 3, 4].map((i) => (
             <Stack key={i} gap={2}>
               <Stack px={4}>
@@ -53,18 +63,22 @@ const LeftSidebar = () => {
     );
   }
 
-  const defaultOpenCluster = clusters?.length ? clusters[0].id : null;
-
   return (
     <Sidebar direction="left" title="Data Layers">
       <Accordion.Root
         multiple
         lazyMount
-        defaultValue={defaultOpenCluster ? [String(defaultOpenCluster)] : []}
-        overflowY="scroll"
+        value={expandedValue}
+        onValueChange={(details) => setExpandedValue(details.value)}
+        overflowY="auto"
       >
         {clusters?.map((cluster) => (
-          <Cluster name={cluster.name} id={cluster.id} key={cluster.id} />
+          <Cluster
+            name={cluster.name}
+            id={cluster.id}
+            key={cluster.id}
+            isExpanded={expandedValue.includes(String(cluster.id))}
+          />
         ))}
       </Accordion.Root>
     </Sidebar>

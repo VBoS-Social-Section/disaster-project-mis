@@ -76,7 +76,7 @@ export default defineConfig({
             if (id.includes("@chakra-ui") || id.includes("@emotion") || id.includes("framer-motion")) {
               return "chakra";
             }
-            if (id.includes("recharts") || id.includes("d3-")) {
+            if (id.includes("highcharts")) {
               return "charts";
             }
             return "vendor";

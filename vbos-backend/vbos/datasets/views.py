@@ -3,8 +3,11 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_excel.mixins import XLSXFileMixin
 from drf_excel.renderers import XLSXRenderer
+from rest_framework import status
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_gis.filters import InBBoxFilter
 from rest_framework_gis.pagination import GeoJsonPagination
 
@@ -28,7 +31,11 @@ from .models import (
     VectorDataset,
     VectorItem,
 )
-from .pagination import DataResultsSetPagination, StandardResultsSetPagination
+from .pagination import (
+    DataResultsSetPagination,
+    DatasetListPagination,
+    StandardResultsSetPagination,
+)
 from .serializers import (
     AreaCouncilSerializer,
     ClusterSerializer,
@@ -41,6 +48,44 @@ from .serializers import (
     VectorDatasetSerializer,
     VectorItemSerializer,
 )
+
+
+@method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
+class ClusterDatasetsView(APIView):
+    """Single endpoint returning all dataset types for a cluster in one response."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        cluster_name = request.query_params.get("cluster")
+        if not cluster_name:
+            return Response(
+                {"detail": "Missing required 'cluster' query parameter"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        tabular = TabularDatasetSerializer(
+            TabularDataset.objects.filter(cluster__name__iexact=cluster_name),
+            many=True,
+        ).data
+        raster = RasterDatasetSerializer(
+            RasterDataset.objects.filter(cluster__name__iexact=cluster_name),
+            many=True,
+        ).data
+        vector = VectorDatasetSerializer(
+            VectorDataset.objects.filter(cluster__name__iexact=cluster_name),
+            many=True,
+        ).data
+        pmtiles = PMTilesDatasetSerializer(
+            PMTilesDataset.objects.filter(cluster__name__iexact=cluster_name),
+            many=True,
+        ).data
+
+        return Response({
+            "tabular": tabular,
+            "raster": raster,
+            "vector": vector,
+            "pmtiles": pmtiles,
+        })
 
 
 @method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
@@ -71,11 +116,12 @@ class AreaCouncilListView(ListAPIView):
         )
 
 
+@method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class RasterDatasetListView(ListAPIView):
     queryset = RasterDataset.objects.all()
     serializer_class = RasterDatasetSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = StandardResultsSetPagination
+    pagination_class = DatasetListPagination
     filterset_class = RasterDatasetFilter
 
 
@@ -85,11 +131,12 @@ class RasterDatasetDetailView(RetrieveAPIView):
     permission_classes = [IsAuthenticated]
 
 
+@method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class PMTilesDatasetListView(ListAPIView):
     queryset = PMTilesDataset.objects.all()
     serializer_class = PMTilesDatasetSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = StandardResultsSetPagination
+    pagination_class = DatasetListPagination
     filterset_class = PMTilesDatasetFilter
 
 
@@ -99,11 +146,12 @@ class PMTilesDatasetDetailView(RetrieveAPIView):
     permission_classes = [IsAuthenticated]
 
 
+@method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class VectorDatasetListView(ListAPIView):
     queryset = VectorDataset.objects.all()
     serializer_class = VectorDatasetSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = StandardResultsSetPagination
+    pagination_class = DatasetListPagination
     filterset_class = VectorDatasetFilter
 
 
@@ -128,11 +176,12 @@ class VectorDatasetDataView(ListAPIView):
         return VectorItem.objects.filter(dataset=self.kwargs.get("pk"))
 
 
+@method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class TabularDatasetListView(ListAPIView):
     queryset = TabularDataset.objects.all()
     serializer_class = TabularDatasetSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = StandardResultsSetPagination
+    pagination_class = DatasetListPagination
     filterset_class = TabularDatasetFilter
 
 

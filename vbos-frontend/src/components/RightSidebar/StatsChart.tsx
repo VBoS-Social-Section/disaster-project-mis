@@ -1,11 +1,10 @@
-import { Chart, useChart } from "@chakra-ui/charts";
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
 import { Box } from "@chakra-ui/react";
-import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useAreaStore } from "@/store/area-store";
 import { TabularData } from "@/types/api";
 import { consolidateStats } from "@/utils/consolidateStats";
 import { getAttributes } from "@/utils/getAttributes";
-import { formatYAxisLabel } from "@/utils/formatCharts";
 import { chartColors } from "../colors";
 
 type StatsChartType = {
@@ -17,54 +16,68 @@ export function StatsChart({ stats, unit }: StatsChartType) {
   const { province, ac } = useAreaStore();
   const isAreaCouncilLevel = Boolean(ac);
 
-  const series = getAttributes(stats).map((i, index) => ({
-    name: i,
-    color: `${index < chartColors.length ? chartColors[index] : "yellow"}.solid`,
-    // Stack bars at province level, group them at area council level
-    stackId: isAreaCouncilLevel ? undefined : "a",
+  const consolidated = consolidateStats(stats, province ? "area_council" : "province");
+  const attributes = getAttributes(stats);
+
+  const categories = consolidated.map((d) => d.place);
+  const series = attributes.map((attr, index) => ({
+    name: attr.replace(/_/g, " "),
+    data: consolidated.map((d) => (d[attr] as number) ?? 0),
+    stack: isAreaCouncilLevel ? undefined : "a",
+    color: chartColors[index % chartColors.length] ?? chartColors[0],
   }));
-  const chart = useChart({
-    data: consolidateStats(stats, province ? "area_council" : "province"),
-    series: series,
-  });
+
+  const options: Highcharts.Options = {
+    chart: {
+      type: "column",
+      height: 320,
+      style: { fontFamily: "var(--chakra-fonts-body)" },
+    },
+    title: { text: undefined },
+    xAxis: {
+      categories,
+      labels: {
+        rotation: -45,
+        style: { fontSize: "10px" },
+      },
+      crosshair: true,
+    },
+    yAxis: {
+      title: unit ? { text: unit } : undefined,
+      labels: {
+        formatter: function () {
+          const v = this.value as number;
+          if (v >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
+          if (v >= 1e3) return `${(v / 1e3).toFixed(1)}K`;
+          return String(v);
+        },
+      },
+      gridLineDashStyle: "Dash",
+    },
+    tooltip: {
+      shared: true,
+      useHTML: true,
+    },
+    legend: {
+      align: "center",
+      verticalAlign: "bottom",
+      layout: "horizontal",
+      itemStyle: { fontSize: "11px" },
+      itemDistance: 16,
+    },
+    plotOptions: {
+      column: {
+        stacking: isAreaCouncilLevel ? undefined : "normal",
+        borderWidth: 0,
+      },
+    },
+    series: series as Highcharts.SeriesOptionsType[],
+    credits: { enabled: false },
+  };
 
   return (
-    <Box h="240px" minW={0} w="100%" mt={4} mb={12}>
-      <Chart.Root h="100%" w="100%" chart={chart}>
-      <BarChart data={chart.data}>
-        <CartesianGrid stroke={chart.color("border.muted")} vertical={false} />
-        <XAxis
-          axisLine={false}
-          tickLine={false}
-          dataKey={chart.key("place")}
-          angle={-45}
-          textAnchor="end"
-          interval={0}
-        />
-        <YAxis
-          axisLine={false}
-          tickLine={false}
-          type="number"
-          allowDecimals={true}
-          tickFormatter={(value: number) => String(formatYAxisLabel(value))}
-          label={unit ? { value: unit, angle: -90, position: "insideLeft" } : undefined}
-        />
-        <Tooltip
-          cursor={false}
-          animationDuration={100}
-          content={<Chart.Tooltip />}
-        />
-        {chart.series.map((item) => (
-          <Bar
-            key={item.name}
-            isAnimationActive={false}
-            dataKey={chart.key(item.name)}
-            fill={chart.color(item.color)}
-            stackId={item.stackId}
-          />
-        ))}
-      </BarChart>
-    </Chart.Root>
+    <Box minW={0} w="100%" mt={4} mb={4}>
+      <HighchartsReact highcharts={Highcharts} options={options} containerProps={{ style: { width: "100%" } }} />
     </Box>
   );
 }

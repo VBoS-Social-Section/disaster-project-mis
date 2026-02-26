@@ -6,6 +6,24 @@ All notable changes to the VBoS Management Information System project.
 
 ## [Unreleased] – 2026-02-24
 
+### Charts (Highcharts)
+
+- **Highcharts migration**: Replaced Recharts and Chakra Charts with Highcharts for all visualizations.
+- **StatsChart**: Stacked bar chart (province level) or grouped bars (area council level) with Highcharts.
+- **BottomDrawer time series**: Line chart with annual/monthly toggle using Highcharts.
+- **Color palette**: Sequential blue-to-green palette for charts (`colors.ts`).
+- **Dependencies**: Removed `@chakra-ui/charts` and `recharts`; added `highcharts` and `highcharts-react-official`.
+- **Vite**: Chunk split for `highcharts` instead of recharts.
+
+### Left Sidebar Performance
+
+- **Lazy-load datasets**: Datasets are fetched only when a cluster accordion is expanded.
+- **Cache dataset list views**: 15-minute `cache_page` on tabular, raster, vector, and pmtiles list endpoints.
+- **Single dataset endpoint**: `GET /api/v1/datasets/?cluster=<name>` returns all dataset types in one response.
+- **Higher page size**: `DatasetListPagination` (100/page, max 500) for dataset list views.
+
+---
+
 ### Documentation & Onboarding
 
 - **CONTRIBUTING.md**: Setup instructions, code conventions, pull request process.
@@ -44,7 +62,7 @@ All notable changes to the VBoS Management Information System project.
 
 - **React Query cache tuning** (`Providers.tsx`): `staleTime` 5 min, `gcTime` 10 min to cut down refetches.
 - **Lazy-loaded Map** (`App.tsx`): Map component loaded with `React.lazy()` for quicker initial paint after login.
-- **Accordion `lazyMount`** (`LeftSidebar`): Cluster dataset fetches happen only when a cluster accordion is expanded.
+- **Left sidebar lazy-loading** (see Left Sidebar Performance below): Cluster dataset fetches only when expanded.
 - **Indicator loading**:
   - Backend: `DataResultsSetPagination` (1000/page, max 5000) for tabular data.
   - Backend: `select_related("province", "area_council")` on `TabularDatasetDataView` to avoid N+1 queries.

@@ -5,8 +5,12 @@ from . import views
 app_name = "datasets"
 
 urlpatterns = [
-    # raster
     path("cluster/", views.ClusterListView.as_view(), name="cluster-list"),
+    path(
+        "datasets/",
+        views.ClusterDatasetsView.as_view(),
+        name="cluster-datasets",
+    ),
     path("provinces/", views.ProvinceListView.as_view(), name="province-list"),
     path(
         "provinces/<str:province>/area-councils/",

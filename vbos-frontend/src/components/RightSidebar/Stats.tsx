@@ -172,7 +172,7 @@ export function Stats() {
         ) : (
           <Box display="block">
             {/* Stats display */}
-            <HStack gap="3" width="100%" p={2} overflow="auto">
+            <HStack gap="3" width="100%" p={2} overflow="visible">
               {/* Only show top 4 stat items */}
               {sortedAttributes.slice(0, 4).map((attr: string) => (
                 <Stat.Root

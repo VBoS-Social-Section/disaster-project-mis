@@ -16,11 +16,12 @@ function useClusters() {
   };
 }
 
-function useClusterDatasets(cluster: string) {
+function useClusterDatasets(cluster: string, options?: { enabled?: boolean }) {
   const { setAllDatasets } = useLayerStore();
   const { isPending, error, data } = useQuery({
     queryKey: ["datasets", cluster],
     queryFn: () => API.getDatasets(cluster),
+    enabled: options?.enabled ?? true,
   });
 
   useEffect(() => {

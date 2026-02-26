@@ -54,7 +54,15 @@ export const useLayerStore = create<LayersState>((set, get) => ({
 
   setAllDatasets: (datasets: Dataset[]) => {
     const { allDatasets } = get();
-    set({ allDatasets: [...allDatasets, ...datasets] });
+    const existingIds = new Set(
+      allDatasets.map((d) => `${d.dataType[0]}${d.id}`),
+    );
+    const newDatasets = datasets.filter(
+      (d) => !existingIds.has(`${d.dataType[0]}${d.id}`),
+    );
+    if (newDatasets.length > 0) {
+      set({ allDatasets: [...allDatasets, ...newDatasets] });
+    }
   },
 
   setTabularLayerData: (data: TabularData[]) => {

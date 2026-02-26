@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Chart, useChart } from "@chakra-ui/charts";
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
 import {
   Accordion,
   Box,
@@ -8,14 +9,6 @@ import {
   Heading,
   Skeleton,
 } from "@chakra-ui/react";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { Dataset } from "@/types/api";
 import { useLayerStore } from "@/store/layer-store";
 import { getAttributes } from "@/utils/getAttributes";
@@ -23,7 +16,6 @@ import {
   consolidateTimeSeries,
   hasMonthlyVariation,
 } from "@/utils/consolidateTimeSeries";
-import { formatYAxisLabel } from "@/utils/formatCharts";
 import { useAreaStore } from "@/store/area-store";
 import { useUiStore } from "@/store/ui-store";
 import { chartColors } from "../colors";
@@ -64,17 +56,54 @@ const BottomDrawer = () => {
     tabularLayerData,
     showMonthlyView
   );
-  const series = getAttributes(tabularLayerData).map((i, index) => ({
-    name: i,
-    color: `${
-      index < chartColors.length ? chartColors[index] : "yellow"
-    }.solid`,
+  const attributes = getAttributes(tabularLayerData);
+  const xKey = showMonthlyView ? "month" : "year";
+  const categories = timeSeriesData.map((d) => String(d[xKey]));
+  const series = attributes.map((attr, index) => ({
+    name: attr.replace(/_/g, " "),
+    data: timeSeriesData.map((d) => (d[attr] as number) ?? 0),
+    color: chartColors[index % chartColors.length] ?? chartColors[0],
   }));
 
-  const chart = useChart({
-    data: timeSeriesData,
-    series: series,
-  });
+  const chartOptions: Highcharts.Options = {
+    chart: {
+      type: "line",
+      height: 200,
+      style: { fontFamily: "var(--chakra-fonts-body)" },
+    },
+    title: { text: undefined },
+    xAxis: {
+      categories,
+      labels: { style: { fontSize: "10px" } },
+      crosshair: true,
+    },
+    yAxis: {
+      title: formattedUnit ? { text: formattedUnit } : undefined,
+      labels: {
+        formatter: function () {
+          const v = this.value as number;
+          if (v >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
+          if (v >= 1e3) return `${(v / 1e3).toFixed(1)}K`;
+          return String(v);
+        },
+      },
+      gridLineDashStyle: "Dash",
+    },
+    tooltip: { shared: true },
+    legend: {
+      align: "center",
+      verticalAlign: "bottom",
+      itemStyle: { fontSize: "11px" },
+    },
+    plotOptions: {
+      line: {
+        marker: { radius: 4 },
+        lineWidth: 2,
+      },
+    },
+    series: series as Highcharts.SeriesOptionsType[],
+    credits: { enabled: false },
+  };
 
   // Check if data is loading
   const isLoading =
@@ -153,59 +182,14 @@ const BottomDrawer = () => {
                   )}
                 </Box>
               )}
-              {isTimeSeriesOpen && (
+              {isTimeSeriesOpen && timeSeriesData.length > 0 && (
               <Skeleton height="100%" loading={isLoading}>
                 <Box minH="200px" w="100%">
-                <Chart.Root maxH="200px" chart={chart}>
-                  <LineChart data={chart.data}>
-                    <CartesianGrid
-                      stroke={chart.color("border.muted")}
-                      vertical={false}
-                    />
-                    <XAxis
-                      axisLine={false}
-                      tickLine={false}
-                      dataKey={chart.key(showMonthlyView ? "month" : "year")}
-                      stroke={chart.color("border")}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tickMargin={10}
-                      type="number"
-                      allowDecimals={true}
-                      tickFormatter={(value: number) =>
-                        String(formatYAxisLabel(value))}
-                      label={
-                        layerMetadata?.unit
-                          ? {
-                            value: formattedUnit,
-                            angle: -90,
-                            position: "insideLeft",
-                            offset: 10,
-                          }
-                          : undefined
-                      }
-                      stroke={chart.color("border")}
-                    />
-                    <Tooltip
-                      animationDuration={100}
-                      cursor={false}
-                      content={<Chart.Tooltip />}
-                    />
-                    {chart.series.map((item) => (
-                      <Line
-                        key={item.name}
-                        isAnimationActive={false}
-                        dataKey={chart.key(item.name)}
-                        stroke={chart.color(item.color)}
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                        type="monotone"
-                      />
-                    ))}
-                  </LineChart>
-                </Chart.Root>
+                  <HighchartsReact
+                    highcharts={Highcharts}
+                    options={chartOptions}
+                    containerProps={{ style: { width: "100%" } }}
+                  />
                 </Box>
               </Skeleton>
               )}
