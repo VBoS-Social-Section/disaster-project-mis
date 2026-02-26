@@ -29,6 +29,7 @@ whitenoise
 django-admin-sortable2==2.2.6
 
 # Developer Tools
+python-dotenv==1.0.1
 ipdb==0.13.13
 ipython==8.30.0
 mkdocs==1.6.1

@@ -1,6 +1,8 @@
 # VM Server Deployment Guide
 
-This guide covers migrating the Disaster Project MIS (VBoS) to your VM server (e.g. `vbosadmin@10.252.0.158`).
+This guide covers migrating the Disaster Project MIS (VBoS) to your VM server (e.g. `vbosadmin@10.252.0.158`) using **Docker Compose**.
+
+For a **manual setup without Docker** (PostgreSQL, Python, Node.js installed directly), see [DEPLOYMENT_MANUAL.md](DEPLOYMENT_MANUAL.md).
 
 ## Prerequisites on the VM
 
