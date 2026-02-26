@@ -9,7 +9,11 @@ from django.contrib.gis.geos.geometry import GEOSGeometry
 from django.shortcuts import redirect, render, reverse
 from django.urls import path
 
-from .forms import CSVUploadForm, GeoJSONUploadForm
+from .forms import (
+    CSVImportOptionsForm,
+    FileDatasetFormSet,
+    GeoJSONUploadForm,
+)
 from .models import (
     AreaCouncil,
     Cluster,
@@ -204,64 +208,85 @@ class TabularItemAdmin(admin.GISModelAdmin):
 
     def import_file(self, request):
         if request.method == "POST":
-            form = CSVUploadForm(request.POST, request.FILES)
-            if form.is_valid():
-                uploaded_file = request.FILES["file"]
-
-                # Check if the file is a CSV
-                if not uploaded_file.name.endswith(".csv"):
-                    messages.error(request, "Please upload a CSV file")
-                    return redirect("admin:datasets_tabularitem_import_file")
-
-                try:
-                    decoded_file = TextIOWrapper(uploaded_file.file, encoding="utf-8")
-                    reader = csv.DictReader(decoded_file)
-
-                    created_count = 0
-                    error_count = 0
+            formset = FileDatasetFormSet(request.POST, request.FILES)
+            options_form = CSVImportOptionsForm(request.POST)
+            if formset.is_valid() and options_form.is_valid():
+                pairs = [
+                    (cd["file"], cd["dataset"])
+                    for cd in formset.cleaned_data
+                    if cd.get("file") and cd.get("dataset")
+                ]
+                if not pairs:
+                    messages.error(
+                        request,
+                        "Please add at least one file and select a dataset for it.",
+                    )
+                else:
+                    total_created = 0
+                    total_errors = 0
                     first_error = None
-
-                    if form.cleaned_data.get("format_style") == "wide":
-                        year = form.cleaned_data.get("year") or 2024
-                        created_count, error_count, first_error = import_wide_format_csv(
-                            reader,
-                            form.cleaned_data["dataset"],
-                            year,
-                        )
-                    else:
-                        for row in reader:
-                            try:
-                                csv_row = CSVRow(row)
-                                create_tabular_item(
-                                    csv_row, form.cleaned_data["dataset"]
+                    format_style = options_form.cleaned_data.get("format_style", "long")
+                    year = options_form.cleaned_data.get("year") or 2024
+                    for uploaded_file, dataset in pairs:
+                        if not uploaded_file.name.endswith(".csv"):
+                            messages.error(
+                                request,
+                                f"'{uploaded_file.name}' is not a CSV file. "
+                                "Only CSV files are accepted.",
+                            )
+                            continue
+                        try:
+                            decoded_file = TextIOWrapper(
+                                uploaded_file.file, encoding="utf-8"
+                            )
+                            reader = csv.DictReader(decoded_file)
+                            created_count = 0
+                            error_count = 0
+                            if format_style == "wide":
+                                created_count, error_count, err = (
+                                    import_wide_format_csv(reader, dataset, year)
                                 )
-                                created_count += 1
-                            except Exception as e:
-                                error_count += 1
-                                if first_error is None:
-                                    first_error = str(e)
-
-                    if created_count > 0:
+                                if err and first_error is None:
+                                    first_error = err
+                            else:
+                                for row in reader:
+                                    try:
+                                        csv_row = CSVRow(row)
+                                        create_tabular_item(csv_row, dataset)
+                                        created_count += 1
+                                    except Exception as e:
+                                        error_count += 1
+                                        if first_error is None:
+                                            first_error = str(e)
+                            total_created += created_count
+                            total_errors += error_count
+                        except Exception as e:
+                            messages.error(
+                                request,
+                                f"Error processing '{uploaded_file.name}': {str(e)}",
+                            )
+                    if total_created > 0:
                         messages.success(
-                            request, f"Successfully created {created_count} new records"
+                            request,
+                            f"Successfully created {total_created} new records",
                         )
-
-                    if error_count > 0:
-                        msg = f"Failed to create {error_count} items."
+                    if total_errors > 0:
+                        msg = f"Failed to create {total_errors} items."
                         if first_error:
                             msg += f" First error: {first_error}"
                         messages.warning(request, msg)
-
-                except Exception as e:
-                    messages.error(request, f"Error processing CSV: {str(e)}")
-
-                return redirect("admin:datasets_tabularitem_import_file")
+                    if pairs:
+                        return redirect(
+                            "admin:datasets_tabularitem_import_file"
+                        )
         else:
-            form = CSVUploadForm()
+            formset = FileDatasetFormSet()
+            options_form = CSVImportOptionsForm()
 
         context = {
-            "form": form,
+            "formset": formset,
+            "options_form": options_form,
             "opts": self.model._meta,
-            "title": "Import CSV File",
+            "title": "Import CSV Files",
         }
-        return render(request, "admin/file_upload.html", context)
+        return render(request, "admin/csv_import.html", context)

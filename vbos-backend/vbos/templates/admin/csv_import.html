@@ -1,0 +1,98 @@
+<!-- templates/admin/csv_import.html -->
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block content %}
+<div id="content-main">
+    <form method="post" enctype="multipart/form-data" id="csv-import-form">
+        {% csrf_token %}
+        {{ formset.management_form }}
+
+        <div class="form-row">
+            <h3>{% trans "File–dataset mapping" %}</h3>
+            <p class="help">{% trans "Add one or more files. For each file, select the dataset to import into." %}</p>
+        </div>
+
+        <div id="formset-rows">
+            {% for form in formset %}
+            <div class="form-row formset-row" style="margin-bottom: 1em; padding: 0.75em; border: 1px solid #ddd; border-radius: 4px;">
+                <strong>{% trans "Row" %} {{ forloop.counter }}</strong>
+                <div style="display: flex; gap: 1em; flex-wrap: wrap; margin-top: 0.5em;">
+                    <div>
+                        {{ form.file.label_tag }}
+                        {{ form.file }}
+                        {% if form.file.errors %}<div class="error">{{ form.file.errors }}</div>{% endif %}
+                    </div>
+                    <div>
+                        {{ form.dataset.label_tag }}
+                        {{ form.dataset }}
+                        {% if form.dataset.errors %}<div class="error">{{ form.dataset.errors }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="form-row" style="margin-bottom: 1em;">
+            <button type="button" id="add-row" class="button">{% trans "Add another file" %}</button>
+        </div>
+
+        <div class="form-row" style="margin-top: 1.5em; padding: 0.75em; background: #f8f8f8; border-radius: 4px;">
+            <h4>{% trans "Import options (apply to all files)" %}</h4>
+            <div style="display: flex; gap: 2em; flex-wrap: wrap; margin-top: 0.5em;">
+                <div>
+                    {{ options_form.format_style.label_tag }}
+                    {{ options_form.format_style }}
+                    {% if options_form.format_style.help_text %}
+                    <p class="help">{{ options_form.format_style.help_text }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    {{ options_form.year.label_tag }}
+                    {{ options_form.year }}
+                    {% if options_form.year.help_text %}
+                    <p class="help">{{ options_form.year.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="submit-row" style="margin-top: 1.5em;">
+            <input type="submit" value="{% trans 'Import Files' %}" class="default" />
+        </div>
+    </form>
+
+    {% if formset.errors %}
+    <div class="errornote">{% trans "Please correct the errors below." %}</div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addBtn = document.getElementById('add-row');
+    const rowsContainer = document.getElementById('formset-rows');
+    const totalFormsInput = document.querySelector('[name$="-TOTAL_FORMS"]');
+
+    addBtn.addEventListener('click', function() {
+        const template = rowsContainer.querySelector('.formset-row:last-of-type');
+        if (!template) return;
+        const nextIndex = parseInt(totalFormsInput.value, 10);
+        const newRow = template.cloneNode(true);
+        newRow.querySelector('strong').textContent = 'Row ' + (nextIndex + 1);
+        const inputs = newRow.querySelectorAll('input, select');
+        inputs.forEach(function(inp) {
+            const name = inp.getAttribute('name');
+            if (name) {
+                inp.setAttribute('name', name.replace(/^form-\d+-/, 'form-' + nextIndex + '-'));
+                const id = inp.getAttribute('id');
+                if (id) inp.setAttribute('id', id.replace(/form-\d+-/, 'form-' + nextIndex + '-'));
+            }
+            if (inp.type === 'file') inp.value = '';
+            if (inp.tagName === 'SELECT') inp.selectedIndex = 0;
+        });
+        rowsContainer.appendChild(newRow);
+        totalFormsInput.value = nextIndex + 1;
+    });
+});
+</script>
+{% endblock %}
