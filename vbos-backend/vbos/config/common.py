@@ -58,14 +58,16 @@ class Common(Configuration):
 
     ADMINS = (("Author", "info@developmentseed.org"),)
 
-    # Postgres
+    # Postgres – use DJANGO_DB_URL (config reads DATABASE_URL by default)
+    _db_url = os.getenv(
+        "DJANGO_DB_URL",
+        os.getenv("DATABASE_URL", "postgis://postgres:postgres@postgres:5432/vbos"),
+    )
     DATABASES = {
-        "default": dj_database_url.config(
-            default=os.getenv(
-                "DJANGO_DB_URL", "postgis://postgres:postgres@postgres:5432/vbos"
-            ),
-            conn_max_age=int(os.getenv("POSTGRES_CONN_MAX_AGE", 600)),
-        )
+        "default": {
+            **dj_database_url.parse(_db_url),
+            "CONN_MAX_AGE": int(os.getenv("POSTGRES_CONN_MAX_AGE", 600)),
+        }
     }
 
     # General
