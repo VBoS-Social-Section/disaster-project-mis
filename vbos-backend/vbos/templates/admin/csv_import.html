@@ -1,98 +1,220 @@
-<!-- templates/admin/csv_import.html -->
+<!-- templates/admin/csv_import.html - Multi-select CSV import with progress -->
 {% extends "admin/base_site.html" %}
 {% load i18n admin_urls static %}
 
 {% block content %}
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 <div id="content-main">
-    <form method="post" enctype="multipart/form-data" id="csv-import-form">
-        {% csrf_token %}
-        {{ formset.management_form }}
+    <div id="step-select" class="import-step">
+        <h3>{% trans "Step 1: Select CSV files" %}</h3>
+        <p class="help">{% trans "Select multiple CSV files at once." %}</p>
+        <label class="button" for="csv-file-input">{% trans "Select CSV files..." %}</label>
+        <input type="file" id="csv-file-input" accept=".csv" multiple style="display:none;">
+    </div>
 
-        <div class="form-row">
-            <h3>{% trans "File–dataset mapping" %}</h3>
-            <p class="help">{% trans "Add one or more files. For each file, select the dataset to import into." %}</p>
+    <div id="step-mapping" class="import-step" style="display:none;">
+        <h3>{% trans "Step 2: Map files to datasets" %}</h3>
+        <p class="help">{% trans "Each file is auto-matched to a dataset where possible. Adjust if needed." %}</p>
+        <div id="mapping-table-wrap" style="overflow-x:auto; max-height:400px; overflow-y:auto;">
+            <table class="mapping-table" style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f0f0f0;">
+                        <th style="padding:8px; text-align:left;">{% trans "File" %}</th>
+                        <th style="padding:8px; text-align:left;">{% trans "Dataset" %}</th>
+                        <th style="width:40px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="mapping-tbody"></tbody>
+            </table>
         </div>
+        <button type="button" id="clear-files" class="button" style="margin-top:0.5em;">{% trans "Clear all" %}</button>
+    </div>
 
-        <div id="formset-rows">
-            {% for form in formset %}
-            <div class="form-row formset-row" style="margin-bottom: 1em; padding: 0.75em; border: 1px solid #ddd; border-radius: 4px;">
-                <strong>{% trans "Row" %} {{ forloop.counter }}</strong>
-                <div style="display: flex; gap: 1em; flex-wrap: wrap; margin-top: 0.5em;">
-                    <div>
-                        {{ form.file.label_tag }}
-                        {{ form.file }}
-                        {% if form.file.errors %}<div class="error">{{ form.file.errors }}</div>{% endif %}
-                    </div>
-                    <div>
-                        {{ form.dataset.label_tag }}
-                        {{ form.dataset }}
-                        {% if form.dataset.errors %}<div class="error">{{ form.dataset.errors }}</div>{% endif %}
-                    </div>
-                </div>
+    <div id="step-options" class="import-step" style="display:none;">
+        <h3>{% trans "Step 3: Import options" %}</h3>
+        <div style="display:flex; gap:2em; flex-wrap:wrap;">
+            <div>
+                <label for="format-style">{% trans "CSV format:" %}</label>
+                <select id="format-style">
+                    <option value="long">{% trans "Long format (Year, Attribute, Value per row)" %}</option>
+                    <option value="wide">{% trans "Wide format (Region per row, metrics as columns)" %}</option>
+                </select>
+                <p class="help">{% trans "Wide format: first column = Region, other columns = attribute names with values" %}</p>
             </div>
-            {% endfor %}
-        </div>
-
-        <div class="form-row" style="margin-bottom: 1em;">
-            <button type="button" id="add-row" class="button">{% trans "Add another file" %}</button>
-        </div>
-
-        <div class="form-row" style="margin-top: 1.5em; padding: 0.75em; background: #f8f8f8; border-radius: 4px;">
-            <h4>{% trans "Import options (apply to all files)" %}</h4>
-            <div style="display: flex; gap: 2em; flex-wrap: wrap; margin-top: 0.5em;">
-                <div>
-                    {{ options_form.format_style.label_tag }}
-                    {{ options_form.format_style }}
-                    {% if options_form.format_style.help_text %}
-                    <p class="help">{{ options_form.format_style.help_text }}</p>
-                    {% endif %}
-                </div>
-                <div>
-                    {{ options_form.year.label_tag }}
-                    {{ options_form.year }}
-                    {% if options_form.year.help_text %}
-                    <p class="help">{{ options_form.year.help_text }}</p>
-                    {% endif %}
-                </div>
+            <div>
+                <label for="import-year">{% trans "Year (for wide format):" %}</label>
+                <input type="number" id="import-year" value="2024" min="1900" max="2100" style="width:80px;">
+                <p class="help">{% trans "Used when CSV has no Year column (wide format)" %}</p>
             </div>
         </div>
+    </div>
 
-        <div class="submit-row" style="margin-top: 1.5em;">
-            <input type="submit" value="{% trans 'Import Files' %}" class="default" />
+    <div id="step-submit" class="import-step" style="display:none; margin-top:1.5em;">
+        <button type="button" id="import-btn" class="default">{% trans "Import Files" %}</button>
+    </div>
+
+    <div id="progress-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:white; padding:2em; border-radius:8px; min-width:320px; text-align:center;">
+            <p id="progress-text">{% trans "Uploading..." %} 0%</p>
+            <div style="height:20px; background:#eee; border-radius:4px; margin-top:1em; overflow:hidden;">
+                <div id="progress-bar" style="height:100%; background:#417690; width:0%; transition:width 0.2s;"></div>
+            </div>
+            <p id="progress-detail" style="margin-top:0.5em; font-size:0.9em; color:#666;"></p>
         </div>
-    </form>
-
-    {% if formset.errors %}
-    <div class="errornote">{% trans "Please correct the errors below." %}</div>
-    {% endif %}
+    </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const addBtn = document.getElementById('add-row');
-    const rowsContainer = document.getElementById('formset-rows');
-    const totalFormsInput = document.querySelector('[name$="-TOTAL_FORMS"]');
+(function() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    const datasets = {{ datasets_json|safe }};
+    const uploadUrl = '{{ upload_url }}';
 
-    addBtn.addEventListener('click', function() {
-        const template = rowsContainer.querySelector('.formset-row:last-of-type');
-        if (!template) return;
-        const nextIndex = parseInt(totalFormsInput.value, 10);
-        const newRow = template.cloneNode(true);
-        newRow.querySelector('strong').textContent = 'Row ' + (nextIndex + 1);
-        const inputs = newRow.querySelectorAll('input, select');
-        inputs.forEach(function(inp) {
-            const name = inp.getAttribute('name');
-            if (name) {
-                inp.setAttribute('name', name.replace(/^form-\d+-/, 'form-' + nextIndex + '-'));
-                const id = inp.getAttribute('id');
-                if (id) inp.setAttribute('id', id.replace(/form-\d+-/, 'form-' + nextIndex + '-'));
-            }
-            if (inp.type === 'file') inp.value = '';
-            if (inp.tagName === 'SELECT') inp.selectedIndex = 0;
-        });
-        rowsContainer.appendChild(newRow);
-        totalFormsInput.value = nextIndex + 1;
+    function filenameToSearchKey(name) {
+        return name.replace(/\.csv$/i, '').replace(/_/g, ' ').toLowerCase().trim();
+    }
+
+    function datasetNameToSearchKey(str) {
+        return (str || '').toLowerCase().trim();
+    }
+
+    function suggestDataset(filename) {
+        const key = filenameToSearchKey(filename);
+        if (!key) return null;
+        for (const d of datasets) {
+            const dKey = datasetNameToSearchKey(d.name);
+            if (dKey && (dKey.includes(key) || key.includes(dKey))) return d.id;
+        }
+        for (const d of datasets) {
+            const dKey = datasetNameToSearchKey(d.name);
+            if (dKey && dKey.split(/[\s\-_]+/).some(part => part.length > 2 && key.includes(part))) return d.id;
+        }
+        return null;
+    }
+
+    let selectedFiles = [];
+
+    const fileInput = document.getElementById('csv-file-input');
+    const stepSelect = document.getElementById('step-select');
+    const stepMapping = document.getElementById('step-mapping');
+    const stepOptions = document.getElementById('step-options');
+    const stepSubmit = document.getElementById('step-submit');
+    const tbody = document.getElementById('mapping-tbody');
+    const clearBtn = document.getElementById('clear-files');
+    const importBtn = document.getElementById('import-btn');
+    const progressModal = document.getElementById('progress-modal');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const progressDetail = document.getElementById('progress-detail');
+
+    fileInput.addEventListener('change', function() {
+        const files = Array.from(this.files).filter(f => f.name.toLowerCase().endsWith('.csv'));
+        selectedFiles = files;
+        renderMapping();
+        stepMapping.style.display = 'block';
+        stepOptions.style.display = 'block';
+        stepSubmit.style.display = 'block';
     });
-});
+
+    function renderMapping() {
+        tbody.innerHTML = '';
+        selectedFiles.forEach((file, i) => {
+            const tr = document.createElement('tr');
+            const suggested = suggestDataset(file.name);
+            tr.innerHTML = `
+                <td style="padding:8px;">${escapeHtml(file.name)}</td>
+                <td style="padding:8px;">
+                    <select class="dataset-select" data-index="${i}">
+                        <option value="">{% trans "Select a dataset" %}</option>
+                        ${datasets.map(d => `<option value="${d.id}" ${suggested === d.id ? 'selected' : ''}>${escapeHtml(d.display)}</option>`).join('')}
+                    </select>
+                </td>
+                <td><button type="button" class="remove-row" data-index="${i}">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        tbody.querySelectorAll('.remove-row').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const i = parseInt(this.dataset.index, 10);
+                selectedFiles.splice(i, 1);
+                renderMapping();
+            });
+        });
+    }
+
+    function escapeHtml(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    clearBtn.addEventListener('click', function() {
+        selectedFiles = [];
+        fileInput.value = '';
+        renderMapping();
+        stepMapping.style.display = 'none';
+        stepOptions.style.display = 'none';
+        stepSubmit.style.display = 'none';
+    });
+
+    importBtn.addEventListener('click', function() {
+        const selects = tbody.querySelectorAll('.dataset-select');
+        const pairs = [];
+        let allMapped = true;
+        for (let i = 0; i < selectedFiles.length; i++) {
+            const datasetId = selects[i]?.value;
+            if (!datasetId) allMapped = false;
+            pairs.push({ file: selectedFiles[i], datasetId });
+        }
+        if (!allMapped) {
+            alert('{% trans "Please select a dataset for every file." %}');
+            return;
+        }
+        doUpload(pairs);
+    });
+
+    function doUpload(pairs) {
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', csrfToken);
+        formData.append('format_style', document.getElementById('format-style').value);
+        formData.append('year', document.getElementById('import-year').value);
+        formData.append('file_count', String(pairs.length));
+        pairs.forEach((p, i) => {
+            formData.append('file_' + i, p.file);
+            formData.append('dataset_' + i, p.datasetId);
+        });
+
+        progressModal.style.display = 'flex';
+        progressBar.style.width = '0%';
+        progressText.textContent = '{% trans "Uploading..." %} 0%';
+        progressDetail.textContent = '';
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', uploadUrl);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                const pct = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = pct + '%';
+                progressText.textContent = '{% trans "Uploading..." %} ' + pct + '%';
+                progressDetail.textContent = e.loaded + ' / ' + e.total + ' bytes';
+            }
+        };
+
+        xhr.onload = function() {
+            progressBar.style.width = '100%';
+            progressText.textContent = '{% trans "Complete. Redirecting..." %}';
+            window.location.href = uploadUrl;
+        };
+
+        xhr.onerror = function() {
+            progressDetail.textContent = '{% trans "Error" %}';
+            setTimeout(() => { progressModal.style.display = 'none'; }, 2000);
+        };
+
+        xhr.send(formData);
+    }
+})();
 </script>
 {% endblock %}
