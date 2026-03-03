@@ -1,3 +1,3 @@
-import { Tooltip } from "./Tooltip";
+import { TooltipCompat as Tooltip, TooltipProvider } from "./tooltip";
 
-export { Tooltip };
+export { Tooltip, TooltipProvider };

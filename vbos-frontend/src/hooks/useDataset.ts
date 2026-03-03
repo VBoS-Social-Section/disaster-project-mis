@@ -14,6 +14,7 @@ function useDataset(
       new URLSearchParams(filters).toString(),
     ],
     queryFn: () => API.getDatasetData(dataType, id, filters),
+    staleTime: 10 * 60 * 1000, // 10 min – dataset data rarely changes mid-session
   });
 
   return {

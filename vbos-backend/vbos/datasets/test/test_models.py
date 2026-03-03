@@ -23,7 +23,7 @@ class TestRasterModels(TestCase):
         )
         self.dataset = RasterDataset.objects.create(
             name="Rainfall",
-            cluster=Cluster.objects.create(name="Environment"),
+            cluster=None,
             filename_id="rainfall",
         )
 
@@ -55,38 +55,31 @@ class TestRasterModels(TestCase):
 
         RasterFile.objects.all().delete()
 
-    def test_unique_name_type_cluster(self):
-        self.cluster = Cluster.objects.create(name="Administrative")
+    def test_unique_name_type(self):
+        """Raster (name, type) is unique globally; cluster is optional."""
         r_2 = RasterFile.objects.create(
             name="Population Density COG", file="raster/pop.tiff"
         )
         RasterDataset.objects.create(
             name="Population",
-            cluster=self.cluster,
+            cluster=None,
             source="Government",
             filename_id="population_baseline",
             titiler_url_params="rescale=-0.3,0.3",
         )
         RasterDataset.objects.create(
             name="Population",
-            cluster=self.cluster,
+            cluster=None,
             source="Government",
             filename_id="population_damage",
-            type="estimated_damage",
-        )
-        RasterDataset.objects.create(
-            name="Population",
-            cluster=Cluster.objects.create(name="Education"),
-            source="Government",
-            filename_id="population_education_damage",
             type="estimated_damage",
         )
         with self.assertRaises(IntegrityError):
             RasterDataset.objects.create(
                 name="Population",
-                cluster=self.cluster,
+                cluster=None,
                 source="Government",
-                filename_id="population_baseline",
+                filename_id="population_baseline_dup",
             )
 
 

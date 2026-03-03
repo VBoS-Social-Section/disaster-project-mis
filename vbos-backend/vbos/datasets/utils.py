@@ -47,7 +47,7 @@ class GeoJSONProperties:
                 break
             except KeyError:
                 pass
-        return value
+        return value if value is not None else ""
 
     def clean_properties(self):
         empty_keys = [

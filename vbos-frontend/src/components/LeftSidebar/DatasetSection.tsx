@@ -1,8 +1,13 @@
-import { Accordion, HStack, Status } from "@chakra-ui/react";
+import {
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { LayerSwitch } from "./LayerSwitch";
 import { Dataset } from "@/types/api";
 import { DATASET_TYPES } from "@/utils/datasetTypes";
 import { useActiveLayerCount } from "@/hooks/useActiveLayerCount";
+import { cn } from "@/lib/utils";
 
 type DatasetSectionProps = {
   title:
@@ -14,39 +19,39 @@ type DatasetSectionProps = {
 };
 
 export function DatasetSection({ title, datasets }: DatasetSectionProps) {
-  // Check if any layer in this section is active
   const activeLayerCount = useActiveLayerCount(datasets);
 
   return (
-    <Accordion.Item key={title} value={title}>
-      <Accordion.ItemTrigger
-        cursor="pointer"
-        px={4}
-        py={1}
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        fontWeight="normal"
-        fontSize="sm"
+    <AccordionItem
+      value={title}
+      className={cn(
+        "rounded-lg border-0 bg-muted/30",
+        "data-[state=open]:bg-muted/50",
+      )}
+    >
+      <AccordionTrigger
+        className={cn(
+          "px-3 py-2 text-sm font-normal [&>svg]:shrink-0 [&>svg]:transition-transform [&>svg]:duration-200",
+          "hover:no-underline hover:bg-muted/40",
+          "rounded-md",
+        )}
       >
-        <HStack gap={2}>
-          {DATASET_TYPES[title]}
+        <span className="flex items-center gap-2">
+          <span>{DATASET_TYPES[title]}</span>
           {activeLayerCount > 0 && (
-            <Status.Root size="sm">
-              <Status.Indicator colorPalette="blue" />
-            </Status.Root>
+            <span
+              className={cn(
+                "shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary",
+                "text-primary",
+              )}
+            >
+              {activeLayerCount}
+            </span>
           )}
-        </HStack>
-        <Accordion.ItemIndicator />
-      </Accordion.ItemTrigger>
-      <Accordion.ItemContent>
-        <Accordion.ItemBody
-          px={4}
-          pt={0}
-          display="flex"
-          flexDirection="column"
-          gap={1}
-        >
+        </span>
+      </AccordionTrigger>
+      <AccordionContent>
+        <div className="flex flex-col gap-1.5 px-3 pb-2 pt-0">
           {datasets.map((dataset) => (
             <LayerSwitch
               key={dataset.id}
@@ -55,8 +60,8 @@ export function DatasetSection({ title, datasets }: DatasetSectionProps) {
               title={dataset.name}
             />
           ))}
-        </Accordion.ItemBody>
-      </Accordion.ItemContent>
-    </Accordion.Item>
+        </div>
+      </AccordionContent>
+    </AccordionItem>
   );
 }

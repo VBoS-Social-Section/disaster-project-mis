@@ -1,78 +1,57 @@
+/**
+ * Context-aware right panel. Content adapts to user selection:
+ * - Raster → Legend + opacity
+ * - Tabular → Charts + KPIs
+ * - Feature → Drill-down insights
+ * - Climate → Land accounts
+ */
 import { Sidebar } from "../Sidebar";
-import { Accordion, Box, Button } from "@chakra-ui/react";
-import { AreaSelect } from "./AreaSelect";
-import { SidebarSectionHeading } from "../SidebarSectionHeading";
+import { Button } from "@/components/ui/button";
+import { Tooltip } from "@/components/ui";
 import { LuDownload } from "react-icons/lu";
-import { DateSelect } from "./DateSelect";
-import { Stats } from "./Stats";
+import { AreaSelect } from "./AreaSelect";
+import { YearSelect } from "./YearSelect";
+import { ContextPanelContent } from "../ContextPanel/ContextPanelContent";
 import { DownloadDataDialog } from "./DownloadDataDialog";
 import { useState } from "react";
-import { useLayerStore } from "@/store/layer-store";
+import { usePanelContext } from "@/hooks/usePanelContext";
+import { useViewStore } from "@/store/view-store";
 
 const RightSidebar = () => {
   const [downloadDialogIsOpen, setDownloadDialogIsOpen] = useState(false);
-  const { layers } = useLayerStore();
+  const { context, hasActiveLayers } = usePanelContext();
+  const scenarioId = useViewStore((s) => s.scenarioId);
 
-  // Check if there are any active layers
-  const hasActiveLayers = layers.length > 0;
-
-  const handleDownload = () => {
-    setDownloadDialogIsOpen(true);
-  };
+  const hasRelevantContent = context !== "empty";
 
   return (
-    <Sidebar direction="right" title="Analysis">
-      <Box
-        px={6}
-        py={2}
-        borderBottom="1px solid"
-        borderColor="border.emphasized"
-      >
+    <Sidebar
+      direction="right"
+      title="Context"
+      collapseWhen={!hasRelevantContent}
+    >
+      <div className="border-b border-border bg-card px-5 py-4 md:px-6 md:py-4">
         <AreaSelect />
-      </Box>
-      <Box flex="1" overflow="scroll">
-        <Accordion.Root multiple defaultValue={["0"]}>
-          <Accordion.Item value="0">
-            <Accordion.ItemTrigger
-              cursor="pointer"
-              px={6}
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <SidebarSectionHeading>Selected Indicators</SidebarSectionHeading>
-              <Accordion.ItemIndicator />
-            </Accordion.ItemTrigger>
-            <Accordion.ItemContent>
-              <Accordion.ItemBody px={6}>
-                <DateSelect />
-                <Stats />
-              </Accordion.ItemBody>
-            </Accordion.ItemContent>
-          </Accordion.Item>
-        </Accordion.Root>
-      </Box>
-      <Box
-        borderTop="1px solid"
-        borderColor="border.emphasized"
-        px={6}
-        py={2}
-        mt="auto"
-        position="sticky"
-        bottom="0"
-        bg="bg"
-      >
-        <Button
-          w="full"
-          colorPalette="blue"
-          variant="outline"
-          onClick={handleDownload}
-          disabled={!hasActiveLayers}
+      </div>
+      <div className="scrollbar-thin flex-1 overflow-auto bg-card px-5 py-4 md:px-6 md:py-5 space-y-4">
+        {scenarioId === "climate" ? null : <YearSelect />}
+        <ContextPanelContent />
+      </div>
+      <div className="sticky bottom-0 mt-auto border-t border-border bg-card px-5 py-4 md:px-6 md:py-4">
+        <Tooltip
+          content={!hasActiveLayers ? "Enable a data layer to download" : "Download active datasets"}
+          positioning={{ placement: "top" }}
         >
-          <LuDownload />
-          Download Data
-        </Button>
-      </Box>
+          <Button
+            className="download-accent-pill hover-lift w-full rounded-full font-semibold"
+            onClick={() => setDownloadDialogIsOpen(true)}
+            disabled={!hasActiveLayers}
+          >
+            <LuDownload className="size-4" />
+            Download Data
+          </Button>
+        </Tooltip>
+      </div>
       <DownloadDataDialog
         isOpen={downloadDialogIsOpen}
         setIsOpen={setDownloadDialogIsOpen}

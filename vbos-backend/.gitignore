@@ -54,7 +54,9 @@ coverage.xml
 *.log
 .static_storage/
 .media/
+media/
 .media/raster/*
+raster_data/*.tif
 local_settings.py
 
 # Flask stuff:

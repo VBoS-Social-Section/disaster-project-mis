@@ -6,23 +6,21 @@ import {
   useImperativeHandle,
   useState,
 } from "react";
-import ReactMapGl, {
-  type MapRef,
-  type MapProps,
-  ViewStateChangeEvent,
-  MapLayerMouseEvent,
-  NavigationControl,
-  LngLatLike,
-  PopupProps,
-} from "react-map-gl/maplibre";
-import * as maplibregl from "maplibre-gl";
-import * as pmtiles from "pmtiles";
-import "maplibre-gl/dist/maplibre-gl.css";
+import {
+  MapContainer,
+  TileLayer,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
+import L, { type Map as LeafletMap } from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { bbox } from "@turf/bbox";
 import { featureCollection } from "@turf/helpers";
-import { useMapStore } from "@/store/map-store";
+import { useMapStore, BASEMAP_STYLES } from "@/store/map-store";
 import { useAreaStore } from "@/store/area-store";
+import { useColorMode } from "@/components/ui/color-mode";
 import { useLayerStore } from "@/store/layer-store";
+import { usePanelStore } from "@/store/panel-store";
 import { AdminAreaMapLayers } from "./AdminAreaLayers";
 import { VectorLayers } from "./VectorLayers";
 import { TabularLayers } from "./TabularLayer";
@@ -30,145 +28,193 @@ import { Legend } from "./Legend";
 import { MapPopup } from "./MapPopup";
 import { RasterLayers } from "./RasterLayer";
 import { PMTilesLayers } from "./PMTilesLayers";
+import { MapControlsCluster } from "./MapControlsCluster";
+import { ComparisonOverlay } from "./ComparisonOverlay";
+import { RasterComparisonOverlay } from "./RasterComparisonOverlay";
+import { TabularDeltaOverlay } from "./TabularDeltaOverlay";
+import { LandCoverLegend } from "./LandCoverLegend";
 
-export interface PopupInfo extends PopupProps {
+export interface PopupInfo {
+  latitude: number;
+  longitude: number;
   properties: Record<string, unknown>;
   datasetName?: string;
   datasetId: string;
+  /** VectorItem id from GeoJSON feature (for admin lookup) */
+  featureId?: number;
 }
 
-function Map(props: MapProps, ref: Ref<MapRef | undefined>) {
-  const [map, setMap] = useState<MapRef>();
-  const setMapRef = (m: MapRef) => setMap(m);
-  const { viewState, setViewState, syncToUrl } = useMapStore();
+function MapEventHandler({
+  onMove,
+  onMoveEnd,
+  onClick,
+}: {
+  onMove: () => void;
+  onMoveEnd: () => void;
+  onClick: (lat: number, lng: number) => void;
+}) {
+  useMapEvents({
+    move: onMove,
+    moveend: onMoveEnd,
+    click: (e) => onClick(e.latlng.lat, e.latlng.lng),
+  });
+  return null;
+}
+
+function MapReady({
+  onMapReady,
+  children,
+}: {
+  onMapReady: (map: LeafletMap | null) => void;
+  children: React.ReactNode;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    onMapReady(map);
+    return () => onMapReady(null);
+  }, [map, onMapReady]);
+  return <>{children}</>;
+}
+
+export type MapRef = {
+  fitBounds: (bounds: [[number, number], [number, number]], options?: { padding?: number }) => void;
+  flyTo: (center: [number, number], zoom?: number) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  getMap: () => LeafletMap | null;
+};
+
+function Map(_props: object, ref: Ref<MapRef | undefined>) {
+  const [map, setMap] = useState<LeafletMap | null>(null);
+  const { viewState, setViewState, syncToUrl, mapStyle, setMapStyle } = useMapStore();
+  const { colorMode } = useColorMode();
   const { ac, acGeoJSON } = useAreaStore();
-  const { layers, getLayerMetadata } = useLayerStore();
+  const { layers } = useLayerStore();
+  const setSelectedFeatureInfo = usePanelStore((s) => s.setSelectedFeatureInfo);
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
 
-  useEffect(() => {
-    const protocol = new pmtiles.Protocol();
-    maplibregl.addProtocol("pmtiles", protocol.tile);
-
-    return () => {
-      maplibregl.removeProtocol("pmtiles");
-    };
-  }, []);
+  const currentStyle = BASEMAP_STYLES.find((s) => s.url === mapStyle) ?? BASEMAP_STYLES[0];
 
   useEffect(() => {
     if (popupInfo && !layers.includes(popupInfo.datasetId)) setPopupInfo(null);
   }, [popupInfo, layers]);
 
-  useImperativeHandle(ref, () => {
-    if (map) {
-      return map;
-    }
-  }, [map]);
+  useEffect(() => {
+    setSelectedFeatureInfo(popupInfo);
+  }, [popupInfo, setSelectedFeatureInfo]);
 
-  const onMove = useCallback(
-    (evt: ViewStateChangeEvent) => {
-      setViewState(evt.viewState);
+  useEffect(() => {
+    if (!colorMode) return;
+    const style = colorMode === "dark"
+      ? BASEMAP_STYLES.find((s) => s.id === "dark")
+      : BASEMAP_STYLES.find((s) => s.id === "positron");
+    if (style) setMapStyle(style.url);
+  }, [colorMode, setMapStyle]);
+
+  const mapRefAdapter: MapRef = {
+    fitBounds: (bounds, options) => {
+      if (!map) return;
+      // bounds from MapControlsCluster: [[minLng, minLat], [maxLng, maxLat]]
+      // Leaflet expects [[minLat, minLng], [maxLat, maxLng]]
+      const [[minLng, minLat], [maxLng, maxLat]] = bounds;
+      map.fitBounds(
+        [[minLat, minLng], [maxLat, maxLng]] as L.LatLngBoundsExpression,
+        {
+          padding: options?.padding ? [options.padding, options.padding] : undefined,
+          animate: true,
+        },
+      );
     },
-    [setViewState],
-  );
+    flyTo: (center, zoom = 12) => {
+      if (!map) return;
+      map.flyTo(center as L.LatLngTuple, zoom, { duration: 800 });
+    },
+    zoomIn: () => map?.zoomIn(),
+    zoomOut: () => map?.zoomOut(),
+    getMap: () => map,
+  };
+
+  useImperativeHandle(ref, () => mapRefAdapter, [map]);
+
+  const onMove = useCallback(() => {
+    if (!map) return;
+    const center = map.getCenter();
+    const zoom = map.getZoom();
+    setViewState({
+      latitude: center.lat,
+      longitude: center.lng,
+      zoom,
+    });
+  }, [map, setViewState]);
 
   const onMoveEnd = useCallback(() => {
     syncToUrl();
   }, [syncToUrl]);
-  const onClick = useCallback(
-    (evt: MapLayerMouseEvent) => {
-      if (!map) return;
-      try {
-        const features = map.queryRenderedFeatures(evt.point);
 
-        // Set stats popup
-        const statsFeatures = features.filter((i) => i.source === "stats");
-        if (statsFeatures.length > 0) {
-          // Get the active tabular layer
-          const tabularLayers = layers
-            .split(",")
-            .filter((i) => i.startsWith("t"));
-          const metadata = tabularLayers.length
-            ? getLayerMetadata(tabularLayers[0])
-            : undefined;
-
-          setPopupInfo({
-            ...statsFeatures[0],
-            longitude: evt.lngLat.lng,
-            latitude: evt.lngLat.lat,
-            datasetName: metadata?.name,
-            datasetId: tabularLayers[0],
-          });
-          return;
-        }
-
-        // Set vector popup
-        const vectorFeatures = features.filter(
-          (i) => typeof i.source === "string" && i.source.startsWith("v"),
-        );
-        if (vectorFeatures.length > 0) {
-          const source = vectorFeatures[0].source as string;
-          const metadata = getLayerMetadata(source);
-
-          setPopupInfo({
-            ...vectorFeatures[0],
-            longitude: evt.lngLat.lng,
-            latitude: evt.lngLat.lat,
-            datasetName: metadata?.name,
-            datasetId: source,
-          });
-          return;
-        }
-        setPopupInfo(null);
-      } catch (error) {
-        setPopupInfo(null);
-        console.error(error);
-      }
-    },
-    [map, layers, getLayerMetadata],
-  );
+  const onClick = useCallback(() => {
+    setPopupInfo(null);
+    setSelectedFeatureInfo(null);
+  }, [setSelectedFeatureInfo]);
 
   useEffect(() => {
-    if (acGeoJSON?.features?.length && map) {
-      const acBbox = ac
-        ? bbox(
+    if (!acGeoJSON?.features?.length || !map) return;
+    const acBbox = ac
+      ? bbox(
           featureCollection(
             acGeoJSON.features.filter(
-              (i) => i.properties.name.toLowerCase() === ac.toLowerCase(),
+              (i) => (i.properties?.name as string)?.toLowerCase() === ac.toLowerCase(),
             ),
           ),
         )
-        : bbox(acGeoJSON);
-      map.fitBounds(
-        [acBbox.slice(0, 2) as LngLatLike, acBbox.slice(2, 4) as LngLatLike],
-        {
-          padding: { top: 0, bottom: 0, left: 0, right: 0 },
-        },
-      );
-    }
+      : bbox(acGeoJSON);
+    const bounds: L.LatLngBoundsExpression = [
+      [acBbox[1], acBbox[0]] as L.LatLngTuple,
+      [acBbox[3], acBbox[2]] as L.LatLngTuple,
+    ];
+    const id = requestAnimationFrame(() => {
+      map.fitBounds(bounds, { animate: true });
+    });
+    return () => cancelAnimationFrame(id);
   }, [ac, acGeoJSON, map]);
 
   return (
-    <ReactMapGl
-      initialViewState={viewState}
-      ref={setMapRef}
-      onMove={onMove}
-      onMoveEnd={onMoveEnd}
-      mapStyle="https://tiles.openfreemap.org/styles/positron"
-      touchPitch={false}
-      dragRotate={false}
-      onClick={onClick}
-      {...props}
+    <MapContainer
+      center={[viewState.latitude, viewState.longitude]}
+      zoom={viewState.zoom}
+      style={{ height: "100%", width: "100%" }}
+      zoomControl={false}
+      attributionControl={false}
     >
-      <NavigationControl position="bottom-left" showZoom />
-      <AdminAreaMapLayers fitBounds={map?.fitBounds} />
-      <VectorLayers />
-      <TabularLayers />
-      <RasterLayers />
-      <PMTilesLayers />
-      <Legend />
-      {popupInfo && <MapPopup {...popupInfo} />}
-      {props.children}
-    </ReactMapGl>
+      <TileLayer
+        url={currentStyle.url}
+        attribution={currentStyle.attribution}
+      />
+      <MapReady onMapReady={setMap}>
+        <MapEventHandler
+          onMove={onMove}
+          onMoveEnd={onMoveEnd}
+          onClick={onClick}
+        />
+        <AdminAreaMapLayers
+          map={map}
+          setPopupInfo={setPopupInfo}
+          activeFeatureName={
+            popupInfo?.properties?.name as string | undefined
+          }
+        />
+        <VectorLayers setPopupInfo={setPopupInfo} />
+        <TabularLayers />
+        <RasterLayers />
+        <PMTilesLayers />
+        <ComparisonOverlay />
+        <TabularDeltaOverlay />
+        <RasterComparisonOverlay />
+        <LandCoverLegend />
+        <Legend />
+        <MapControlsCluster map={mapRefAdapter} />
+        {popupInfo && <MapPopup {...popupInfo} />}
+      </MapReady>
+    </MapContainer>
   );
 }
 

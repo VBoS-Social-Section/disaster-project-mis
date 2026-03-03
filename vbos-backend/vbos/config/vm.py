@@ -11,6 +11,9 @@ class Vm(Common):
     DEBUG = False
     INSTALLED_APPS = Common.INSTALLED_APPS + ("gunicorn",)
 
+    # Static files in Docker volume at /app/staticfiles (shared with nginx)
+    STATIC_ROOT = "/app/staticfiles"
+
     # Allow cookies over HTTP for VM (no HTTPS)
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False

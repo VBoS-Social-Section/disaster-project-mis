@@ -1,13 +1,15 @@
 import { create } from "zustand";
-import { ViewState } from "react-map-gl/maplibre";
+
+export type ViewState = {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+};
 
 const DEFAULT_VIEW: ViewState = {
-  longitude: 167.5997,
   latitude: -16.7087,
+  longitude: 167.5997,
   zoom: 6,
-  pitch: 0,
-  bearing: 0,
-  padding: { top: 0, bottom: 0, left: 0, right: 0 },
 };
 
 function getInitialViewState(): ViewState {
@@ -27,20 +29,79 @@ function getInitialViewState(): ViewState {
   return DEFAULT_VIEW;
 }
 
+// Leaflet uses raster tile URLs (not MapLibre style URLs)
+export const BASEMAP_STYLES = [
+  {
+    id: "positron",
+    label: "Light",
+    url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    hasLabels: true,
+    hasTerrain: false,
+  },
+  {
+    id: "positron_nolabels",
+    label: "Light (no labels)",
+    url: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    hasLabels: false,
+    hasTerrain: false,
+  },
+  {
+    id: "dark",
+    label: "Dark",
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    hasLabels: true,
+    hasTerrain: false,
+  },
+  {
+    id: "dark_nolabels",
+    label: "Dark (no labels)",
+    url: "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    hasLabels: false,
+    hasTerrain: false,
+  },
+  {
+    id: "bright",
+    label: "Bright",
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    hasLabels: true,
+    hasTerrain: false,
+  },
+  {
+    id: "terrain",
+    label: "Terrain",
+    url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
+    hasLabels: true,
+    hasTerrain: true,
+  },
+] as const;
+
 interface MapState {
   viewState: ViewState;
+  mapStyle: string;
   setViewState: (viewState: Partial<ViewState>) => void;
+  setMapStyle: (style: string) => void;
   syncFromUrl: () => void;
   syncToUrl: () => void;
 }
 
 export const useMapStore = create<MapState>((set, get) => ({
+  mapStyle: BASEMAP_STYLES[0].url,
   viewState: getInitialViewState(),
 
   setViewState: (updates) => {
     set((state) => ({
       viewState: { ...state.viewState, ...updates },
     }));
+  },
+
+  setMapStyle: (style: string) => {
+    set({ mapStyle: style });
   },
 
   syncFromUrl: () => {

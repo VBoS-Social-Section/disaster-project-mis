@@ -1,0 +1,27 @@
+/**
+ * Global polish - smooth transitions, refined focus
+ */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button, [role="button"], a {
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+/**
+ * Sync color-scheme with theme (next-themes + prefers-color-scheme).
+ * When user toggles, overrides system; when "system", follows prefers-color-scheme.
+ */
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #0a0a0a;
+}

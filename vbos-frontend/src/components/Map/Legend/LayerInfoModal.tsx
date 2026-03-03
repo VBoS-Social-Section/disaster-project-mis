@@ -1,164 +1,111 @@
-/**
- * LayerInfoModal displays detailed metadata about a map layer.
- *
- * Shows information like layer name, type, source, unit of measurement,
- * creation/update dates, and other metadata in a modal dialog.
- */
-
 import {
   Dialog,
-  Stack,
-  CloseButton,
-  Text,
-  Heading,
-  Separator,
-  Badge,
-} from "@chakra-ui/react";
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import type { LegendLayer } from "./types";
 
-/**
- * Props for the LayerInfoModal component.
- */
 interface LayerInfoModalProps {
-  /** The layer to display info for */
   layer: LegendLayer | null;
-  /** Whether the modal is open */
   open: boolean;
-  /** Callback when the modal should close */
   onOpenChange: (open: boolean) => void;
 }
 
-/**
- * Modal dialog displaying detailed metadata about a map layer.
- *
- * @example
- * ```tsx
- * const [selectedLayer, setSelectedLayer] = useState<LegendLayer | null>(null);
- *
- * <LayerInfoModal
- *   layer={selectedLayer}
- *   open={!!selectedLayer}
- *   onOpenChange={(open) => !open && setSelectedLayer(null)}
- * />
- * ```
- */
 export function LayerInfoModal(props: LayerInfoModalProps) {
   const { layer, open, onOpenChange } = props;
 
   if (!layer) return null;
 
   return (
-    <Dialog.Root
-      open={open}
-      onOpenChange={(details) => onOpenChange(details.open)}
-      size="md"
-    >
-      <Dialog.Backdrop />
-      <Dialog.Positioner>
-        <Dialog.Content>
-          <Dialog.CloseTrigger asChild>
-            <CloseButton size="sm" />
-          </Dialog.CloseTrigger>
-          <Dialog.Header>
-            <Dialog.Title>Layer Information</Dialog.Title>
-          </Dialog.Header>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Layer Information</DialogTitle>
+          <DialogDescription>
+            Details about the selected map layer.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-muted-foreground">Name</p>
+            <h3 className="text-base font-semibold">{layer.name}</h3>
+          </div>
 
-          <Dialog.CloseTrigger />
+          {layer.description && (
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">
+                Description
+              </p>
+              <p>{layer.description}</p>
+            </div>
+          )}
 
-          <Dialog.Body>
-            <Stack gap={4}>
-              {/* Layer Name */}
-              <Stack gap={1}>
-                <Text fontSize="sm" fontWeight="medium" color="fg.muted">
-                  Name
-                </Text>
-                <Heading size="md">{layer.name}</Heading>
-              </Stack>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-muted-foreground">Type</p>
+            <Badge variant="secondary">{layer.dataType}</Badge>
+          </div>
 
-              {/* Layer Description */}
-              {layer.description && (
-                <Stack gap={1}>
-                  <Text fontSize="sm" fontWeight="medium" color="fg.muted">
-                    Description
-                  </Text>
-                  <Text>{layer.description}</Text>
-                </Stack>
-              )}
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-muted-foreground">
+              Dataset ID
+            </p>
+            <p>{layer.id}</p>
+          </div>
 
-              {/* Layer Type */}
-              <Stack gap={1} alignItems="start">
-                <Text fontSize="sm" fontWeight="medium" color="fg.muted">
-                  Type
-                </Text>
-                <Badge colorPalette="blue" size="sm">
-                  {layer.dataType}
-                </Badge>
-              </Stack>
+          {layer.unit && (
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">
+                Unit of Measurement
+              </p>
+              <p>{layer.unit}</p>
+            </div>
+          )}
 
-              {/* ID */}
-              <Stack gap={1}>
-                <Text fontSize="sm" fontWeight="medium" color="fg.muted">
-                  Dataset ID
-                </Text>
-                <Text>{layer.id}</Text>
-              </Stack>
+          {layer.dataType === "tabular" && layer.dataRange && (
+            <>
+              <Separator />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Data Range
+                </p>
+                <p>
+                  {layer.dataRange.min.toLocaleString()} -{" "}
+                  {layer.dataRange.max.toLocaleString()}
+                  {layer.unit ? ` ${layer.unit}` : ""}
+                </p>
+              </div>
+            </>
+          )}
 
-              {/* Unit */}
-              {layer.unit && (
-                <Stack gap={1}>
-                  <Text fontSize="sm" fontWeight="medium" color="fg.muted">
-                    Unit of Measurement
-                  </Text>
-                  <Text>{layer.unit}</Text>
-                </Stack>
-              )}
+          {layer.dataType === "vector" && (
+            <>
+              <Separator />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Geometry Type
+                </p>
+                <p>{layer.geometryType}</p>
+              </div>
+            </>
+          )}
 
-              {/* Data Range (for tabular layers) */}
-              {layer.dataType === "tabular" && layer.dataRange && (
-                <>
-                  <Separator />
-                  <Stack gap={1}>
-                    <Text fontSize="sm" fontWeight="medium" color="fg.muted">
-                      Data Range
-                    </Text>
-                    <Text>
-                      {layer.dataRange.min.toLocaleString()} -{" "}
-                      {layer.dataRange.max.toLocaleString()}
-                      {layer.unit ? ` ${layer.unit}` : ""}
-                    </Text>
-                  </Stack>
-                </>
-              )}
-
-              {/* Geometry Type (for vector layers) */}
-              {layer.dataType === "vector" && (
-                <>
-                  <Separator />
-                  <Stack gap={1}>
-                    <Text fontSize="sm" fontWeight="medium" color="fg.muted">
-                      Geometry Type
-                    </Text>
-                    <Text>{layer.geometryType}</Text>
-                  </Stack>
-                </>
-              )}
-
-              {/* Source */}
-              {layer.source && (
-                <>
-                  <Separator />
-                  <Stack gap={1}>
-                    <Text fontSize="sm" fontWeight="medium" color="fg.muted">
-                      Data Source
-                    </Text>
-                    <Text fontSize="sm">{layer.source}</Text>
-                  </Stack>
-                </>
-              )}
-            </Stack>
-          </Dialog.Body>
-        </Dialog.Content>
-      </Dialog.Positioner>
-    </Dialog.Root>
+          {layer.source && (
+            <>
+              <Separator />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Data Source
+                </p>
+                <p className="text-sm">{layer.source}</p>
+              </div>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

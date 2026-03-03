@@ -1,0 +1,90 @@
+import type { ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  LuMinus,
+  LuMoon,
+  LuPlus,
+  LuSparkles,
+  LuSun,
+} from "react-icons/lu";
+import type { MapRef } from "./index";
+import { useMapStore, BASEMAP_STYLES } from "@/store/map-store";
+import { Tooltip } from "@/components/ui";
+
+type MapControlsClusterProps = {
+  map: MapRef | undefined;
+};
+
+export function MapControlsCluster({ map }: MapControlsClusterProps) {
+  const { mapStyle, setMapStyle } = useMapStore();
+
+  const currentId = BASEMAP_STYLES.find((s) => s.url === mapStyle)?.id ?? "positron";
+
+  const basemapIcons: Record<string, ReactNode> = {
+    positron: <LuSun className="size-4" />,
+    positron_nolabels: <LuSun className="size-4" />,
+    dark: <LuMoon className="size-4" />,
+    dark_nolabels: <LuMoon className="size-4" />,
+    bright: <LuSparkles className="size-4" />,
+    terrain: <LuSparkles className="size-4" />,
+  };
+
+  return (
+    <div className="absolute right-4 top-4 z-[1000] flex flex-col gap-1 overflow-hidden rounded-lg border border-border p-1 shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface md:right-6 md:top-6">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="secondary"
+            size="icon-xs"
+            className="h-9 w-full"
+            aria-label="Basemap"
+            title="Basemap"
+          >
+            {basemapIcons[currentId] ?? basemapIcons.positron}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-[11rem]">
+          {BASEMAP_STYLES.map((s) => (
+            <DropdownMenuItem
+              key={s.id}
+              onClick={() => setMapStyle(s.url)}
+              className={currentId === s.id ? "bg-muted" : undefined}
+            >
+              {basemapIcons[s.id]}
+              <span className="ml-2">{s.label}</span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <div className="mx-1 h-px bg-border" />
+      <div className="flex flex-col gap-0">
+        <Tooltip content="Zoom in" positioning={{ placement: "left" }}>
+          <Button
+            size="icon-xs"
+            variant="ghost"
+            aria-label="Zoom in"
+            onClick={() => map?.zoomIn()}
+          >
+            <LuPlus className="size-4 icon-interactive" />
+          </Button>
+        </Tooltip>
+        <Tooltip content="Zoom out" positioning={{ placement: "left" }}>
+          <Button
+            size="icon-xs"
+            variant="ghost"
+            aria-label="Zoom out"
+            onClick={() => map?.zoomOut()}
+          >
+            <LuMinus className="size-4 icon-interactive" />
+          </Button>
+        </Tooltip>
+      </div>
+    </div>
+  );
+}

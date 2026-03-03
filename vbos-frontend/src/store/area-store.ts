@@ -21,25 +21,23 @@ export const useAreaStore = create<AreaState>((set) => ({
 
   setAc: (ac: string) => {
     set({ ac });
-    const params = new URLSearchParams(window.location.search);
-    if (ac) {
-      params.set("ac", ac);
-    } else {
-      params.delete("ac");
-    }
-    window.history.replaceState(null, "", `?${params.toString()}`);
+    queueMicrotask(() => {
+      const params = new URLSearchParams(window.location.search);
+      if (ac) params.set("ac", ac);
+      else params.delete("ac");
+      window.history.replaceState(null, "", params.toString() ? `?${params}` : window.location.pathname);
+    });
   },
 
   setProvince: (province: string) => {
     set({ province, ac: "" });
-    const params = new URLSearchParams(window.location.search);
-    params.delete("ac");
-    if (province) {
-      params.set("province", province);
-    } else {
-      params.delete("province");
-    }
-    window.history.replaceState(null, "", `?${params.toString()}`);
+    queueMicrotask(() => {
+      const params = new URLSearchParams(window.location.search);
+      params.delete("ac");
+      if (province) params.set("province", province);
+      else params.delete("province");
+      window.history.replaceState(null, "", params.toString() ? `?${params}` : window.location.pathname);
+    });
   },
 
   syncFromUrl: () => {

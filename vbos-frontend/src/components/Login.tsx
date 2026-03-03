@@ -1,14 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Box,
-  Button,
-  Heading,
-  Image,
-  Input,
-  VStack,
-  Field,
-  Text,
-} from "@chakra-ui/react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useAuthStore } from "@/store/auth-store";
 import { login } from "@/api/auth";
 import { toast } from "@/utils/toast";
@@ -46,89 +40,73 @@ export function Login() {
   };
 
   return (
-    <Box
-      minH="100vh"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      bg="bg.subtle"
-      p={4}
+    <div
+      className="flex min-h-screen items-center justify-center bg-background p-4"
       role="main"
       aria-label="Sign in"
     >
-      <Box
-        as="form"
-        onSubmit={handleSubmit}
-        w="full"
-        maxW="400px"
-        bg="bg"
-        p={8}
-        borderRadius="lg"
-        shadow="lg"
-      >
-        <VStack gap={6} align="stretch">
-          <Box textAlign="center">
-            <Image
+      <Card className="w-full max-w-[400px] border border-border shadow-md">
+        <form onSubmit={handleSubmit}>
+          <CardHeader className="space-y-6 text-center">
+            <img
               src="/MISLogo.svg"
               alt="Disaster Risk Management Information system Logo"
-              boxSize="16"
-              mx="auto"
-              mb={4}
+              className="mx-auto mb-4 size-16"
             />
-            <Heading size="xl" color="blue.700">
-              Disaster Risk Management Information system
-            </Heading>
-            <Text color="fg.muted" mt={2} fontSize="sm">
+            <h1 className="text-lg font-semibold text-foreground">
+              Disaster Risk Management Information System
+            </h1>
+            <p className="text-sm text-muted-foreground">
               Disaster & Climate Risk Data
-            </Text>
-          </Box>
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                ref={usernameInputRef}
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
+                required
+                autoComplete="username"
+                aria-invalid={!!error}
+              />
+            </div>
 
-          <Field.Root invalid={!!error}>
-            <Field.Label>Username</Field.Label>
-            <Input
-              ref={usernameInputRef}
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              required
-              autoComplete="username"
-              aria-label="Username"
-            />
-          </Field.Root>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+                autoComplete="current-password"
+                aria-invalid={!!error}
+              />
+              {error && (
+                <p className="text-sm text-destructive">{error}</p>
+              )}
+            </div>
 
-          <Field.Root invalid={!!error}>
-            <Field.Label>Password</Field.Label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-              autoComplete="current-password"
-              aria-label="Password"
-            />
-            {error && (
-              <Field.ErrorText color="red.500" fontSize="sm" mt={1}>
-                {error}
-              </Field.ErrorText>
-            )}
-          </Field.Root>
+            <Button
+              type="submit"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+              disabled={isLoading}
+            >
+              {isLoading ? "Signing in…" : "Sign in"}
+            </Button>
 
-          <Button
-            type="submit"
-            colorPalette="blue"
-            loading={isLoading}
-            disabled={isLoading}
-          >
-            Sign in
-          </Button>
-
-          <Text fontSize="xs" color="fg.muted" textAlign="center">
-            Contact your administrator if you need access.
-          </Text>
-        </VStack>
-      </Box>
-    </Box>
+            <p className="text-center text-xs text-muted-foreground">
+              Contact your administrator if you need access.
+            </p>
+          </CardContent>
+        </form>
+      </Card>
+    </div>
   );
 }

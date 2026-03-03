@@ -3,27 +3,33 @@ import { useAreaStore } from "@/store/area-store";
 import { useLayerStore } from "@/store/layer-store";
 import { useDateStore } from "@/store/date-store";
 import { useMapStore } from "@/store/map-store";
+import { useComparisonStore } from "@/store/comparison-store";
+import { useViewStore } from "@/store/view-store";
 
 export const useUrlSync = () => {
   const { syncFromUrl: syncAreaFromUrl } = useAreaStore();
   const { syncFromUrl: syncDateFromUrl } = useDateStore();
   const { syncFromUrl: syncLayersFromUrl } = useLayerStore();
   const { syncFromUrl: syncMapFromUrl } = useMapStore();
+  const { syncFromUrl: syncComparisonFromUrl } = useComparisonStore();
+  const { syncFromUrl: syncViewFromUrl } = useViewStore();
 
   useEffect(() => {
     // Sync from URL on mount and on popstate (shareable links restore full view state)
-    // Map view state is read at store init for initial render
     syncAreaFromUrl();
     syncDateFromUrl();
     syncLayersFromUrl();
     syncMapFromUrl();
+    syncViewFromUrl();
+    syncComparisonFromUrl();
 
-    // Listen for URL changes (browser back/forward)
     const handlePopState = () => {
       syncAreaFromUrl();
       syncDateFromUrl();
       syncLayersFromUrl();
       syncMapFromUrl();
+      syncViewFromUrl();
+      syncComparisonFromUrl();
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -31,5 +37,5 @@ export const useUrlSync = () => {
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
-  }, [syncAreaFromUrl, syncLayersFromUrl, syncDateFromUrl, syncMapFromUrl]);
+  }, [syncAreaFromUrl, syncLayersFromUrl, syncDateFromUrl, syncMapFromUrl, syncViewFromUrl, syncComparisonFromUrl]);
 };

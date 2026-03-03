@@ -1,10 +1,15 @@
 from django.urls import path
 
-from . import views
+from . import aggregate_views, pmtiles_serve, views
 
 app_name = "datasets"
 
 urlpatterns = [
+    path(
+        "pmtiles-serve/<path:path>",
+        pmtiles_serve.serve_pmtiles,
+        name="pmtiles-serve",
+    ),
     path("cluster/", views.ClusterListView.as_view(), name="cluster-list"),
     path(
         "datasets/",
@@ -54,6 +59,11 @@ urlpatterns = [
         "tabular/<int:pk>/data/",
         views.TabularDatasetDataView.as_view(),
         name="tabular-data",
+    ),
+    path(
+        "tabular/<int:pk>/aggregate/",
+        aggregate_views.TabularAggregateView.as_view(),
+        name="tabular-aggregate",
     ),
     path(
         "tabular/<int:pk>/data-xlsx/",

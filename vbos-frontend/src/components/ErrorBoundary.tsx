@@ -1,9 +1,12 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { Box, Button, Heading, Text, VStack } from "@chakra-ui/react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  /** Render prop for custom fallback with retry. Takes precedence over fallback. */
+  fallbackRender?: (error: Error, retry: () => void) => ReactNode;
 }
 
 interface State {
@@ -31,48 +34,37 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError && this.state.error) {
+      if (this.props.fallbackRender) {
+        return this.props.fallbackRender(
+          this.state.error,
+          this.handleRetry,
+        );
+      }
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
       return (
-        <Box
-          minH="100vh"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          bg="gray.50"
-          p={6}
-        >
-          <VStack
-            gap={6}
-            maxW="md"
-            p={8}
-            bg="white"
-            borderRadius="lg"
-            shadow="lg"
-            align="stretch"
-          >
-            <Box>
-              <Heading size="lg" color="red.600" mb={2}>
+        <div className="flex min-h-screen items-center justify-center bg-muted p-6">
+          <Card className="max-w-md shadow-lg">
+            <CardHeader>
+              <h2 className="text-lg font-semibold text-red-600">
                 Something went wrong
-              </Heading>
-              <Text color="fg.muted" fontSize="sm">
+              </h2>
+              <p className="text-sm text-muted-foreground">
                 {this.state.error.message}
-              </Text>
-            </Box>
-            <Button
-              colorPalette="blue"
-              onClick={this.handleRetry}
-              alignSelf="flex-start"
-            >
-              Try again
-            </Button>
-            <Text fontSize="xs" color="fg.muted">
-              If the problem persists, try refreshing the page or contact support.
-            </Text>
-          </VStack>
-        </Box>
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button onClick={this.handleRetry}>
+                Try again
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                If the problem persists, try refreshing the page or contact support.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       );
     }
 

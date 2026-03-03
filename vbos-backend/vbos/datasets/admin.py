@@ -3,6 +3,7 @@ import json
 from io import TextIOWrapper
 
 from adminsortable2.admin import SortableAdminMixin
+from django import forms
 from django.contrib.admin import SimpleListFilter
 from django.contrib import messages
 from django.contrib.gis import admin
@@ -10,7 +11,7 @@ from django.contrib.gis.geos.geometry import GEOSGeometry
 from django.shortcuts import redirect, render, reverse
 from django.urls import path
 
-from .forms import GeoJSONUploadForm
+from .forms import GeoJSONUploadForm, IconPickerWidget
 from .models import (
     AreaCouncil,
     Cluster,
@@ -61,8 +62,33 @@ class RasterFileAdmin(admin.ModelAdmin):
 
 @admin.register(RasterDataset)
 class RasterDatasetAdmin(admin.ModelAdmin):
-    list_display = ["id", "name", "cluster", "type", "updated", "filename_id"]
-    list_filter = ["cluster", "type"]
+    list_display = ["id", "name", "type", "is_land_cover", "updated", "filename_id"]
+    list_filter = ["type", "is_land_cover"]
+    list_editable = ["is_land_cover"]
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": ("name", "type", "description", "source"),
+                "description": "Raster datasets are Climate-mode only. They appear in the Land cover tab regardless of selected cluster.",
+            },
+        ),
+        (
+            "Raster / TiTiler",
+            {
+                "fields": ("filename_id", "titiler_url_params", "is_land_cover"),
+                "description": "filename_id is used for VRT path: {MEDIA_URL}/{filename_id}_{year}.vrt. "
+                "Check is_land_cover for categorical land cover rasters (Climate mode).",
+            },
+        ),
+        (
+            "Precomputed tiles",
+            {
+                "fields": ("precomputed_tile_url",),
+                "description": "Optional URL template for precomputed raster+tabular tiles. Use {z}, {x}, {y}, {year}. When set, used instead of TiTiler.",
+            },
+        ),
+    )
 
 
 @admin.register(PMTilesDataset)
@@ -73,14 +99,63 @@ class PMTilesDatasetAdmin(admin.ModelAdmin):
 
 @admin.register(VectorDataset)
 class VectorDatasetAdmin(admin.ModelAdmin):
-    list_display = ["id", "name", "cluster", "type", "updated"]
+    list_display = ["id", "name", "cluster", "type", "icon", "color", "updated"]
     list_filter = ["cluster", "type"]
+    list_editable = ["icon", "color"]
+    change_form_template = "admin/datasets/vectordataset/change_form.html"
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "icon":
+            kwargs["widget"] = IconPickerWidget
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
 
 
 @admin.register(VectorItem)
 class VectorItemAdmin(admin.GISModelAdmin):
-    list_display = ["id", "dataset", "name", "attribute", "province", "area_council"]
+    list_display = [
+        "id",
+        "dataset",
+        "location_display",
+        "coords_display",
+        "name",
+        "attribute",
+    ]
+    list_editable = ["name", "attribute"]
     list_filter = ["dataset", "province", "area_council"]
+    search_fields = ["id", "name", "attribute"]
+    list_per_page = 50
+
+    @admin.display(description="Location")
+    def location_display(self, obj):
+        """Province / Area council - match this to the map popup to identify which school."""
+        parts = []
+        if obj.province:
+            parts.append(str(obj.province.name))
+        if obj.area_council:
+            parts.append(str(obj.area_council.name))
+        return " / ".join(parts) if parts else "—"
+
+    @admin.display(description="Coords")
+    def coords_display(self, obj):
+        """Lat, lng - helps match to the map when multiple schools share the same area."""
+        if obj.geometry:
+            try:
+                centroid = obj.geometry.centroid
+                return f"{centroid.y:.4f}, {centroid.x:.4f}"
+            except Exception:
+                pass
+        return "—"
+    fieldsets = (
+        (
+            "Main info",
+            {
+                "fields": ("dataset", "name", "attribute"),
+                "description": "Edit name and attribute to fix missing or incorrect data.",
+            },
+        ),
+        ("Location", {"fields": ("province", "area_council")}),
+        ("Geometry", {"fields": ("geometry",)}),
+    )
 
     def get_urls(self):
         urls = super().get_urls()
@@ -110,48 +185,69 @@ class VectorItemAdmin(admin.GISModelAdmin):
                     return redirect("admin:datasets_vectoritem_import_file")
 
                 try:
+                    dataset = form.cleaned_data["dataset"]
+                    icon = (form.cleaned_data.get("icon") or "").strip()
+                    color = (form.cleaned_data.get("color") or "").strip()
+                    update_fields = []
+                    if icon:
+                        dataset.icon = icon
+                        update_fields.append("icon")
+                    if color:
+                        dataset.color = color
+                        update_fields.append("color")
+                    if update_fields:
+                        dataset.save(update_fields=update_fields)
+
                     decoded_file = TextIOWrapper(uploaded_file.file, encoding="utf-8")
                     geojson_content = json.loads(decoded_file.read())
 
                     created_count = 0
                     error_count = 0
 
+                    first_error = None
                     for item in geojson_content["features"]:
-                        metadata = GeoJSONProperties(item["properties"])
+                        props = item.get("properties") or {}
+                        metadata = GeoJSONProperties(props.copy())
                         try:
+                            province_name = str(metadata.province or "").strip()
                             province = (
-                                Province.objects.filter(
-                                    name__iexact=metadata.province.strip()
-                                ).first()
-                                if metadata.province
+                                Province.objects.filter(name__iexact=province_name).first()
+                                if province_name
                                 else None
                             )
+                            ac_name = str(metadata.area_council or "").strip()
                             area_council = (
-                                AreaCouncil.objects.filter(
-                                    name__iexact=metadata.area_council.strip()
-                                ).first()
-                                if metadata.province
+                                AreaCouncil.objects.filter(name__iexact=ac_name).first()
+                                if ac_name
                                 else None
                             )
                             attribute = (
-                                metadata.attribute.strip()
-                                if metadata.attribute
-                                else None
+                                str(metadata.attribute or "").strip() or None
                             )
+                            name = str(metadata.name or "").strip() or None
+                            ref = str(metadata.ref or "").strip() or None
+                            if ref and len(ref) > 50:
+                                ref = ref[:50]
+
+                            geom = item.get("geometry")
+                            if not geom:
+                                raise ValueError("Feature has no geometry")
+
                             VectorItem.objects.create(
-                                dataset=form.cleaned_data["dataset"],
+                                dataset=dataset,
                                 metadata=metadata.properties,
-                                name=metadata.name.strip() if metadata.name else None,
-                                ref=metadata.ref,
+                                name=name,
+                                ref=ref,
                                 attribute=attribute,
                                 province=province,
                                 area_council=area_council,
-                                geometry=GEOSGeometry(json.dumps(item["geometry"])),
+                                geometry=GEOSGeometry(json.dumps(geom)),
                             )
                             created_count += 1
                         except Exception as e:
-                            print(e)
                             error_count += 1
+                            if first_error is None:
+                                first_error = str(e)
 
                     if created_count > 0:
                         messages.success(
@@ -159,9 +255,10 @@ class VectorItemAdmin(admin.GISModelAdmin):
                         )
 
                     if error_count > 0:
-                        messages.warning(
-                            request, f"Failed to create {error_count} items."
-                        )
+                        msg = f"Failed to create {error_count} items."
+                        if first_error:
+                            msg += f" First error: {first_error}"
+                        messages.warning(request, msg)
 
                 except Exception as e:
                     messages.error(request, f"Error processing GeoJSON: {str(e)}")
@@ -170,12 +267,19 @@ class VectorItemAdmin(admin.GISModelAdmin):
         else:
             form = GeoJSONUploadForm()
 
+        # Dataset icon/color for auto-load when user selects a dataset
+        dataset_meta = {
+            str(d.id): {"icon": d.icon or "", "color": d.color or ""}
+            for d in VectorDataset.objects.all().only("id", "icon", "color")
+        }
+
         context = {
             "form": form,
             "opts": self.model._meta,
             "title": "Import GeoJSON File",
+            "dataset_meta_json": json.dumps(dataset_meta),
         }
-        return render(request, "admin/file_upload.html", context)
+        return render(request, "admin/geojson_upload.html", context)
 
 
 @admin.register(TabularDataset)

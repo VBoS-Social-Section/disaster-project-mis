@@ -1,4 +1,5 @@
-import { Switch } from "@chakra-ui/react";
+import { startTransition } from "react";
+import { Switch } from "@/components/ui/switch";
 import { useLayerStore } from "@/store/layer-store";
 
 type LayerSwitchProps = {
@@ -10,27 +11,22 @@ type LayerSwitchProps = {
 const LayerSwitch = ({ title, id, dataType }: LayerSwitchProps) => {
   const { layers, switchLayer } = useLayerStore();
   const urlLayerId = `${dataType.slice(0, 1)}${id}`;
+  const checked = layers.split(",").includes(urlLayerId);
 
   return (
-    <Switch.Root
-      size="sm"
-      colorPalette="blue"
-      checked={layers.split(",").includes(urlLayerId)}
-      onCheckedChange={() => switchLayer(urlLayerId)}
-    >
-      <Switch.HiddenInput />
-      <Switch.Control>
-        <Switch.Thumb />
-      </Switch.Control>
-      <Switch.Label
-        fontWeight="normal"
-        whiteSpace="pre"
-        overflow="hidden"
-        textOverflow="ellipsis"
-      >
+    <label className="flex cursor-pointer items-center gap-2">
+      <Switch
+        id={`layer-${urlLayerId}`}
+        size="sm"
+        checked={checked}
+        onCheckedChange={() =>
+          startTransition(() => switchLayer(urlLayerId))
+        }
+      />
+      <span className="overflow-hidden text-ellipsis whitespace-pre font-normal">
         {title}
-      </Switch.Label>
-    </Switch.Root>
+      </span>
+    </label>
   );
 };
 

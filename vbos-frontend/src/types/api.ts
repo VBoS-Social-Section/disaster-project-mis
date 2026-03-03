@@ -19,7 +19,7 @@ export interface BaseDataset {
   description: string;
   created: string;
   updated: string;
-  cluster: string; // Cluster name, not ID
+  cluster?: string | null; // Cluster name; null for Climate-only rasters
   type: DatasetType;
   source: string | null;
   unit?: string | null;
@@ -35,10 +35,21 @@ export interface TabularDataset extends BaseDataset {
 
 export interface RasterDataset extends BaseDataset {
   dataType: "raster";
+  /** When true, treated as categorical land cover; frontend auto-activates in Climate mode. */
+  is_land_cover?: boolean;
+  /**
+   * Optional URL template for precomputed tiles (raster + tabular joins).
+   * Placeholders: {z}, {x}, {y}, {year}. When set, used instead of TiTiler.
+   */
+  precomputed_tile_url?: string | null;
 }
 
 export interface VectorDataset extends BaseDataset {
   dataType: "vector";
+  /** Icon key for map display (e.g. mapPin, cross). Empty = auto from cluster/index. */
+  icon?: string | null;
+  /** Hex color for map markers (e.g. #3d4aff). Empty = auto from cluster/index. */
+  color?: string | null;
 }
 
 export interface PMTilesDataset extends BaseDataset {
@@ -71,6 +82,18 @@ export interface TabularData {
   area_council?: string;
   Unit?: string;
   [key: string]: string | number | undefined; // Allow other API fields
+}
+
+/** Response from tabular aggregate endpoint (group_by=province or area_council). */
+export interface TabularAggregateResult {
+  group_by: "province" | "area_council";
+  year: string | null;
+  attribute: string | null;
+  agg: "sum" | "count" | "avg";
+  results: Array<
+    | { province: string; attribute: string; value: number }
+    | { area_council: string; attribute: string; value: number }
+  >;
 }
 
 export interface PaginatedVectorData {

@@ -25,7 +25,9 @@ import type {
 } from "@/components/Map/Legend/types";
 import type { PaginatedVectorData } from "@/types/api";
 import type { AreaCouncilGeoJSON, ProvincesGeoJSON } from "@/types/data";
-import { mapColors } from "../../../colors";
+import { MAP_COLORS, VECTOR_LAYER_COLORS, VECTOR_CLUSTER_COLORS } from "../../../colors";
+import { useColorMode } from "../../../ui/color-mode";
+import { getVectorIconKey } from "../../vectorIcons";
 
 /**
  * Hook that provides legend layer data for all currently active map layers.
@@ -45,13 +47,15 @@ import { mapColors } from "../../../colors";
  * ```
  */
 export function useLegendLayers(): LegendLayer[] {
+  const { colorMode } = useColorMode();
+  const mapPalette = MAP_COLORS[colorMode === "dark" ? "dark" : "light"];
   const {
     layers: layerString,
     getLayerMetadata,
     tabularLayerData,
   } = useLayerStore();
-  const { ac, province, acGeoJSON } = useAreaStore();
-  const { year } = useDateStore();
+  const { province, acGeoJSON } = useAreaStore();
+  const { year: dataYear } = useDateStore();
   const { data: provincesGeojson } = useProvinces();
   const queryClient = useQueryClient();
   const isFetching = useIsFetching();
@@ -70,6 +74,8 @@ export function useLegendLayers(): LegendLayer[] {
     .map((id) => id.trim())
     .filter(Boolean);
 
+  const vectorLayerIds = activeLayerIds.filter((id) => id.startsWith("v"));
+
   // Build legend layers from the store metadata
   const legendLayers: LegendLayer[] = [];
 
@@ -80,20 +86,15 @@ export function useLegendLayers(): LegendLayer[] {
     // Only include layers that have metadata loaded
     if (dataset) {
       if (dataset.dataType === "tabular") {
-        // Check if we're currently fetching data for this dataset
         const filters = new URLSearchParams();
-        if (ac) filters.set("area_council", ac);
-        if (province) filters.set("province", province);
-
         const queryKey = ["dataset", "tabular", dataset.id, filters.toString()];
 
-        // Check if this specific query is fetching
         const isPending =
           isFetching > 0 && queryClient.isFetching({ queryKey }) > 0;
 
         // Filter data for the current year
         const filteredData = tabularLayerData.filter((i) =>
-          i.date.startsWith(year),
+          i.date.startsWith(dataYear),
         );
 
         legendLayers.push({
@@ -102,19 +103,10 @@ export function useLegendLayers(): LegendLayer[] {
           dataRange: { min: minValue, max: maxValue },
           isPending,
           hasData: filteredData.length > 0,
+          dataYear,
         });
       } else if (dataset.dataType === "vector") {
-        // Try to get the vector data from the query cache to determine geometry type
-        const filters = new URLSearchParams();
-        if (ac) filters.set("area_council", ac);
-        if (province) filters.set("province", province);
-
-        const vectorDataQueryKey = [
-          "dataset",
-          "vector",
-          dataset.id,
-          new URLSearchParams(filters).toString(),
-        ];
+        const vectorDataQueryKey = ["dataset", "vector", dataset.id, ""];
 
         const vectorData =
           queryClient.getQueryData<PaginatedVectorData>(vectorDataQueryKey);
@@ -122,21 +114,38 @@ export function useLegendLayers(): LegendLayer[] {
           (vectorData?.features[0]?.geometry
             .type as VectorLegendLayer["geometryType"]) || "LineString";
 
+        const colorIndex = vectorLayerIds.indexOf(layerId);
+        const cluster = dataset.cluster;
+        const datasetColor =
+          dataset && "color" in dataset && dataset.color ? dataset.color : undefined;
+        const layerColor =
+          datasetColor ??
+          (cluster && VECTOR_CLUSTER_COLORS[cluster.toLowerCase().trim()]) ??
+          VECTOR_LAYER_COLORS[colorIndex % VECTOR_LAYER_COLORS.length];
+        const iconKey = getVectorIconKey(
+          colorIndex,
+          cluster,
+          dataset && "icon" in dataset ? dataset.icon : undefined,
+        );
+
         legendLayers.push({
           ...dataset,
           geometryType,
-          color: geometryType === "Point" ? mapColors.blue : mapColors.orange,
+          color: layerColor,
+          iconKey,
         });
       } else if (dataset.dataType === "raster") {
         legendLayers.push({
           ...dataset,
           opacity: 1.0,
+          dataYear,
         });
       } else if (dataset.dataType === "pmtiles") {
         legendLayers.push({
           ...dataset,
           geometryType: "LineString",
-          color: mapColors.red,
+          color: mapPalette.areaCouncilBorder,
+          dataYear,
         });
       }
     }

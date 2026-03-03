@@ -38,7 +38,7 @@ class DatasetFilter(FilterSet):
 class RasterDatasetFilter(DatasetFilter):
     class Meta:
         model = RasterDataset
-        fields = ["name", "source", "cluster", "created", "updated"]
+        fields = ["name", "source", "created", "updated"]
 
 
 class PMTilesDatasetFilter(DatasetFilter):

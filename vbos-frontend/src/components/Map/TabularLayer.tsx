@@ -1,8 +1,7 @@
 import { useEffect } from "react";
-import { Box, Skeleton, Text } from "@chakra-ui/react";
 import { useDataset } from "@/hooks/useDataset";
-import { useAreaStore } from "@/store/area-store";
 import { useLayerStore } from "@/store/layer-store";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function TabularLayers() {
   const { layers } = useLayerStore();
@@ -14,6 +13,7 @@ export function TabularLayers() {
   const layer = tabularLayers.length ? tabularLayers[0] : null;
 
   if (layer) return <TabularDatasetMapLayer id={layer} />;
+  return null;
 }
 
 type TabularDatasetMapLayerProps = {
@@ -21,12 +21,8 @@ type TabularDatasetMapLayerProps = {
 };
 
 function TabularDatasetMapLayer({ id }: TabularDatasetMapLayerProps) {
-  // load ac and province and set filters
-  const { ac, province } = useAreaStore();
   const { setTabularLayerData } = useLayerStore();
   const filters = new URLSearchParams();
-  if (ac) filters.set("area_council", ac);
-  if (province) filters.set("province", province);
 
   const { data, isPending } = useDataset("tabular", id, filters);
 
@@ -40,21 +36,12 @@ function TabularDatasetMapLayer({ id }: TabularDatasetMapLayerProps) {
 
   if (isPending)
     return (
-      <Box
-        position="relative"
-        display="inline-block"
-        p={2}
-        m={1}
-        opacity={0.95}
-        bgColor="white"
-        borderRadius="md"
-        shadow="sm"
-      >
-        <Skeleton height={4} width="140px" mb={1} />
-        <Text fontSize="xs" color="fg.muted">
+      <div className="relative m-1 inline-block rounded-md bg-background p-2 shadow-sm opacity-95" role="status" aria-label="Loading dataset">
+        <Skeleton className="mb-1 h-4 w-[140px]" />
+        <p className="text-xs text-muted-foreground">
           Loading dataset layer {id}
-        </Text>
-      </Box>
+        </p>
+      </div>
     );
 
   return null;

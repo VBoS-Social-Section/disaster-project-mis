@@ -1,5 +1,9 @@
 import { StrictMode } from "react";
+import "./lib/highchartsSetup";
+import "./index.css";
 import "@fontsource-variable/work-sans/index.css";
+import "@flaticon/flaticon-uicons/css/solid/rounded.css";
+import "./Theme/accessibility.css";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import Providers from "./Providers.tsx";

@@ -28,6 +28,9 @@ whitenoise
 # Admin
 django-admin-sortable2==2.2.6
 
+# Excel (land accounts import)
+openpyxl==3.1.5
+
 # Developer Tools
 python-dotenv==1.0.1
 ipdb==0.13.13

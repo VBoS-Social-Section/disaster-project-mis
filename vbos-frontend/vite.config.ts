@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { VitePWA } from "vite-plugin-pwa";
@@ -8,8 +9,17 @@ import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    proxy: {
+      "/api": "http://localhost:8000",
+      "/api-token-auth": "http://localhost:8000",
+      "/admin": "http://localhost:8000",
+      "/media": "http://localhost:8000",
+    },
+  },
   plugins: [
     react(),
+    tailwindcss(),
     tsconfigPaths(),
     VitePWA({
       registerType: "autoUpdate",
@@ -34,11 +44,20 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/tiles\.openfreemap\.org\/.*/i,
+            urlPattern: /^https:\/\/[a-z0-9-]+\.basemaps\.cartocdn\.com\/.*/i,
             handler: "CacheFirst",
             options: {
-              cacheName: "map-tiles-cache",
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 },
+              cacheName: "basemap-tiles",
+              expiration: { maxEntries: 500, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/[^/]+\/.*\.pmtiles$/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "pmtiles-cache",
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 30 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },
@@ -67,14 +86,13 @@ export default defineConfig({
       output: {
         manualChunks: (id) => {
           if (id.includes("node_modules")) {
-            if (id.includes("maplibre-gl") || id.includes("react-map-gl") || id.includes("pmtiles")) {
+            // maplibre-gl + pmtiles only (no react-map-gl - it must share React with the app)
+            if (id.includes("maplibre-gl") || id.includes("pmtiles")) {
               return "map";
             }
-            if (id.includes("react") || id.includes("react-dom") || id.includes("scheduler")) {
+            // react-map-gl must share the same React instance
+            if (id.includes("react") || id.includes("react-dom") || id.includes("scheduler") || id.includes("react-map-gl")) {
               return "react";
-            }
-            if (id.includes("@chakra-ui") || id.includes("@emotion") || id.includes("framer-motion")) {
-              return "chakra";
             }
             if (id.includes("highcharts")) {
               return "charts";

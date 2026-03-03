@@ -125,7 +125,7 @@ python manage.py runserver 0.0.0.0:8000
 gunicorn --bind 0.0.0.0:8000 vbos.wsgi:application
 ```
 
-Backend runs at `http://localhost:8000`.
+Backend runs at `http://localhost:8000` (or `http://<VM-IP>:8000` from other machines, e.g. `http://10.252.0.158:8000`).
 
 ---
 
@@ -136,9 +136,11 @@ Backend runs at `http://localhost:8000`.
 ```bash
 cd vbos-frontend
 
-# Create .env.local
-echo "VITE_API_HOST=http://localhost:8000" > .env.local
-echo "VITE_TITILER_API=http://localhost:8002" >> .env.local
+# Create .env.local (use your server IP when deploying to VM)
+# For VM at 10.252.0.158:
+echo "VITE_API_HOST=http://10.252.0.158:8000" > .env.local
+echo "VITE_TITILER_API=http://10.252.0.158:8002" >> .env.local
+# For local dev: use http://localhost:8000 and http://localhost:8002
 
 pnpm install
 pnpm build
@@ -189,13 +191,14 @@ Without Titiler, tabular and vector layers work; raster layers will not.
 1. Start PostgreSQL
 2. In `vbos-backend`: `python manage.py runserver 0.0.0.0:8000`
 3. In `vbos-frontend`: `pnpm build && npx serve dist -l 5173`
-4. Open `http://localhost:5173`, ensure `VITE_API_HOST` points to `http://localhost:8000`
+4. Open the app (e.g. `http://localhost:5173` or `http://10.252.0.158:5173`), ensure `VITE_API_HOST` matches your backend URL
 
 ---
 
 ## Troubleshooting
 
-- **PostGIS not found**: Ensure extension is created: `CREATE EXTENSION postgis;`
+- **collectstatic Permission denied**: Fix ownership: `sudo chown -R $USER:$USER /path/to/static` (static dir is often `vbos-backend/static` or one level up)
+- **PostGIS not found**: Install `postgresql-16-postgis-3`, then `CREATE EXTENSION postgis;`
 - **GDAL/geos errors**: Install `libgdal-dev`, `libgeos-dev` and Python dev headers
 - **CORS errors**: Use `Vm` or `Local` config; they allow relaxed CORS
 - **Static files 404**: Run `python manage.py collectstatic`

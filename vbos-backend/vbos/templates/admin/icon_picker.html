@@ -1,0 +1,90 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+{% block title %}{% trans "Choose Icon" %} | {{ block.super }}{% endblock %}
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@flaticon/flaticon-uicons@3.3.1/css/solid/rounded.css" />
+<style>
+  #icon-picker-search { width: 100%; max-width: 400px; padding: 8px 12px; margin-bottom: 16px; font-size: 14px; }
+  #icon-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); gap: 8px; max-height: 70vh; overflow-y: auto; }
+  .icon-picker-item { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; cursor: pointer; border: 2px solid #e0e0e0; border-radius: 6px; transition: all 0.15s; }
+  .icon-picker-item:hover { border-color: #417690; background: #f0f7ff; }
+  .icon-picker-item i { font-size: 24px; color: #333; }
+  .icon-picker-item:hover i { color: #417690; }
+  .icon-picker-suggested-item { cursor: pointer; border: 2px solid #e0e0e0; border-radius: 6px; }
+  .icon-picker-suggested-item:hover { border-color: #417690; background: #f0f7ff; }
+  .icon-picker-empty { grid-column: 1 / -1; padding: 24px; text-align: center; color: #666; }
+</style>
+{% endblock %}
+{% block content %}
+<div id="content-main">
+  <h1>{% trans "Choose Icon" %}</h1>
+  <p class="help">{% trans "50,000+ icons from Flaticon Uicons. Search and click to select." %}</p>
+
+  <div class="icon-picker-suggested" style="margin-bottom: 20px;">
+    <h3 style="margin: 0 0 12px 0; font-size: 14px;">{% trans "Suggested (humanitarian clusters)" %}</h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+      {% for label, icon_id in cluster_icons %}
+      <div class="icon-picker-item icon-picker-suggested-item" data-icon="{{ icon_id }}" title="{{ label }} ({{ icon_id }})" style="flex-direction: column; width: 72px; height: 64px; padding: 4px;">
+        <i class="fi {{ icon_id }}" style="font-size: 24px; margin-bottom: 4px;"></i>
+        <span style="font-size: 11px; text-align: center; line-height: 1.2;">{{ label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <input type="text" id="icon-picker-search" placeholder="{% trans 'Search icons...' %}" autofocus />
+  <div id="icon-picker-grid"></div>
+  <p class="help" style="margin-top: 16px;">
+    <a href="https://www.flaticon.com/uicons" target="_blank" rel="noopener">Uicons by Flaticon</a>
+  </p>
+</div>
+<script>
+(function() {
+  const icons = {{ icons_json|safe }};
+  const grid = document.getElementById('icon-picker-grid');
+  const searchInput = document.getElementById('icon-picker-search');
+
+  function selectIcon(iconId) {
+    if (window.opener) {
+      try {
+        window.opener.postMessage({ type: 'icon-picker-select', icon: iconId }, '*');
+      } catch (e) {}
+    }
+    window.close();
+  }
+
+  document.querySelector('.icon-picker-suggested')?.addEventListener('click', function(e) {
+    const item = e.target.closest('.icon-picker-suggested-item');
+    if (item) selectIcon(item.dataset.icon);
+  });
+
+  function render(filter) {
+    const term = (filter || '').toLowerCase();
+    const filtered = term ? icons.filter(function(id) { return id.toLowerCase().indexOf(term) !== -1; }) : icons;
+    grid.innerHTML = '';
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="icon-picker-empty">{% trans "No icons match your search." %}</div>';
+      return;
+    }
+    filtered.slice(0, 500).forEach(function(iconId) {
+      const div = document.createElement('div');
+      div.className = 'icon-picker-item';
+      div.title = iconId;
+      div.innerHTML = '<i class="fi ' + iconId + '"></i>';
+      div.onclick = function() { selectIcon(iconId); };
+      grid.appendChild(div);
+    });
+    if (filtered.length > 500) {
+      const more = document.createElement('div');
+      more.className = 'icon-picker-empty';
+      more.textContent = '{% trans "Showing first 500. Refine search to see more." %}';
+      grid.appendChild(more);
+    }
+  }
+
+  searchInput.oninput = function() { render(this.value); };
+  render();
+})();
+</script>
+{% endblock %}

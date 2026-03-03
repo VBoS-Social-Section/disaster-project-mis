@@ -1,13 +1,12 @@
 import {
-  Box,
-  Button,
-  CloseButton,
   Dialog,
-  Flex,
-  Link,
-  Portal,
-  Text,
-} from "@chakra-ui/react";
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { LuDownload, LuExternalLink } from "react-icons/lu";
 import { useLayerStore } from "@/store/layer-store";
@@ -17,9 +16,12 @@ import { Dataset } from "@/types/api";
 import {
   downloadFile,
   getRasterFileUrl,
+  getRasterGeoTiffUrl,
   sanitizeFilename,
 } from "@/utils/downloadHelpers";
 import { useVectorDatasetFromCache } from "@/hooks/useVectorDatasetFromCache";
+import { useLandCoverRaster } from "@/hooks/useLandCoverRaster";
+import { LAND_COVER_COLORMAP } from "@/components/colors";
 import { toast } from "@/utils/toast";
 import { useDateStore } from "@/store/date-store";
 
@@ -37,10 +39,8 @@ export const DownloadDataDialog = ({
   const getVectorDatasetFromCache = useVectorDatasetFromCache();
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
 
-  // Parse active layers from the layers string (format: "t1,v34,r54")
   const activeLayers = layers ? layers.split(",") : [];
 
-  // Get metadata for each active layer
   const activeDatasets = activeLayers
     .map((layerId) => {
       const metadata = getLayerMetadata(layerId);
@@ -50,7 +50,6 @@ export const DownloadDataDialog = ({
       (item): item is { layerId: string; metadata: Dataset } => item !== null,
     );
 
-  // Group datasets by type
   const groupedDatasets = {
     tabular: activeDatasets.filter((d) => d.layerId.startsWith("t")),
     raster: activeDatasets.filter((d) => d.layerId.startsWith("r")),
@@ -58,12 +57,9 @@ export const DownloadDataDialog = ({
   };
 
   const handleDownload = async (layerId: string, dataset: Dataset) => {
-    // Mark this dataset as downloading
     setDownloadingIds((prev) => new Set(prev).add(layerId));
 
     try {
-      // Build area filters (province and ac only)
-      // Note: Date/year filtering is not used for downloads - we download the full dataset
       const areaFilters = new URLSearchParams();
       if (province) areaFilters.set("province", province);
       if (ac) areaFilters.set("area_council", ac);
@@ -71,8 +67,6 @@ export const DownloadDataDialog = ({
       let result;
 
       if (dataset.dataType === "tabular") {
-        // Use the dedicated XLSX endpoint for tabular data
-        // Downloads full dataset filtered only by area
         result = await getXLSXData(dataset.id, areaFilters);
       } else if (dataset.dataType === "vector") {
         result = getVectorDatasetFromCache(dataset.id, areaFilters);
@@ -80,27 +74,21 @@ export const DownloadDataDialog = ({
         return;
       }
 
-      // Generate filename with area context: DatasetName_Province_AC.ext
       const sanitizedName = sanitizeFilename(dataset.name);
       const filenameParts = [sanitizedName];
-
       if (province) filenameParts.push(sanitizeFilename(province));
       if (ac) filenameParts.push(sanitizeFilename(ac));
-
       const filename = `${filenameParts.join("_")}.${result.extension}`;
 
-      // Trigger the download
       downloadFile(result.blob, filename);
       toast.success("Download started", filename);
     } catch (error) {
-      // Error occurred during download
       const message =
         error instanceof Error
           ? error.message
           : "Failed to download dataset. Please try again.";
       toast.error("Download failed", message);
     } finally {
-      // Remove from downloading set
       setDownloadingIds((prev) => {
         const next = new Set(prev);
         next.delete(layerId);
@@ -110,119 +98,86 @@ export const DownloadDataDialog = ({
   };
 
   return (
-    <Dialog.Root
-      lazyMount
-      size="md"
-      open={isOpen}
-      onOpenChange={(e) => setIsOpen(e.open)}
-    >
-      <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
-            <Dialog.Header>
-              <Dialog.Title>Download Active Datasets</Dialog.Title>
-            </Dialog.Header>
-            <Dialog.Body>
-              {activeDatasets.length === 0 ? (
-                <Text color="gray.600">
-                  No active datasets. Please enable some datasets from the left
-                  sidebar to download them.
-                </Text>
-              ) : (
-                <Flex direction="column" gap={4}>
-                  {groupedDatasets.tabular.length > 0 && (
-                    <Box>
-                      <Text
-                        fontWeight="600"
-                        mb={2}
-                        fontSize="sm"
-                        color="gray.700"
-                      >
-                        Tabular Datasets
-                      </Text>
-                      <Flex direction="column" gap={2}>
-                        {groupedDatasets.tabular.map(
-                          ({ layerId, metadata }) => (
-                            <DatasetRow
-                              key={layerId}
-                              layerId={layerId}
-                              dataset={metadata}
-                              onDownload={handleDownload}
-                              isDownloading={downloadingIds.has(layerId)}
-                            />
-                          ),
-                        )}
-                      </Flex>
-                    </Box>
-                  )}
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Download Active Datasets</DialogTitle>
+          <DialogDescription>
+            Download tabular or vector data for the currently active layers.
+          </DialogDescription>
+        </DialogHeader>
+        {activeDatasets.length === 0 ? (
+          <p className="text-muted-foreground">
+            No active datasets. Please enable some datasets from the left
+            sidebar to download them.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {groupedDatasets.tabular.length > 0 && (
+              <div>
+                <p className="mb-2 text-sm font-semibold text-foreground">
+                  Tabular Datasets
+                </p>
+                <div className="flex flex-col gap-2">
+                  {groupedDatasets.tabular.map(({ layerId, metadata }) => (
+                    <DatasetRow
+                      key={layerId}
+                      layerId={layerId}
+                      dataset={metadata}
+                      onDownload={handleDownload}
+                      isDownloading={downloadingIds.has(layerId)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
-                  {groupedDatasets.raster.length > 0 && (
-                    <Box>
-                      <Text
-                        fontWeight="600"
-                        mb={2}
-                        fontSize="sm"
-                        color="gray.700"
-                      >
-                        Raster Datasets
-                      </Text>
-                      <Flex direction="column" gap={2}>
-                        {groupedDatasets.raster.map(({ layerId, metadata }) => (
-                          <DatasetRow
-                            key={layerId}
-                            layerId={layerId}
-                            dataset={metadata}
-                            onDownload={handleDownload}
-                            isDownloading={downloadingIds.has(layerId)}
-                          />
-                        ))}
-                      </Flex>
-                    </Box>
-                  )}
+            {groupedDatasets.raster.length > 0 && (
+              <div>
+                <p className="mb-2 text-sm font-semibold text-foreground">
+                  Raster Datasets
+                </p>
+                <div className="flex flex-col gap-2">
+                  {groupedDatasets.raster.map(({ layerId, metadata }) => (
+                    <DatasetRow
+                      key={layerId}
+                      layerId={layerId}
+                      dataset={metadata}
+                      onDownload={handleDownload}
+                      isDownloading={downloadingIds.has(layerId)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
-                  {groupedDatasets.vector.length > 0 && (
-                    <Box>
-                      <Text
-                        fontWeight="600"
-                        mb={2}
-                        fontSize="sm"
-                        color="gray.700"
-                      >
-                        Vector Datasets
-                      </Text>
-                      <Flex direction="column" gap={2}>
-                        {groupedDatasets.vector.map(({ layerId, metadata }) => (
-                          <DatasetRow
-                            key={layerId}
-                            layerId={layerId}
-                            dataset={metadata}
-                            onDownload={handleDownload}
-                            isDownloading={downloadingIds.has(layerId)}
-                          />
-                        ))}
-                      </Flex>
-                    </Box>
-                  )}
-                </Flex>
-              )}
-            </Dialog.Body>
-            <Dialog.Footer>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsOpen(false)}
-              >
-                Close
-              </Button>
-            </Dialog.Footer>
-            <Dialog.CloseTrigger asChild>
-              <CloseButton size="sm" />
-            </Dialog.CloseTrigger>
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Portal>
-    </Dialog.Root>
+            {groupedDatasets.vector.length > 0 && (
+              <div>
+                <p className="mb-2 text-sm font-semibold text-foreground">
+                  Vector Datasets
+                </p>
+                <div className="flex flex-col gap-2">
+                  {groupedDatasets.vector.map(({ layerId, metadata }) => (
+                    <DatasetRow
+                      key={layerId}
+                      layerId={layerId}
+                      dataset={metadata}
+                      onDownload={handleDownload}
+                      isDownloading={downloadingIds.has(layerId)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={() => setIsOpen(false)}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
@@ -240,61 +195,93 @@ const DatasetRow = ({
   isDownloading,
 }: DatasetRowProps) => {
   const { year } = useDateStore();
-  // Determine file format based on dataset type
+  const landCover = useLandCoverRaster();
+  const [geotiffDownloading, setGeotiffDownloading] = useState(false);
+
   const getFileFormat = () => {
     if (dataset.dataType === "tabular") return "XLSX";
     if (dataset.dataType === "vector") return "GeoJSON";
-    if (dataset.dataType === "raster") return "VRT";
+    if (dataset.dataType === "raster") return "VRT / GeoTIFF";
+  };
+
+  const typeLabel = dataset.type
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char, index) =>
+      index === 0 ? char.toUpperCase() : char.toLowerCase(),
+    );
+
+  const handleGeoTiffDownload = async () => {
+    if (dataset.dataType !== "raster") return;
+    setGeotiffDownloading(true);
+    try {
+      const filenameId = dataset.filename_id as string;
+      const colormap = landCover?.layerId === layerId ? LAND_COVER_COLORMAP : undefined;
+      const url = getRasterGeoTiffUrl(filenameId, year, colormap);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("GeoTIFF export not available");
+      const blob = await res.blob();
+      const name = sanitizeFilename(dataset.name);
+      downloadFile(blob, `${name}_${year}.tif`);
+      toast.success("Download started", `${name}_${year}.tif`);
+    } catch {
+      toast.error("Download failed", "GeoTIFF export may not be supported by this server.");
+    } finally {
+      setGeotiffDownloading(false);
+    }
   };
 
   return (
-    <Flex
-      justify="space-between"
-      align="center"
-      p={3}
-      bg="gray.50"
-      borderRadius="md"
-      borderWidth={1}
-      borderColor="gray.200"
-    >
-      <Box flex={1}>
-        <Text fontWeight="500" fontSize="sm">
-          {dataset.name}
-        </Text>
-        <Text fontSize="xs" color="gray.600">
-          {dataset.type
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (char, index) =>
-              index === 0 ? char.toUpperCase() : char.toLowerCase(),
-            )}{" "}
-          • {getFileFormat()}
-        </Text>
-      </Box>
+    <div className="flex items-center justify-between rounded-md border border-border bg-muted p-3">
+      <div className="flex-1">
+        <p className="text-sm font-medium">{dataset.name}</p>
+        <p className="text-xs text-muted-foreground">
+          {typeLabel} • {getFileFormat()}
+        </p>
+      </div>
       {dataset.dataType === "raster" ? (
-        // Raster datasets have an external download link
-        <Link
-          colorPalette="blue"
-          variant="plain"
-          href={getRasterFileUrl(dataset.filename_id as string, year)}
-        >
-          <Button size="sm" colorPalette="blue" variant="outline">
-            <LuExternalLink />
-            Download
+        <div className="flex gap-1">
+          <a
+            href={getRasterFileUrl(dataset.filename_id as string, year)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            <Button size="sm" variant="outline">
+              <LuExternalLink className="size-4" />
+              VRT
+            </Button>
+          </a>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleGeoTiffDownload}
+            disabled={geotiffDownloading}
+          >
+            {geotiffDownloading ? "…" : (
+              <>
+                <LuDownload className="size-4" />
+                GeoTIFF
+              </>
+            )}
           </Button>
-        </Link>
+        </div>
       ) : (
         <Button
           size="sm"
-          colorPalette="blue"
           variant="outline"
           onClick={() => onDownload(layerId, dataset)}
           disabled={isDownloading}
-          loading={isDownloading}
         >
-          <LuDownload />
-          Download
+          {isDownloading ? (
+            "Downloading…"
+          ) : (
+            <>
+              <LuDownload className="size-4" />
+              Download
+            </>
+          )}
         </Button>
       )}
-    </Flex>
+    </div>
   );
 };

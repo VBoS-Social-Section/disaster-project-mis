@@ -1,25 +1,44 @@
 import { useEffect } from "react";
-import { Layer, Source, LayerProps, MapRef } from "react-map-gl/maplibre";
+import { GeoJSON } from "react-leaflet";
+import { useUiStore } from "@/store/ui-store";
 import { featureCollection } from "@turf/helpers";
+import L from "leaflet";
 import useProvinces from "@/hooks/useProvinces";
 import { useAreaStore } from "@/store/area-store";
+import { useDeferredArea } from "@/hooks/useDeferredArea";
 import { useLayerStore } from "@/store/layer-store";
 import { useOpacityStore } from "@/store/opacity-store";
+import { useFocusStore } from "@/store/focus-store";
 import { useAdminAreaStats } from "@/hooks/useAdminAreaStats";
-import { mapColors } from "../colors";
+import { useComparisonStore } from "@/store/comparison-store";
+import { MAP_COLORS, getChoroplethColor } from "../colors";
+import { useColorMode } from "../ui/color-mode";
 import type { AreaCouncilGeoJSON, ProvincesGeoJSON } from "@/types/data";
+import type { PopupInfo } from "./index";
 
-type AdminAreaMapLayers = {
-  fitBounds?: MapRef["fitBounds"];
+type AdminAreaMapLayersProps = {
+  map: L.Map | null;
+  setPopupInfo: (info: PopupInfo | null) => void;
+  activeFeatureName?: string;
 };
 
 const EMPTY_GEOJSON = featureCollection([]) as ProvincesGeoJSON;
 
-export function AdminAreaMapLayers({ fitBounds }: AdminAreaMapLayers) {
+export function AdminAreaMapLayers({
+  map,
+  setPopupInfo,
+  activeFeatureName,
+}: AdminAreaMapLayersProps) {
+  const { colorMode } = useColorMode();
+  const mapPalette = MAP_COLORS[colorMode === "dark" ? "dark" : "light"];
+  const setMapHoverFeature = useUiStore((s) => s.setMapHoverFeature);
+  const { comparisonMode } = useComparisonStore();
   const { data: provincesGeojson, isPending, error } = useProvinces();
-  const { ac, province, acGeoJSON } = useAreaStore();
-  const { layers } = useLayerStore();
+  const { ac, province } = useDeferredArea();
+  const acGeoJSON = useAreaStore((s) => s.acGeoJSON);
+  const { layers, getLayerMetadata } = useLayerStore();
   const { getOpacity } = useOpacityStore();
+  const { getEffectiveOpacity } = useFocusStore();
   const adminAreaGeoJSON: ProvincesGeoJSON | AreaCouncilGeoJSON =
     province && acGeoJSON ? acGeoJSON : (provincesGeojson ?? EMPTY_GEOJSON);
   const {
@@ -29,86 +48,156 @@ export function AdminAreaMapLayers({ fitBounds }: AdminAreaMapLayers) {
   } = useAdminAreaStats(adminAreaGeoJSON);
 
   useEffect(() => {
-    if (fitBounds && !province)
-      fitBounds([-194.18335, -20.50641, -189.9646, -12.84665]);
-  }, [province, fitBounds]);
+    if (map && !province) {
+      // Vanuatu bounds: [minLng, minLat, maxLng, maxLat] -> Leaflet [[minLat, minLng], [maxLat, maxLng]]
+      map.fitBounds([
+        [-20.50641, -194.18335] as L.LatLngTuple,
+        [-12.84665, -189.9646] as L.LatLngTuple,
+      ] as L.LatLngBoundsExpression);
+    }
+  }, [province, map]);
 
   if (isPending || error) {
     return null;
   }
 
-  // Get the active tabular layer ID to apply opacity
   const tabularLayers = layers.split(",").filter((i) => i.startsWith("t"));
   const activeTabularLayerId = tabularLayers.length ? tabularLayers[0] : null;
-
-  // Get opacity for the tabular layer (0-100) and convert to 0-1
   const tabularOpacity = activeTabularLayerId
-    ? getOpacity(activeTabularLayerId) / 100
+    ? getEffectiveOpacity(activeTabularLayerId, getOpacity(activeTabularLayerId) / 100)
     : 1;
 
-  const provinceLayerStyle: LayerProps = {
-    type: "line",
-    paint: {
-      "line-color": mapColors.blueLight,
-      "line-width": ac ? 1 : 2,
-      "line-opacity": ac ? 0.5 : 1,
-    },
-    source: "provinces",
-    filter: province ? ["==", "name", province.toUpperCase()] : ["all"],
+  const getProvinceStyle = (feature?: GeoJSON.Feature) => {
+    const name = feature?.properties?.name as string | undefined;
+    const show = !province || (name && name.toUpperCase() === province.toUpperCase());
+    return {
+      color: mapPalette.provinceBorder,
+      weight: ac ? 1 : 2,
+      opacity: ac ? 0.5 : show ? 1 : 0,
+      fill: false,
+      fillOpacity: 0,
+    };
   };
-  const areaCouncilLayerStyle: LayerProps = {
-    type: "line",
-    paint: {
-      "line-color": mapColors.blueLight,
-      "line-width": ac ? 2 : 1,
-      "line-opacity": ac ? 1 : 0.125,
-    },
-    source: "area-councils",
-    filter: ac ? ["==", "name", ac] : ["all"],
+
+  const getAreaCouncilStyle = (feature?: GeoJSON.Feature) => {
+    const name = feature?.properties?.name as string | undefined;
+    const show = !ac || (name && name.toLowerCase() === ac.toLowerCase());
+    return {
+      color: mapPalette.areaCouncilBorder,
+      weight: ac ? 2 : 1.5,
+      opacity: ac ? 1 : show ? 0.5 : 0,
+      fill: false,
+      fillOpacity: 0,
+    };
   };
-  const fillStyle: LayerProps = {
-    type: "fill",
-    paint: {
-      "fill-color": mapColors.purple,
-      "fill-opacity": [
-        "*",
-        tabularOpacity,
-        [
-          "interpolate",
-          ["linear"],
-          ["get", "value"],
-          minValue,
-          0.1,
-          maxValue,
-          1,
-        ],
-      ],
-    },
-    source: "stats",
-    filter: ac ? ["==", "name", ac] : ["all"],
+
+  const getStatsStyle = (feature?: GeoJSON.Feature) => {
+    const value = feature?.properties?.value as number | undefined;
+    const name = feature?.properties?.name as string | undefined;
+    if (typeof value !== "number" || !isFinite(value) || (ac && name?.toLowerCase() !== ac.toLowerCase())) {
+      return { fillOpacity: 0, stroke: false };
+    }
+    const t = maxValue !== minValue
+      ? (value - minValue) / (maxValue - minValue)
+      : 1;
+    const fillColor = getChoroplethColor(t, mapPalette);
+    const opacity = maxValue !== minValue ? 0.15 + t * 0.85 : 1;
+    const isActive = activeFeatureName && name?.toLowerCase() === activeFeatureName.toLowerCase();
+    return {
+      fillColor,
+      fillOpacity: tabularOpacity * opacity,
+      color: isActive ? mapPalette.choroplethLow : fillColor,
+      weight: isActive ? 4 : 1,
+      opacity: isActive ? 1 : 0.7,
+      className: isActive ? "selected-map-feature" : undefined,
+    };
+  };
+
+  const hoverHandlers = {
+    mouseover: () => setMapHoverFeature(true),
+    mouseout: () => setMapHoverFeature(false),
+  };
+
+  const buildStatsTooltip = (props: Record<string, unknown>) => {
+    const name = props.name as string | undefined;
+    const value = props.value as number | undefined;
+    const lines: string[] = [];
+    if (name) lines.push(`<strong>${name}</strong>`);
+    if (typeof value === "number" && isFinite(value)) {
+      lines.push(value.toLocaleString(undefined, { maximumFractionDigits: 1 }));
+    }
+    return lines.length ? lines.join("<br/>") : null;
+  };
+
+  const onEachStatsFeature = (feature: GeoJSON.Feature, layer: L.Layer) => {
+    const tooltipContent = buildStatsTooltip(feature.properties || {});
+    if (tooltipContent) {
+      (layer as L.Path).bindTooltip(tooltipContent, {
+        permanent: false,
+        direction: "top",
+        className: "admin-area-tooltip",
+        offset: [0, -4],
+        opacity: 0.95,
+        interactive: false,
+      });
+    }
+    layer.on({
+      ...hoverHandlers,
+      click: (e: L.LeafletMouseEvent) => {
+        L.DomEvent.stopPropagation(e);
+        const tabularLayers = layers.split(",").filter((i) => i.startsWith("t"));
+        const metadata = tabularLayers.length ? getLayerMetadata(tabularLayers[0]) : undefined;
+        setPopupInfo({
+          latitude: e.latlng.lat,
+          longitude: e.latlng.lng,
+          properties: feature.properties || {},
+          datasetName: metadata?.name,
+          datasetId: tabularLayers[0] || "",
+        });
+      },
+    });
+  };
+
+  const onEachBoundaryFeature = (feature: GeoJSON.Feature, layer: L.Layer) => {
+    const name = (feature.properties?.name as string) || "Area";
+    (layer as L.Path).bindTooltip(`<strong>${name}</strong>`, {
+      permanent: false,
+      direction: "top",
+      className: "admin-area-tooltip",
+      offset: [0, -4],
+      opacity: 0.95,
+      interactive: false,
+    });
+    layer.on(hoverHandlers);
   };
 
   return (
     <>
       {acGeoJSON && (
-        <Source id="area-councils" type="geojson" data={acGeoJSON}>
-          <Layer {...areaCouncilLayerStyle} id="area-councils" />
-        </Source>
+        <GeoJSON
+          key="area-councils"
+          data={acGeoJSON}
+          style={getAreaCouncilStyle}
+          onEachFeature={(feat, layer) => onEachBoundaryFeature(feat, layer)}
+        />
       )}
       {provincesGeojson && (
-        <Source id="provinces" type="geojson" data={provincesGeojson}>
-          <Layer
-            {...provinceLayerStyle}
-            beforeId="area-councils"
-            id="provinces"
-          />
-        </Source>
+        <GeoJSON
+          key="provinces"
+          data={provincesGeojson}
+          style={getProvinceStyle}
+          onEachFeature={(feat, layer) => onEachBoundaryFeature(feat, layer)}
+        />
       )}
-      {adminAreaStatsGeojson.features.length &&
+      {!comparisonMode &&
+      adminAreaStatsGeojson.features.length > 0 &&
       (maxValue !== 0 || minValue !== 0) && (
-        <Source id="stats" type="geojson" data={adminAreaStatsGeojson}>
-          <Layer {...fillStyle} beforeId="area-councils" id="stats" />
-        </Source>
+        <GeoJSON
+          key="stats"
+          data={adminAreaStatsGeojson}
+          style={getStatsStyle}
+          onEachFeature={onEachStatsFeature}
+        />
       )}
     </>
   );

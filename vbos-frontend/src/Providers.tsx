@@ -1,16 +1,14 @@
 import "@fontsource/work-sans/index.css";
-import { ChakraProvider } from "@chakra-ui/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ColorModeProvider } from "@/components/ui/color-mode";
-
-import theme from "./Theme";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       networkMode: "always",
-      staleTime: 5 * 60 * 1000, // 5 min - reduce refetches when switching views
-      gcTime: 10 * 60 * 1000, // 10 min - keep cache longer (formerly cacheTime)
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
     },
     mutations: {
       networkMode: "always",
@@ -20,11 +18,16 @@ const queryClient = new QueryClient({
 
 function Providers({ children }: React.PropsWithChildren) {
   return (
-    <ChakraProvider value={theme}>
-      <ColorModeProvider attribute="class" storageKey="vbos-color-mode">
+    <ColorModeProvider
+      attribute="class"
+      storageKey="vbos-color-mode"
+      defaultTheme="system"
+      enableSystem
+    >
+      <TooltipProvider>
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-      </ColorModeProvider>
-    </ChakraProvider>
+      </TooltipProvider>
+    </ColorModeProvider>
   );
 }
 

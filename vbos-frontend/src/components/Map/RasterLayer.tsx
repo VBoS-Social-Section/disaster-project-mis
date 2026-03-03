@@ -1,19 +1,35 @@
-import { Layer, Source, LayerProps } from "react-map-gl/maplibre";
+import { useMap } from "react-leaflet";
+import { useEffect } from "react";
+import L from "leaflet";
 import { useLayerStore } from "@/store/layer-store";
 import { useOpacityStore } from "@/store/opacity-store";
+import { useFocusStore } from "@/store/focus-store";
 import { useDateStore } from "@/store/date-store";
+import { useScenario } from "@/hooks/useScenario";
+import { useComparisonStore } from "@/store/comparison-store";
 import { useCheckRasterLayer } from "@/hooks/useCheckRasterLayer";
+import { useLandCoverRaster } from "@/hooks/useLandCoverRaster";
+import { useLandCoverFilterStore } from "@/store/land-cover-filter-store";
+import { getLandCoverColormap, LAND_COVER_COLORMAP } from "../colors";
 
 export function RasterLayers() {
   const { layers } = useLayerStore();
-  const vectorLayers = layers
+  const scenario = useScenario();
+  const { comparisonMode } = useComparisonStore();
+  const hasRaster = layers.split(",").some((l) => l.startsWith("r"));
+  const hideForRasterComparison =
+    scenario.uiConfig.showComparison && comparisonMode && hasRaster;
+
+  const rasterLayers = layers
     .split(",")
     .filter((i) => i.startsWith("r"))
     .map((i) => Number(i.slice(1)));
 
+  if (hideForRasterComparison) return null;
+
   return (
     <>
-      {vectorLayers.map((layer) => (
+      {rasterLayers.map((layer) => (
         <RasterMapLayer id={layer} key={layer} />
       ))}
     </>
@@ -25,40 +41,65 @@ type RasterMapLayerProps = {
 };
 
 function RasterMapLayer({ id }: RasterMapLayerProps) {
+  const map = useMap();
   const layerId = `r${id}`;
   const { year } = useDateStore();
   const { getLayerMetadata } = useLayerStore();
-  const metadata = getLayerMetadata(layerId);
+  const landCover = useLandCoverRaster();
+  const { hiddenClasses } = useLandCoverFilterStore();
+  const metadata = getLayerMetadata(layerId) as import("@/types/api").RasterDataset | undefined;
   const datasetUrlId = metadata?.filename_id || "";
-  const urlParams = metadata?.titiler_url_params
+  const precomputedUrl = metadata?.precomputed_tile_url;
+  const isPrecomputed = Boolean(precomputedUrl);
+  const isLandCover = landCover?.layerId === layerId;
+
+  let urlParams = metadata?.titiler_url_params
     ? `?${metadata.titiler_url_params}`
     : "";
+  if (isLandCover && !isPrecomputed) {
+    const colormapObj =
+      hiddenClasses.size > 0
+        ? getLandCoverColormap(hiddenClasses)
+        : LAND_COVER_COLORMAP;
+    const colormap = encodeURIComponent(JSON.stringify(colormapObj));
+    urlParams += urlParams ? "&" : "?";
+    urlParams += `colormap=${colormap}&colormap_type=explicit`;
+  }
 
-  // Get opacity from store (0-100) and convert to 0-1 for MapLibre
   const { getOpacity } = useOpacityStore();
-  const opacity = getOpacity(layerId) / 100;
+  const { getEffectiveOpacity } = useFocusStore();
+  const opacity = getEffectiveOpacity(layerId, getOpacity(layerId) / 100);
 
-  // Check if there is a raster layer for the selected year
-  const { error } = useCheckRasterLayer(datasetUrlId, year);
-  if (error) return null;
+  const { error } = useCheckRasterLayer(datasetUrlId, year, isPrecomputed);
 
-  const layerStyle: LayerProps = {
-    type: "raster",
-    paint: {
-      "raster-opacity": opacity,
-    },
-  };
+  useEffect(() => {
+    if (!map || error) return;
+    if (isPrecomputed ? !precomputedUrl : !datasetUrlId) return;
 
-  return (
-    <Source
-      id={layerId}
-      type="raster"
-      tileSize={256}
-      tiles={[
-        `${import.meta.env.VITE_TITILER_API}/dataset/${datasetUrlId}/years/${year}/tiles/WebMercatorQuad/{z}/{x}/{y}.png${urlParams}`,
-      ]}
-    >
-      <Layer id={layerId} source={layerId} {...layerStyle} />
-    </Source>
-  );
+    let url: string;
+    if (isPrecomputed) {
+      const template = precomputedUrl!.replace(/\{year\}/g, year);
+      const apiHost = import.meta.env.VITE_API_HOST ?? "";
+      url =
+        apiHost && template.startsWith("/")
+          ? `${apiHost.replace(/\/$/, "")}${template}`
+          : template;
+    } else {
+      url = `${import.meta.env.VITE_TITILER_API}/dataset/${datasetUrlId}/years/${year}/tiles/WebMercatorQuad/{z}/{x}/{y}.png${urlParams}`;
+    }
+
+    const tileLayer = L.tileLayer(url, {
+      opacity,
+      maxNativeZoom: 12,
+      maxZoom: 18,
+      pane: "overlayPane",
+    });
+    tileLayer.addTo(map);
+
+    return () => {
+      map.removeLayer(tileLayer);
+    };
+  }, [map, datasetUrlId, year, urlParams, opacity, isPrecomputed, precomputedUrl, hiddenClasses, error]);
+
+  return null;
 }

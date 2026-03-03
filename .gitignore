@@ -1,0 +1,4 @@
+# Large data files
+Land_Accounts*.xlsx
+*.tar
+vbos-backend/59K_*.tif

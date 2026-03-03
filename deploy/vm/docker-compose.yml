@@ -91,7 +91,7 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "8080:80"  # Use 8080 if system nginx occupies port 80
+      - "80:80"  # App at http://10.252.0.158/ (use 8080:80 if port 80 is in use)
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ../../vbos-frontend/dist:/usr/share/nginx/html:ro

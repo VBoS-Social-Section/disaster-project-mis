@@ -1,6 +1,6 @@
 import type { AuthUser } from "@/store/auth-store";
 
-const API_HOST = import.meta.env.VITE_API_HOST;
+const API_HOST = import.meta.env.VITE_API_HOST ?? "";
 
 export async function login(
   username: string,

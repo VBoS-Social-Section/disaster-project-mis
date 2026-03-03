@@ -35,7 +35,10 @@ class AreaCouncilSerializer(GeoFeatureModelSerializer):
 
 
 class RasterDatasetSerializer(serializers.ModelSerializer):
-    cluster = serializers.ReadOnlyField(source="cluster.name")
+    cluster = serializers.SerializerMethodField()
+
+    def get_cluster(self, obj):
+        return obj.cluster.name if obj.cluster else None
 
     class Meta:
         model = RasterDataset
@@ -50,6 +53,8 @@ class RasterDatasetSerializer(serializers.ModelSerializer):
             "source",
             "filename_id",
             "titiler_url_params",
+            "is_land_cover",
+            "precomputed_tile_url",
         ]
 
 
@@ -67,6 +72,8 @@ class VectorDatasetSerializer(serializers.ModelSerializer):
             "cluster",
             "type",
             "source",
+            "icon",
+            "color",
         ]
 
 
@@ -100,15 +107,23 @@ class VectorItemSerializer(GeoFeatureModelSerializer):
     class Meta:
         model = VectorItem
         geo_field = "geometry"
+        id_field = "id"
         fields = [
             "id",
             "name",
-            "ref",
             "attribute",
             "province",
             "area_council",
-            "metadata",
         ]
+
+    def to_representation(self, instance):
+        """Ensure id is in both feature-level and properties for popup/tooltip display."""
+        data = super().to_representation(instance)
+        if "properties" in data and "id" not in data.get("properties", {}):
+            data["properties"]["id"] = instance.id
+        if "id" not in data:
+            data["id"] = instance.id
+        return data
 
 
 class TabularDatasetSerializer(serializers.ModelSerializer):

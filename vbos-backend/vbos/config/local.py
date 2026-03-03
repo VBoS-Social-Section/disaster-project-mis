@@ -11,6 +11,13 @@ class Local(Common):
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
 
+    # Allow frontend origin for local dev (Vite default: 5173)
+    CSRF_TRUSTED_ORIGINS = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",
+    ]
+
     # Testing
     INSTALLED_APPS = Common.INSTALLED_APPS
 

@@ -208,3 +208,76 @@ class TestTabularDatasetDataView(APITestCase):
         assert req.headers[
             "content-disposition"
         ] == "attachment; filename=vbos-mis-tabular-{}.xlsx".format(self.dataset_1.id)
+
+
+class TestTabularAggregateView(APITestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        self.client.force_authenticate(user=self.user)
+        self.cluster = Cluster.objects.create(name="Demographics")
+        self.dataset = TabularDataset.objects.create(
+            name="Population", cluster=self.cluster
+        )
+        self.torba = Province.objects.get(name="TORBA")
+        self.tafea = Province.objects.get(name="TAFEA")
+        TabularItem.objects.create(
+            dataset=self.dataset,
+            date=date(2025, 1, 1),
+            province=self.torba,
+            attribute="Population",
+            value=1000.0,
+        )
+        TabularItem.objects.create(
+            dataset=self.dataset,
+            date=date(2025, 1, 1),
+            province=self.torba,
+            attribute="Population",
+            value=500.0,
+        )
+        TabularItem.objects.create(
+            dataset=self.dataset,
+            date=date(2025, 1, 1),
+            province=self.tafea,
+            attribute="Population",
+            value=2000.0,
+        )
+        TabularItem.objects.create(
+            dataset=self.dataset,
+            date=date(2024, 6, 1),
+            province=self.torba,
+            attribute="Population",
+            value=800.0,
+        )
+        self.url = reverse("datasets:tabular-aggregate", args=[self.dataset.id])
+
+    def test_aggregate_by_province(self):
+        req = self.client.get(self.url, {"group_by": "province"})
+        assert req.status_code == 200
+        assert req.data["group_by"] == "province"
+        results = {r["province"]: r["value"] for r in req.data["results"]}
+        assert results["TORBA"] == 2300.0  # 1000 + 500 + 800 (all years)
+        assert results["TAFEA"] == 2000.0
+
+    def test_aggregate_by_province_with_year(self):
+        req = self.client.get(
+            self.url, {"group_by": "province", "year": "2025"}
+        )
+        assert req.status_code == 200
+        results = {r["province"]: r["value"] for r in req.data["results"]}
+        assert results["TORBA"] == 1500.0  # 2025 only: 1000 + 500
+        assert results["TAFEA"] == 2000.0
+
+    def test_aggregate_requires_group_by_valid(self):
+        req = self.client.get(self.url, {"group_by": "invalid"})
+        assert req.status_code == 400
+
+    def test_aggregate_404_for_unknown_dataset(self):
+        req = self.client.get(
+            reverse("datasets:tabular-aggregate", args=[99999]),
+            {"group_by": "province"},
+        )
+        assert req.status_code == 404
+
+    def test_aggregate_by_area_council_requires_province(self):
+        req = self.client.get(self.url, {"group_by": "area_council"})
+        assert req.status_code == 400

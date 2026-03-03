@@ -1,48 +1,64 @@
-import { Popup } from "react-map-gl/maplibre";
+import { Marker, Popup } from "react-leaflet";
+import L from "leaflet";
 import "@/Theme/popup.css";
-import { DataList, Heading } from "@chakra-ui/react";
 import { toSentenceCase } from "@/utils/format";
-import { PopupInfo } from "./index";
+import type { PopupInfo } from "./index";
+
+const transparentIcon = L.divIcon({
+  className: "leaflet-transparent-marker",
+  iconSize: [0, 0],
+  iconAnchor: [0, 0],
+});
 
 export function MapPopup(popupInfo: PopupInfo) {
-  const { latitude, longitude, datasetName, properties } = popupInfo;
+  const { latitude, longitude, datasetName, properties, featureId } = popupInfo;
+  const coords = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
   return (
-    <Popup
-      latitude={latitude}
-      longitude={longitude}
-      key={latitude + longitude}
-      offset={[0, -10]}
-      closeButton={false}
-      style={{ fontFamily: "var(--chakra-fonts-body)" }}
-      closeOnClick={false}
+    <Marker
+      position={[latitude, longitude]}
+      icon={transparentIcon}
+      key={`${latitude}-${longitude}`}
     >
-      {datasetName && (
-        <Heading size="xs" mb={2}>
-          {datasetName}
-        </Heading>
-      )}
-      <DataList.Root
-        orientation="horizontal"
-        divideY="1px"
-        size="sm"
-        maxW="sm"
-        gap={1}
-      >
-        {Object.entries(properties).map(([key, value]) => (
-          <DataList.Item
-            alignItems="baseline"
-            key={key}
-            _notFirst={{ pt: "1" }}
-          >
-            <DataList.ItemLabel minW="5rem">
-              {toSentenceCase(key)}
-            </DataList.ItemLabel>
-            <DataList.ItemValue maxW="100%" display="inline-block">
-              {value !== null && value !== undefined ? String(value) : "N/A"}
-            </DataList.ItemValue>
-          </DataList.Item>
-        ))}
-      </DataList.Root>
-    </Popup>
+      <Popup closeButton={false} autoPan={true}>
+        <div className="min-w-[12rem] font-sans">
+          {datasetName && (
+            <h4 className="mb-2 text-sm font-semibold">{datasetName}</h4>
+          )}
+          {(featureId != null || coords) && (
+            <p className="mb-2 text-xs text-muted-foreground">
+              {featureId != null && (
+                <span className="font-medium">ID {featureId}</span>
+              )}
+              {featureId != null && coords && " · "}
+              {coords && (
+                <span title="Match this to Admin → Coords column">{coords}</span>
+              )}
+            </p>
+          )}
+          <dl className="space-y-1 divide-y text-sm">
+            {Object.entries(properties)
+              .filter(([key]) => !["id", "ref", "metadata"].includes(key))
+              .map(([key, value]) => {
+              const displayValue =
+                value === null || value === undefined
+                  ? "N/A"
+                  : typeof value === "object"
+                    ? JSON.stringify(value)
+                    : String(value);
+              return (
+                <div key={key} className="flex items-baseline gap-2 pt-1 first:pt-0">
+                  <dt className="min-w-[5rem] shrink-0 text-muted-foreground">
+                    {toSentenceCase(key)}
+                  </dt>
+                  <dd className="max-w-full min-w-0 break-words">
+                    {displayValue}
+                  </dd>
+                </div>
+              );
+            })}
+          </dl>
+        </div>
+      </Popup>
+    </Marker>
   );
 }

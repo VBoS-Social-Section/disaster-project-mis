@@ -39,6 +39,19 @@ def invalidate_cluster_cache(sender, **kwargs):
     _invalidate_cluster_cache(sender, **kwargs)
 
 
+# Invalidate cache when datasets change so new/updated datasets appear in frontend
+@receiver(post_save, sender="datasets.VectorDataset")
+@receiver(post_delete, sender="datasets.VectorDataset")
+@receiver(post_save, sender="datasets.RasterDataset")
+@receiver(post_delete, sender="datasets.RasterDataset")
+@receiver(post_save, sender="datasets.TabularDataset")
+@receiver(post_delete, sender="datasets.TabularDataset")
+@receiver(post_save, sender="datasets.PMTilesDataset")
+@receiver(post_delete, sender="datasets.PMTilesDataset")
+def invalidate_dataset_cache(sender, **kwargs):
+    _invalidate_cluster_cache(sender, **kwargs)
+
+
 class Province(models.Model):
     name = models.CharField(max_length=100, unique=True)
     geometry = models.GeometryField()
@@ -94,6 +107,10 @@ def delete_raster_file(sender, instance, **kwargs):
 
 
 class RasterDataset(models.Model):
+    """
+    Raster datasets are Climate-mode only and are not tied to a particular cluster.
+    They appear in the Land cover tab regardless of selected cluster.
+    """
     name = models.CharField(max_length=155)
     description = models.TextField(max_length=2000, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -101,6 +118,8 @@ class RasterDataset(models.Model):
     cluster = models.ForeignKey(
         Cluster,
         on_delete=models.PROTECT,
+        null=True,
+        blank=True,
     )
     type = models.CharField(max_length=55, choices=TYPE_CHOICES, default="baseline")
     source = models.CharField(max_length=155, blank=True, null=True)
@@ -115,15 +134,39 @@ class RasterDataset(models.Model):
         max_length=1000,
         blank=True,
         null=True,
-        help_text="Additional URL params that should be added to the Titiler URL request by the frontend app.",
+        help_text="Additional URL params for TiTiler (e.g. rescale=0,1). For land cover, frontend adds colormap when is_land_cover is checked.",
+    )
+    is_land_cover = models.BooleanField(
+        default=False,
+        help_text="When checked, this raster is treated as categorical land cover (9 classes). Frontend auto-activates it in Climate mode and applies a discrete colormap.",
+    )
+    precomputed_tile_url = models.CharField(
+        max_length=1024,
+        blank=True,
+        null=True,
+        help_text="URL template for precomputed tiles. Use {z},{x},{y},{year} placeholders. Relative paths like /media/tiles/landcover/{year}/{z}/{x}/{y}.png work with Vite proxy in dev.",
     )
 
     def __str__(self):
-        return f"{self.name} - {self.cluster} / {self.type}"
+        cluster_part = self.cluster.name if self.cluster else "Climate"
+        return f"{self.name} - {cluster_part} / {self.type}"
 
     class Meta:
         ordering = ["id"]
-        unique_together = ["name", "type", "cluster"]
+        unique_together = ["name", "type"]
+
+
+# Legacy Lucide icon keys (still supported). Flaticon format: fi-sr-{name} (e.g. fi-sr-hospital)
+VECTOR_COLOR_CHOICES = [
+    ("#3d4aff", "Blue"),
+    ("#10b981", "Emerald"),
+    ("#f09000", "Orange"),
+    ("#8b5cf6", "Violet"),
+    ("#e34a33", "Red"),
+    ("#06b6d4", "Cyan"),
+    ("#6366f1", "Indigo"),
+    ("#14b8a6", "Teal"),
+]
 
 
 class VectorDataset(models.Model):
@@ -137,6 +180,19 @@ class VectorDataset(models.Model):
     )
     type = models.CharField(max_length=55, choices=TYPE_CHOICES, default="baseline")
     source = models.CharField(max_length=155, blank=True, null=True)
+    icon = models.CharField(
+        max_length=80,
+        blank=True,
+        null=True,
+        help_text="Icon to display on the map. Use Lucide key (e.g. droplet) or Flaticon class (e.g. fi-sr-hospital). Leave empty for auto.",
+    )
+    color = models.CharField(
+        max_length=7,
+        choices=VECTOR_COLOR_CHOICES,
+        blank=True,
+        null=True,
+        help_text="Color for map markers. Leave empty for auto (cluster or index).",
+    )
 
     def __str__(self):
         return f"{self.name} - {self.cluster} / {self.type}"

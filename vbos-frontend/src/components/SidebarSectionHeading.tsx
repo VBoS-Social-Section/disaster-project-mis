@@ -1,22 +1,18 @@
-import React from "react";
-import { Heading, HeadingProps } from "@chakra-ui/react";
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 const SidebarSectionHeading = React.forwardRef<
   HTMLHeadingElement,
-  HeadingProps
->((props, ref) => {
+  React.ComponentProps<"h3">
+>(({ className, ...props }, ref) => {
   return (
-    <Heading
+    <h3
       ref={ref}
-      as="h3"
-      fontWeight={600}
-      fontSize="1rem"
-      m={0}
-      color="blue.800"
+      className={cn(
+        "m-0 overflow-hidden text-ellipsis whitespace-pre text-base font-semibold text-blue-800",
+        className
+      )}
       {...props}
-      whiteSpace="pre"
-      overflow="hidden"
-      textOverflow="ellipsis"
     />
   );
 });

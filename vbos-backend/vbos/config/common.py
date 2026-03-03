@@ -8,6 +8,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class Common(Configuration):
 
+    DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
     INSTALLED_APPS = (
         "django.contrib.admin",
         "django.contrib.gis",
@@ -27,6 +29,7 @@ class Common(Configuration):
         # Your apps
         "vbos.users",
         "vbos.datasets",
+        "vbos.land_accounts",
     )
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/

@@ -11,10 +11,10 @@ A geospatial Management Information System for climate change and natural disast
 | Component | Stack |
 |-----------|-------|
 | **Backend** | Django 5.2, Django REST Framework, PostGIS |
-| **Frontend** | React 19, Vite 7, TypeScript, Chakra UI v3 |
+| **Frontend** | React 19, Vite 7, TypeScript, Tailwind CSS, shadcn/ui (Radix) |
 | **Database** | PostgreSQL with PostGIS extension |
 | **Raster tiles** | TiTiler (COG/GeoTIFF), PMTiles |
-| **Maps** | MapLibre GL, react-map-gl |
+| **Maps** | Leaflet, react-leaflet, protomaps-leaflet |
 | **State** | Zustand, TanStack React Query |
 
 The backend exposes a REST API with token authentication. The frontend is a single-page application (SPA) that consumes the API and renders interactive maps with layer switching, filtering, and data export.
@@ -24,7 +24,7 @@ The backend exposes a REST API with token authentication. The frontend is a sing
 ```mermaid
 flowchart TB
     subgraph Client["Client (Browser)"]
-        SPA["React SPA<br/>(Vite, Chakra UI)"]
+        SPA["React SPA<br/>(Vite, Tailwind, shadcn)"]
     end
 
     subgraph Backend["vbos-backend"]
@@ -83,7 +83,7 @@ vcdmis/
 
 - **Cluster** – Dataset grouping (e.g. `transportation`, `administrative`, `environment`, `statistics`).
 - **Province** / **AreaCouncil** – Admin boundaries with PostGIS geometries.
-- **RasterDataset** – Raster metadata; references files via `filename_id` (VRT pattern: `{MEDIA_URL}/{filename_id}_{year}.vrt`). Optional `titiler_url_params` for rescale, etc.
+- **RasterDataset** – Raster metadata; references files via `filename_id` (VRT pattern: `{MEDIA_URL}/{filename_id}_{year}.vrt`). Optional `titiler_url_params` for rescale, etc. Optional `precomputed_tile_url` for heavy raster+tabular joins (see [precomputed_tiles](vbos-backend/docs/precomputed_tiles.md)).
 - **VectorDataset** / **VectorItem** – Vector layers with GeoJSON geometries; supports `province`, `area_council`, `attribute`, `metadata` filters and `in_bbox`.
 - **TabularDataset** / **TabularItem** – Time-series/statistical data; filters: `province`, `area_council`, `attribute`, `date_after`, `date_before`. Export to XLSX.
 - **PMTilesDataset** – Remote PMTiles sources with `url` and `source_layer`.
@@ -112,6 +112,7 @@ Base URL: `/api/v1/`
 | `api/v1/tabular/` | GET | List tabular datasets |
 | `api/v1/tabular/<id>/` | GET | Tabular detail |
 | `api/v1/tabular/<id>/data/` | GET | Tabular items with filters |
+| `api/v1/tabular/<id>/aggregate/` | GET | Aggregated by province/area_council (`group_by`, `year`, `attribute`, `agg`, `province`) |
 | `api/v1/tabular/<id>/data-xlsx/` | GET | Export to XLSX |
 | `api/v1/schema/` | GET | OpenAPI schema |
 | `api/v1/docs/` | GET | Swagger UI |
@@ -149,11 +150,11 @@ Optional: mount raster data in `./data` for TiTiler.
 ### Tech Stack
 
 - **Build**: Vite 7, TypeScript
-- **UI**: Chakra UI v3, React Icons
-- **Maps**: MapLibre GL, react-map-gl, pmtiles
-- **Data**: TanStack React Query, Zustand (auth)
-- **Charts**: Recharts, @chakra-ui/charts
-- **Geospatial**: @turf/bbox, @turf/helpers
+- **UI**: Tailwind CSS 4, shadcn/ui (Radix), Lucide React
+- **Maps**: Leaflet, react-leaflet, protomaps-leaflet, leaflet-side-by-side
+- **Data**: TanStack React Query, Zustand
+- **Charts**: Highcharts
+- **Geospatial**: @turf/bbox, @turf/helpers, @turf/simplify
 
 ### Environment
 
@@ -189,7 +190,7 @@ Open `dist/stats.html` after `pnpm build` to analyze bundle size (treemap, gzip/
 
 - **Left sidebar**: Clusters → datasets; toggle layers (raster, vector, PMTiles, tabular).
 - **Right sidebar**: Province/area council selectors, date range, stats table/chart, XLSX download.
-- **Map**: MapLibre with vector overlays, raster tiles (via TiTiler), PMTiles.
+- **Map**: Leaflet with vector overlays, raster tiles (via TiTiler), PMTiles.
 - **URL sync**: `useUrlSync` keeps layer selections and filters in the URL.
 
 ---

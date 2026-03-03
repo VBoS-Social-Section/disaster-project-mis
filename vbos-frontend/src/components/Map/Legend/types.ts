@@ -24,12 +24,16 @@ export type TabularLegendLayer = Dataset & {
   isPending?: boolean;
   /** Whether there is data available for current filters (time/place) */
   hasData?: boolean;
+  /** Data year for display in legend */
+  dataYear?: string;
 };
 
 /**
  * Legend entry for vector (geometry) layers.
  * Vector layers display points, lines, or polygons loaded from GeoJSON.
  */
+import type { VectorIconKey } from "@/components/Map/vectorIcons";
+
 export type VectorLegendLayer = Dataset & {
   dataType: "vector" | "pmtiles";
   /** Primary geometry type in this layer */
@@ -42,6 +46,10 @@ export type VectorLegendLayer = Dataset & {
     | "MultiPolygon";
   /** Color used to render this layer */
   color: string;
+  /** Icon for point layers (vector only). Lucide key or Flaticon class (fi-sr-*). */
+  iconKey?: VectorIconKey | string;
+  /** Data year for display (pmtiles) */
+  dataYear?: string;
 };
 
 /**
@@ -54,6 +62,8 @@ export type RasterLegendLayer = Dataset & {
   colorScheme?: string;
   /** Optional opacity/transparency level */
   opacity?: number;
+  /** Data year for display in legend */
+  dataYear?: string;
 };
 
 /**

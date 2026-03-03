@@ -7,6 +7,7 @@ interface LayersState {
   allDatasets: Dataset[]; // used to store the metadata of all dataset layers
   setLayers: (layers: string) => void;
   switchLayer: (layer: string) => void;
+  reorderLayers: (fromIndex: number, toIndex: number) => void;
   setTabularLayerData: (data: TabularData[]) => void;
   setAllDatasets: (datasets: Dataset[]) => void;
   getLayerMetadata: (layer: string) => Dataset | undefined;
@@ -31,9 +32,7 @@ export const useLayerStore = create<LayersState>((set, get) => ({
 
   switchLayer: (layer: string) => {
     const { layers } = get();
-    let layerArray = layers ? layers.split(",") : [];
-    // We can only have one tabular layer and one raster layer enabled at once.
-    // So, we need to remove other enabled tabular/raster layers, before adding a new one.
+    let layerArray = layers ? layers.split(",").filter(Boolean) : [];
     const isTabularLayer = layer.startsWith("t");
     const isRasterLayer = layer.startsWith("r");
     if (layerArray.includes(layer)) {
@@ -46,9 +45,17 @@ export const useLayerStore = create<LayersState>((set, get) => ({
       if (isRasterLayer) {
         layerArray = layerArray.filter((l) => !l.startsWith("r"));
       }
-      // Add new enabled layer
       layerArray.push(layer);
     }
+    get().setLayers(layerArray.join());
+  },
+
+  reorderLayers: (fromIndex: number, toIndex: number) => {
+    const { layers } = get();
+    const layerArray = layers ? layers.split(",").filter(Boolean) : [];
+    if (fromIndex < 0 || fromIndex >= layerArray.length || toIndex < 0 || toIndex >= layerArray.length) return;
+    const [removed] = layerArray.splice(fromIndex, 1);
+    layerArray.splice(toIndex, 0, removed);
     get().setLayers(layerArray.join());
   },
 

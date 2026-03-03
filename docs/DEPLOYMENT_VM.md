@@ -1,8 +1,33 @@
 # VM Server Deployment Guide
 
-This guide covers migrating the Disaster Project MIS (VBoS) to your VM server (e.g. `vbosadmin@10.252.0.158`) using **Docker Compose**.
+This guide covers deploying the Disaster Project MIS (VBoS) to your VM server (e.g. `vbosadmin@10.252.0.158`) using **Docker Compose**.
 
 For a **manual setup without Docker** (PostgreSQL, Python, Node.js installed directly), see [DEPLOYMENT_MANUAL.md](DEPLOYMENT_MANUAL.md).
+
+---
+
+## Migrate from Manual to Docker
+
+If you previously ran the manual setup and want to switch to Docker:
+
+1. **Stop manual processes** on the VM:
+   ```bash
+   # Kill Django (port 8000)
+   fuser -k 8000/tcp
+   # Kill frontend serve (port 5173)
+   fuser -k 5173/tcp
+   ```
+
+2. **Optional – migrate existing data** (manual used `disaster` DB, Docker uses fresh `vbos` DB):
+   ```bash
+   # On VM, if you need data from the old disaster DB:
+   pg_dump -U disaster -h localhost disaster > backup.sql
+   # After Docker is running, restore into vbos (see Troubleshooting)
+   ```
+
+3. Proceed with [Prerequisites](#prerequisites-on-the-vm) and [Configure Environment](#3-configure-environment) below.
+
+---
 
 ## Prerequisites on the VM
 
@@ -53,7 +78,8 @@ sudo usermod -aG docker $USER
 
 ```bash
 ssh vbosadmin@10.252.0.158
-cd ~
+sudo mkdir -p /var/www && sudo chown $USER:$USER /var/www
+cd /var/www
 git clone <YOUR_REPO_URL> disaster-project-mis
 cd disaster-project-mis
 ```
@@ -65,15 +91,17 @@ From your **local** machine (where the project lives):
 ```bash
 rsync -avz --exclude 'node_modules' --exclude '.git' --exclude 'media' \
   "/home/htevilili/Documents/Work/Disaster Project/disaster-project-mis/" \
-  vbosadmin@10.252.0.158:~/disaster-project-mis/
+  vbosadmin@10.252.0.158:/var/www/disaster-project-mis/
 ```
 
 Then on the VM:
 
 ```bash
 ssh vbosadmin@10.252.0.158
-cd ~/disaster-project-mis
+cd /var/www/disaster-project-mis
 ```
+
+> Use `/var/www/disaster-project-mis` or `~/disaster-project-mis` – replace paths in the steps below accordingly.
 
 ## 3. Configure Environment
 
@@ -112,8 +140,7 @@ Create `vbos-frontend/.env.production.local` with your VM's URL.
 ```bash
 cd ~/disaster-project-mis/vbos-frontend
 
-# Replace 10.252.0.158 with your VM IP or hostname
-# API goes through nginx (port 80), Titiler stays on 8002
+# Replace 10.252.0.158 with your VM IP. App at http://10.252.0.158/
 echo 'VITE_API_HOST=http://10.252.0.158' > .env.production.local
 echo 'VITE_TITILER_API=http://10.252.0.158:8002' >> .env.production.local
 ```
@@ -166,7 +193,7 @@ If your VM cannot reach `ghcr.io` (e.g. firewall, no outbound HTTPS), titiler wi
 sudo docker compose -f deploy/vm/docker-compose.yml --profile raster up -d
 ```
 
-Access at **http://10.252.0.158** (port 80).
+Access at **http://10.252.0.158/**.
 
 ### Option B: Backend only (dev-style)
 
@@ -191,7 +218,7 @@ npx serve dist -l 5173
 **Option A (VM compose):**
 
 ```bash
-cd ~/disaster-project-mis
+cd /var/www/disaster-project-mis   # or ~/disaster-project-mis
 docker compose -f deploy/vm/docker-compose.yml exec web ./manage.py createsuperuser
 ```
 
@@ -204,7 +231,7 @@ docker compose exec web ./manage.py createsuperuser
 
 ## 6. Verify Deployment
 
-**Option A (nginx):** App + API at http://10.252.0.158, Titiler at :8002  
+**Option A (nginx):** App + API at http://10.252.0.158/, Titiler at :8002  
 **Option B:** API at :8000, Frontend at :5173, Titiler at :8002
 
 ## Ports Summary

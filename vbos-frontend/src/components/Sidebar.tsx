@@ -1,7 +1,10 @@
-import { Box, Flex, Heading, IconButton } from "@chakra-ui/react";
-import { ReactNode, useState, useEffect } from "react";
-import { LuPanelLeft, LuPanelRight, LuX } from "react-icons/lu";
+import { ReactNode, useState, useEffect, useRef } from "react";
+import { LuColumns2, LuLayers, LuPanelLeft, LuPanelRight, LuX } from "react-icons/lu";
+import { Tooltip as AppTooltip } from "@/components/ui";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useUiStore } from "@/store/ui-store";
+import { cn } from "@/lib/utils";
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -9,21 +12,43 @@ type Props = {
   title: string;
   direction: "right" | "left";
   children?: ReactNode;
+  badgeCount?: number;
+  /** Optional pill/badge text (e.g. "Baseline datasets only" in Climate mode) */
+  subtitle?: string;
+  /** When provided, shown in collapsed icon-only mode. Receives onExpand to open sidebar. */
+  collapsedIcons?: (onExpand: () => void) => ReactNode;
+  /** When true, uses translucent background so map shows through (for left Data Layers sidebar) */
+  transparent?: boolean;
+  /** When true, panel is compact/floating (height fits content) instead of full height */
+  floating?: boolean;
+  /** When true, auto-collapse the sidebar (e.g. when no data to show) */
+  collapseWhen?: boolean;
 };
 
-export const Sidebar = ({ title, direction, children }: Props) => {
+export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, collapsedIcons, transparent, floating, collapseWhen }: Props) => {
   const isLeftSidebar = direction === "left";
   const {
     isMobile,
     setIsMobile,
     mobileOpenPanel,
     setMobileOpenPanel,
+    leftSidebarIconMode,
+    rightSidebarIconMode,
   } = useUiStore();
 
-  // Desktop: local state. Mobile: use store (only one panel at a time)
-  const [desktopVisible, setDesktopVisible] = useState(
-    () => typeof window !== "undefined" && window.innerWidth >= MOBILE_BREAKPOINT,
-  );
+  const iconMode = isLeftSidebar ? leftSidebarIconMode : rightSidebarIconMode;
+  const setIconMode = isLeftSidebar
+    ? useUiStore.getState().setLeftSidebarIconMode
+    : useUiStore.getState().setRightSidebarIconMode;
+
+  const [desktopVisible, setDesktopVisible] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const isDesktop = window.innerWidth >= MOBILE_BREAKPOINT;
+    if (isLeftSidebar) return isDesktop;
+    if (collapseWhen) return false;
+    const iconMode = useUiStore.getState().rightSidebarIconMode;
+    return isDesktop && !iconMode;
+  });
 
   const panelId = isLeftSidebar ? "left" : "right";
   const sideBarVisible = isMobile
@@ -38,6 +63,19 @@ export const Sidebar = ({ title, direction, children }: Props) => {
     }
   };
 
+  const prevCollapseWhen = useRef(collapseWhen);
+  useEffect(() => {
+    if (isMobile) return;
+    if (collapseWhen && sideBarVisible) {
+      setIconMode(true);
+      setDesktopVisible(false);
+    } else if (!collapseWhen && prevCollapseWhen.current) {
+      setIconMode(false);
+      setDesktopVisible(true);
+    }
+    prevCollapseWhen.current = collapseWhen;
+  }, [collapseWhen, isMobile, sideBarVisible, setIconMode]);
+
   useEffect(() => {
     const mq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
     const handler = () => {
@@ -51,110 +89,170 @@ export const Sidebar = ({ title, direction, children }: Props) => {
   }, [setIsMobile, setMobileOpenPanel]);
 
   return (
-    <Box
-      position="relative"
-      height="full"
-      shadow="xs"
-      borderColor="border"
-      borderLeftWidth={isLeftSidebar ? 0 : 1}
-      borderRightWidth={isLeftSidebar ? 1 : 0}
-      bg="bg.panel"
+    <div
+      className={cn(
+        "relative border-border shadow-sm",
+        floating ? "h-fit max-h-[calc(100vh-3.5rem)]" : "h-full",
+        transparent ? "glass-surface-translucent" : "glass-surface",
+        isLeftSidebar ? "border-l-0 border-r" : "border-r-0 border-l",
+        floating && (isLeftSidebar ? "rounded-r-xl" : "rounded-l-xl"),
+        iconMode && !sideBarVisible && "z-[1001]",
+      )}
     >
-      <Flex
-        flexDir="column"
-        w={{
-          base: sideBarVisible ? "min(18rem, 88vw)" : "0px",
-          md: !sideBarVisible ? "0px" : isLeftSidebar ? "20rem" : "28rem",
-        }}
-        maxW={{ base: "88vw", md: "none" }}
-        h="full"
-        maxH="calc(100vh - 3.75rem)"
-        overflow="hidden"
-        opacity={sideBarVisible ? 1 : 0}
-        transition="all 0.24s"
-        willChange="width, opacity"
-        position={{ base: "absolute", md: "relative" }}
-        top={0}
-        bottom={0}
-        left={isLeftSidebar ? { base: 0, md: "auto" } : undefined}
-        right={!isLeftSidebar ? { base: 0, md: "auto" } : undefined}
-        zIndex={{ base: 1000, md: 10 }}
-        bg="bg.panel"
-        shadow={{ base: sideBarVisible ? "xl" : "none", md: "none" }}
+      <div
+        className={cn(
+          "flex flex-col overflow-hidden sidebar-spring will-change-[width,opacity]",
+          floating ? "h-fit max-h-[calc(100vh-5rem)]" : "h-full max-h-[calc(100vh-3.5rem)]",
+          transparent ? "glass-surface-translucent max-md:glass-surface-translucent" : "glass-surface max-md:glass-surface-mobile-overlay",
+          "max-md:rounded-t-2xl max-md:border-t",
+          "md:relative md:top-0 md:bottom-0",
+          (sideBarVisible || (iconMode && !isMobile && !sideBarVisible)) ? "opacity-100" : "opacity-0",
+          "max-md:absolute max-md:inset-x-0 max-md:bottom-0 max-md:top-auto max-md:z-[1000] max-md:max-h-[85vh] max-md:w-full max-md:max-w-none",
+          sideBarVisible ? "max-md:shadow-xl" : "max-md:shadow-none",
+          sideBarVisible ? (floating ? "w-80" : "w-[min(18rem,88vw)]") : "w-0",
+          "md:min-w-0",
+          !sideBarVisible && iconMode && "md:w-12",
+          !sideBarVisible && !iconMode && "md:w-0",
+          sideBarVisible && isLeftSidebar && "md:w-80",
+          sideBarVisible && !isLeftSidebar && "md:w-[28rem]",
+        )}
       >
-        {sideBarVisible && (
+        {(sideBarVisible || (iconMode && !isMobile && !sideBarVisible)) && (
           <>
-            <Flex
-              px={4}
-              py={3}
-              h={10}
-              bg="blue.50"
-              alignItems="center"
-              justifyContent="space-between"
-              gap="2"
+            <div
+              className={cn(
+                "flex h-10 min-h-10 shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-3",
+                transparent ? "bg-white/5 dark:bg-white/[0.03]" : "bg-muted",
+                iconMode && !sideBarVisible && !collapsedIcons && "flex-col min-h-0",
+                iconMode && !sideBarVisible && collapsedIcons && "flex-col min-h-0 px-2",
+              )}
             >
-              <Heading
-                fontSize="xs"
-                fontWeight="bold"
-                textTransform="uppercase"
-                color="blue.800"
-                letterSpacing="wider"
-                lineHeight="normal"
-              >
-                {title}
-              </Heading>
-              {isMobile && (
-                <IconButton
-                  size="xs"
+              {iconMode && !sideBarVisible && !collapsedIcons ? (
+                <Button
                   variant="ghost"
-                  aria-label="Close panel"
+                  size="icon"
+                  className="relative"
+                  aria-label={`Open ${title}`}
                   onClick={toggleSidebar}
                 >
-                  <LuX />
-                </IconButton>
-              )}
-            </Flex>
-            {children}
+                  <LuLayers className="size-4 icon-interactive" />
+                  {badgeCount > 0 && (
+                    <Badge
+                      variant="default"
+                      className="absolute -right-1 -top-1 size-5 items-center justify-center p-0"
+                    >
+                      {badgeCount}
+                    </Badge>
+                  )}
+                </Button>
+              ) : !(iconMode && !sideBarVisible) ? (
+                <>
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                      {title}
+                    </h2>
+                    {subtitle && (
+                      <span className="truncate rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                        {subtitle}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-1">
+                    {!isMobile && (
+                      <AppTooltip
+                        content={iconMode ? "Expand to full panel" : "Collapse to icon bar"}
+                        positioning={{ placement: "bottom" }}
+                      >
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          aria-label={iconMode ? "Expand panel" : "Collapse to icon bar"}
+                          onClick={() => {
+                            if (sideBarVisible) {
+                              setIconMode(true);
+                              setDesktopVisible(false);
+                            } else {
+                              setIconMode(false);
+                              setDesktopVisible(true);
+                            }
+                          }}
+                        >
+                          <LuColumns2 className="size-4 icon-interactive" />
+                        </Button>
+                      </AppTooltip>
+                    )}
+                    {isMobile && (
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label="Close panel"
+                        onClick={toggleSidebar}
+                      >
+                        <LuX className="size-4" />
+                      </Button>
+                    )}
+                  </div>
+                </>
+              ) : iconMode && !sideBarVisible && collapsedIcons ? (
+                <AppTooltip
+                  content="Expand sidebar"
+                  positioning={{ placement: "right" }}
+                >
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative"
+                    aria-label="Expand sidebar"
+                    onClick={toggleSidebar}
+                  >
+                    {isLeftSidebar ? (
+                      <LuPanelLeft className="size-4 icon-interactive" />
+                    ) : (
+                      <LuPanelRight className="size-4 icon-interactive" />
+                    )}
+                  </Button>
+                </AppTooltip>
+              ) : null}
+            </div>
+            {iconMode && !sideBarVisible && collapsedIcons ? (
+              <div className="flex flex-1 flex-col overflow-hidden py-2">
+                {collapsedIcons(toggleSidebar)}
+              </div>
+            ) : null}
+            {sideBarVisible && children}
           </>
         )}
-      </Flex>
-      {/* Mobile: toggle at top of panel */}
+      </div>
+
       {isMobile && !sideBarVisible && (
-        <IconButton
+        <Button
+          variant="ghost"
           size="sm"
-          variant="plain"
-          bg="bg.panel"
-          position="absolute"
-          top={0}
-          left={isLeftSidebar ? 4 : undefined}
-          right={!isLeftSidebar ? 4 : undefined}
-          zIndex={1001}
-          borderRadius="md"
+          className={cn(
+            "absolute top-0 z-[1001] pointer-events-auto rounded-md bg-card",
+            isLeftSidebar ? "left-4" : "right-4",
+          )}
           aria-label={`Open ${title}`}
           onClick={toggleSidebar}
         >
-          {isLeftSidebar ? <LuPanelLeft /> : <LuPanelRight />}
-        </IconButton>
+          {isLeftSidebar ? <LuPanelLeft className="size-4 icon-interactive" /> : <LuPanelRight className="size-4 icon-interactive" />}
+        </Button>
       )}
-      {/* Desktop: toggle on side of panel (original behavior) */}
-      {!isMobile && (
-        <IconButton
-          size="xs"
-          variant="plain"
-          bg="bg.panel"
-          position="absolute"
-          top={10}
-          zIndex={20}
-          aria-label={sideBarVisible ? "Close panel" : `Open ${title}`}
-          css={{
-            [isLeftSidebar ? "right" : "left"]: -8,
-            [isLeftSidebar ? "borderLeftRadius" : "borderRightRadius"]: 0,
-          }}
+
+      {!isMobile && !sideBarVisible && !(iconMode && !sideBarVisible) && (
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          className={cn(
+            "absolute top-10 z-20 rounded-md bg-card",
+            isLeftSidebar ? "-right-8 rounded-l-none" : "-left-8 rounded-r-none",
+          )}
+          aria-label={`Open ${title}`}
           onClick={toggleSidebar}
         >
-          {isLeftSidebar ? <LuPanelLeft /> : <LuPanelRight />}
-        </IconButton>
+          {isLeftSidebar ? <LuPanelLeft className="size-4 icon-interactive" /> : <LuPanelRight className="size-4 icon-interactive" />}
+        </Button>
       )}
-    </Box>
+    </div>
   );
 };
