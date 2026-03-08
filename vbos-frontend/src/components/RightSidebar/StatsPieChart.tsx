@@ -16,8 +16,11 @@ type StatsPieChartProps = {
 
 export function StatsPieChart({ stats, expanded }: StatsPieChartProps) {
   const theme = useHighchartsTheme();
-  const { province } = useDeferredArea();
-  const consolidated = consolidateStats(stats, province ? "area_council" : "province");
+  const { provinces } = useDeferredArea();
+  const consolidated = consolidateStats(
+    stats,
+    provinces.length > 0 ? "area_council" : "province",
+  );
   const attributes = getAttributes(stats);
 
   const topAttr = attributes
@@ -74,7 +77,7 @@ export function StatsPieChart({ stats, expanded }: StatsPieChartProps) {
   return (
     <div className="rounded-lg border border-border/30 bg-white p-4 shadow-sm dark:border-border/40 dark:bg-card/80">
       <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Distribution by {province ? "Area Council" : "Province"}
+        Distribution by {provinces.length > 0 ? "Area Council" : "Province"}
       </h4>
       <HighchartsReact
         highcharts={Highcharts}

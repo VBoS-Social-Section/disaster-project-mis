@@ -6,6 +6,8 @@ from django_filters import (
     OrderingFilter,
 )
 
+from django.db.models import Q
+
 from .models import (
     AreaCouncil,
     Cluster,
@@ -61,16 +63,26 @@ class TabularDatasetFilter(DatasetFilter):
 
 class DataItemsBaseFilter(FilterSet):
     attribute = CharFilter(lookup_expr="icontains")
-    province = ModelChoiceFilter(
-        field_name="province__name",
-        to_field_name="name__iexact",
-        queryset=Province.objects.all(),
-    )
-    area_council = ModelChoiceFilter(
-        field_name="area_council__name",
-        to_field_name="name__iexact",
-        queryset=AreaCouncil.objects.all(),
-    )
+    province = CharFilter(method="filter_province_multi")
+    area_council = CharFilter(method="filter_area_council_multi")
+
+    def filter_province_multi(self, queryset, name, value):
+        values = self.request.query_params.getlist("province") if self.request else []
+        if not values:
+            return queryset
+        q = Q()
+        for v in values:
+            q |= Q(province__name__iexact=v.strip())
+        return queryset.filter(q)
+
+    def filter_area_council_multi(self, queryset, name, value):
+        values = self.request.query_params.getlist("area_council") if self.request else []
+        if not values:
+            return queryset
+        q = Q()
+        for v in values:
+            q |= Q(area_council__name__iexact=v.strip())
+        return queryset.filter(q)
     metadata = CharFilter(
         field_name="metadata",
         method="filter_metadata",

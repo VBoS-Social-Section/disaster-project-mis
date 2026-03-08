@@ -35,7 +35,7 @@ export const DownloadDataDialog = ({
   setIsOpen,
 }: DownloadDataDialogProps) => {
   const { layers, getLayerMetadata, tabularAttributeFilter } = useLayerStore();
-  const { province, ac } = useAreaStore();
+  const { provinces, acList } = useAreaStore();
   const { year } = useDateStore();
   const getVectorDatasetFromCache = useVectorDatasetFromCache();
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
@@ -62,8 +62,8 @@ export const DownloadDataDialog = ({
 
     try {
       const areaFilters = new URLSearchParams();
-      if (province) areaFilters.set("province", province);
-      if (ac) areaFilters.set("area_council", ac);
+      provinces.forEach((p) => areaFilters.append("province", p));
+      acList.forEach((a) => areaFilters.append("area_council", a));
 
       let result;
 
@@ -84,8 +84,8 @@ export const DownloadDataDialog = ({
 
       const sanitizedName = sanitizeFilename(dataset.name);
       const filenameParts = [sanitizedName];
-      if (province) filenameParts.push(sanitizeFilename(province));
-      if (ac) filenameParts.push(sanitizeFilename(ac));
+      if (provinces.length) filenameParts.push(sanitizeFilename(provinces.join("_")));
+      if (acList.length) filenameParts.push(sanitizeFilename(acList.join("_")));
       const filename = `${filenameParts.join("_")}.${result.extension}`;
 
       downloadFile(result.blob, filename);
@@ -112,9 +112,13 @@ export const DownloadDataDialog = ({
           <DialogTitle>Download Active Datasets</DialogTitle>
           <DialogDescription>
             Download tabular or vector data for the currently active layers.
-            {(province || ac || year) && (
+            {(provinces.length > 0 || acList.length > 0 || year) && (
               <span className="block mt-1.5 text-xs font-medium">
-                Filters: {[province && `Province: ${province}`, ac && `Area: ${ac}`, year && `Year: ${year}`]
+                Filters: {[
+                  provinces.length > 0 && `Province: ${provinces.join(", ")}`,
+                  acList.length > 0 && `Area: ${acList.join(", ")}`,
+                  year && `Year: ${year}`,
+                ]
                   .filter(Boolean)
                   .join(" • ")}
               </span>
@@ -141,6 +145,9 @@ export const DownloadDataDialog = ({
                       dataset={metadata}
                       onDownload={handleDownload}
                       isDownloading={downloadingIds.has(layerId)}
+                      provinces={provinces}
+                      acList={acList}
+                      year={year}
                     />
                   ))}
                 </div>
@@ -179,6 +186,9 @@ export const DownloadDataDialog = ({
                       dataset={metadata}
                       onDownload={handleDownload}
                       isDownloading={downloadingIds.has(layerId)}
+                      provinces={provinces}
+                      acList={acList}
+                      year={year}
                     />
                   ))}
                 </div>
@@ -201,6 +211,9 @@ type DatasetRowProps = {
   dataset: Dataset;
   onDownload: (layerId: string, dataset: Dataset) => void;
   isDownloading: boolean;
+  provinces?: string[];
+  acList?: string[];
+  year?: string;
 };
 
 const DatasetRow = ({
@@ -208,8 +221,12 @@ const DatasetRow = ({
   dataset,
   onDownload,
   isDownloading,
+  provinces = [],
+  acList = [],
+  year: yearProp,
 }: DatasetRowProps) => {
-  const { year } = useDateStore();
+  const { year: yearFromStore } = useDateStore();
+  const year = yearProp ?? yearFromStore;
   const landCover = useLandCoverRaster();
   const [geotiffDownloading, setGeotiffDownloading] = useState(false);
 
@@ -224,6 +241,15 @@ const DatasetRow = ({
     .replace(/\b\w/g, (char, index) =>
       index === 0 ? char.toUpperCase() : char.toLowerCase(),
     );
+
+  const filterSuffix =
+    (dataset.dataType === "tabular" || dataset.dataType === "vector") &&
+    (provinces.length > 0 || acList.length > 0 || year)
+      ? " — " +
+        [provinces.join(", "), acList.join(", "), year].filter(Boolean).join(" • ")
+      : "";
+
+  const displayName = `${dataset.name}${filterSuffix}`;
 
   const handleGeoTiffDownload = async () => {
     if (dataset.dataType !== "raster") return;
@@ -248,7 +274,9 @@ const DatasetRow = ({
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/50 p-3 hover:bg-muted/70 transition-colors">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{dataset.name}</p>
+        <p className="text-sm font-medium truncate" title={displayName}>
+          {displayName}
+        </p>
         <p className="text-xs text-muted-foreground">
           {typeLabel} • {getFileFormat()}
         </p>

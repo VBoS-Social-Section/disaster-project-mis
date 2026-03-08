@@ -32,7 +32,7 @@ export function useSmartDefaults() {
   const { layers, setLayers, setAllDatasets } = useLayerStore();
   const { scenarioId, setScenario } = useViewStore();
   const { setYear } = useDateStore();
-  const { setProvince } = useAreaStore();
+  const { setProvinces } = useAreaStore();
   const { setComparisonMode, setYearLeft, setYearRight } = useComparisonStore();
   const { layers: sessionLayers, scenarioId: sessionScenario, year: sessionYear, province: sessionProvince } = useSessionStore();
   const landCover = useLandCoverRaster();
@@ -50,7 +50,7 @@ export function useSmartDefaults() {
         setScenario(sessionScenario);
       }
       if (sessionYear) setYear(sessionYear);
-      if (sessionProvince) setProvince(sessionProvince);
+      if (sessionProvince) setProvinces([sessionProvince]);
       if (sessionScenario === "climate") {
         setYearLeft(CLIMATE_COMPARISON_YEARS.left);
         setYearRight(CLIMATE_COMPARISON_YEARS.right);
@@ -89,7 +89,7 @@ export function useSmartDefaults() {
     setLayers,
     setScenario,
     setYear,
-    setProvince,
+    setProvinces,
     setAllDatasets,
     setComparisonMode,
     setYearLeft,

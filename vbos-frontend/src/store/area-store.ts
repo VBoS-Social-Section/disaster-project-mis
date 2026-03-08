@@ -3,52 +3,72 @@ import { featureCollection } from "@turf/helpers";
 import { create } from "zustand";
 
 interface AreaState {
-  ac: string;
+  /** Selected provinces (multi-select). */
+  provinces: string[];
+  /** Selected area councils (multi-select). */
+  acList: string[];
   acGeoJSON: AreaCouncilGeoJSON;
-  setAc: (area: string) => void;
+  setProvinces: (provinces: string[]) => void;
+  setAcList: (acList: string[]) => void;
   setAcGeoJSON: (acGeoJSON: AreaCouncilGeoJSON) => void;
+  /** First province for backward compat / single-value consumers. */
   province: string;
-  setProvince: (province: string) => void;
+  /** First area council for backward compat / single-value consumers. */
+  ac: string;
   syncFromUrl: () => void;
 }
 
 export const useAreaStore = create<AreaState>((set) => ({
-  ac: "",
+  provinces: [],
+  acList: [],
   acGeoJSON: featureCollection([]),
   province: "",
+  ac: "",
 
   setAcGeoJSON: (acGeoJSON: AreaCouncilGeoJSON) => set({ acGeoJSON }),
 
-  setAc: (ac: string) => {
-    set({ ac });
-    queueMicrotask(() => {
-      const params = new URLSearchParams(window.location.search);
-      if (ac) params.set("ac", ac);
-      else params.delete("ac");
-      window.history.replaceState(null, "", params.toString() ? `?${params}` : window.location.pathname);
+  setAcList: (acList: string[]) => {
+    set({
+      acList,
+      ac: acList[0] ?? "",
     });
-  },
-
-  setProvince: (province: string) => {
-    set({ province, ac: "", acGeoJSON: featureCollection([]) });
     queueMicrotask(() => {
       const params = new URLSearchParams(window.location.search);
       params.delete("ac");
-      if (province) params.set("province", province);
-      else params.delete("province");
-      window.history.replaceState(null, "", params.toString() ? `?${params}` : window.location.pathname);
+      acList.forEach((a) => params.append("ac", a));
+      const { pathname } = window.location;
+      const next = params.toString() ? `?${params}` : pathname;
+      window.history.replaceState(null, "", next);
+    });
+  },
+
+  setProvinces: (provinces: string[]) => {
+    set({
+      provinces,
+      province: provinces[0] ?? "",
+      acList: [],
+      ac: "",
+      acGeoJSON: featureCollection([]),
+    });
+    queueMicrotask(() => {
+      const params = new URLSearchParams(window.location.search);
+      params.delete("ac");
+      params.delete("province");
+      provinces.forEach((p) => params.append("province", p));
+      const next = params.toString() ? `?${params}` : window.location.pathname;
+      window.history.replaceState(null, "", next);
     });
   },
 
   syncFromUrl: () => {
     const params = new URLSearchParams(window.location.search);
-    const ac = params.get("ac");
-    const province = params.get("province");
-    if (ac) {
-      set({ ac });
-    }
-    if (province) {
-      set({ province });
-    }
+    const acAll = params.getAll("ac");
+    const provinceAll = params.getAll("province");
+    set({
+      provinces: provinceAll,
+      acList: acAll,
+      province: provinceAll[0] ?? "",
+      ac: acAll[0] ?? "",
+    });
   },
 }));

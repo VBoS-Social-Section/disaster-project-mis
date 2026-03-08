@@ -89,7 +89,7 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
   const [map, setMap] = useState<LeafletMap | null>(null);
   const { viewState, setViewState, syncToUrl, mapStyle, setMapStyle } = useMapStore();
   const { colorMode } = useColorMode();
-  const { ac, acGeoJSON, province } = useAreaStore();
+  const { acGeoJSON, provinces, acList } = useAreaStore();
   const { data: provincesGeojson } = useProvinces();
   const { layers } = useLayerStore();
   const setSelectedFeatureInfo = usePanelStore((s) => s.setSelectedFeatureInfo);
@@ -161,12 +161,19 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
   useEffect(() => {
     if (!map) return;
 
-    const fitToBounds = (geojson: { features: Feature[] }, filterAc?: string) => {
-      const features = filterAc
-        ? geojson.features.filter(
-            (i) => (i.properties?.name as string)?.toLowerCase() === filterAc.toLowerCase(),
-          )
-        : geojson.features;
+    const fitToBounds = (
+      geojson: { features: Feature[] },
+      filterAcList?: string[],
+    ) => {
+      const features =
+        filterAcList && filterAcList.length > 0
+          ? geojson.features.filter((i) =>
+              filterAcList.some(
+                (a) =>
+                  (i.properties?.name as string)?.toLowerCase() === a.toLowerCase(),
+              ),
+            )
+          : geojson.features;
       const fc = featureCollection(features);
       if (!fc.features.length) return;
       const acBbox = bbox(fc);
@@ -182,7 +189,7 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
       [-12.84665, -189.9646] as L.LatLngTuple,
     ];
 
-    if (!province) {
+    if (provinces.length === 0) {
       const id = requestAnimationFrame(() => {
         map.fitBounds(VANUATU_BOUNDS, { animate: true });
       });
@@ -191,23 +198,26 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
 
     if (acGeoJSON?.features?.length) {
       const id = requestAnimationFrame(() => {
-        fitToBounds(acGeoJSON, ac || undefined);
+        fitToBounds(acGeoJSON, acList.length > 0 ? acList : undefined);
       });
       return () => cancelAnimationFrame(id);
     }
 
     if (provincesGeojson?.features?.length) {
-      const provinceFeature = provincesGeojson.features.find(
-        (f) => (f.properties?.name as string)?.toLowerCase() === province.toLowerCase(),
+      const provinceFeatures = provincesGeojson.features.filter((f) =>
+        provinces.some(
+          (p) =>
+            (f.properties?.name as string)?.toLowerCase() === p.toLowerCase(),
+        ),
       );
-      if (provinceFeature) {
+      if (provinceFeatures.length) {
         const id = requestAnimationFrame(() => {
-          fitToBounds({ features: [provinceFeature as Feature] });
+          fitToBounds({ features: provinceFeatures as Feature[] });
         });
         return () => cancelAnimationFrame(id);
       }
     }
-  }, [ac, acGeoJSON, map, province, provincesGeojson]);
+  }, [acGeoJSON, acList, map, provinces, provincesGeojson]);
 
   return (
     <MapContainer

@@ -9,7 +9,7 @@ import { featureCollection } from "@turf/helpers";
 const useAdminAreaStats = (
   geojson: ProvincesGeoJSON | AreaCouncilGeoJSON = featureCollection([]),
 ) => {
-  const { ac, province } = useAreaStore();
+  const { provinces } = useAreaStore();
   const { tabularLayerData } = useLayerStore();
   const { year } = useDateStore();
 
@@ -34,7 +34,7 @@ const useAdminAreaStats = (
       })),
     };
 
-    if (!province) {
+    if (provinces.length === 0) {
       updatedGeojson.features.forEach(
         (p) =>
           (p.properties.value = getProvinceValue(
@@ -43,7 +43,7 @@ const useAdminAreaStats = (
           )),
       );
     }
-    if (province) {
+    if (provinces.length > 0) {
       updatedGeojson.features.forEach(
         (c) =>
           (c.properties.value = getAreaCouncilValue(
@@ -67,7 +67,7 @@ const useAdminAreaStats = (
       minValue: values[0],
       maxValue: values[values.length - 1],
     };
-  }, [ac, province, tabularLayerData, year, geojson]);
+  }, [provinces, tabularLayerData, year, geojson]);
 };
 
 export { useAdminAreaStats };

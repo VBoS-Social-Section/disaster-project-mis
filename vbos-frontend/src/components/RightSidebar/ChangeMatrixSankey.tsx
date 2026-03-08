@@ -15,12 +15,15 @@ type FlowLink = { from: string; to: string; weight: number; color?: string };
 
 export function ChangeMatrixSankey() {
   const theme = useHighchartsTheme();
-  const { province } = useDeferredArea();
+  const { provinces } = useDeferredArea();
   const { colorMode } = useColorMode();
   const { landAccountsData } = useLandAccounts();
 
   const { data: sankeyData, totalFlow } = useMemo(() => {
-    const matrix = province ? landAccountsData.provinces[province]?.change_matrix : null;
+    const matrix =
+      provinces.length === 1
+        ? landAccountsData.provinces[provinces[0]]?.change_matrix
+        : null;
     if (!matrix) return { data: [] as FlowLink[], totalFlow: 0 };
 
     const links: FlowLink[] = [];
@@ -44,9 +47,9 @@ export function ChangeMatrixSankey() {
 
     const total = links.reduce((s, l) => s + l.weight, 0);
     return { data: links, totalFlow: total };
-  }, [province, colorMode, landAccountsData]);
+  }, [provinces, colorMode, landAccountsData]);
 
-  if (!province || sankeyData.length === 0) {
+  if (provinces.length !== 1 || sankeyData.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/20 py-12 text-center">
         <p className="text-sm font-medium text-muted-foreground">
@@ -96,7 +99,7 @@ export function ChangeMatrixSankey() {
   return (
     <div className="overflow-hidden rounded-lg border border-border/60 bg-card/50">
       <p className="border-b border-border/60 px-4 py-2 text-xs text-muted-foreground">
-        {province}: From → To (km²) · {totalFlow.toFixed(0)} km² total flow
+        {provinces[0]}: From → To (km²) · {totalFlow.toFixed(0)} km² total flow
       </p>
       <HighchartsReact
         highcharts={Highcharts}

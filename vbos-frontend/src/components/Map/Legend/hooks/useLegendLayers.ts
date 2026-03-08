@@ -54,7 +54,7 @@ export function useLegendLayers(): LegendLayer[] {
     getLayerMetadata,
     tabularLayerData,
   } = useLayerStore();
-  const { province, acGeoJSON } = useAreaStore();
+  const { provinces, acGeoJSON } = useAreaStore();
   const { year: dataYear } = useDateStore();
   const { data: provincesGeojson } = useProvinces();
   const queryClient = useQueryClient();
@@ -63,7 +63,9 @@ export function useLegendLayers(): LegendLayer[] {
   // Stable empty fallback - prevents useAdminAreaStats infinite loop when provincesGeojson is undefined
   const emptyGeoJSON = useMemo(() => featureCollection([]) as ProvincesGeoJSON, []);
   const adminAreaGeoJSON: ProvincesGeoJSON | AreaCouncilGeoJSON =
-    province && acGeoJSON ? acGeoJSON : (provincesGeojson ?? emptyGeoJSON);
+    provinces.length > 0 && acGeoJSON.features.length > 0
+      ? acGeoJSON
+      : (provincesGeojson ?? emptyGeoJSON);
 
   // Get min/max values from the same source as the map rendering
   const { minValue, maxValue } = useAdminAreaStats(adminAreaGeoJSON);

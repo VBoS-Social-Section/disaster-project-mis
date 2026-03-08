@@ -58,7 +58,7 @@ export function Stats() {
     useLayerStore();
   const { comparisonMode, yearLeft, yearRight } = useComparisonStore();
   const { toggleTimeSeries, isTimeSeriesOpen, rightSidebarExpanded } = useUiStore();
-  const { province, ac } = useAreaStore();
+  const { provinces, acList } = useAreaStore();
   const tabularAttributeFilter = useLayerStore((s) => s.tabularAttributeFilter);
   const filteredData = useFilteredTabularData();
 
@@ -67,15 +67,15 @@ export function Stats() {
     const dataLeft = applyTabularFilters(
       tabularLayerData,
       yearLeft,
-      province,
-      ac,
+      provinces,
+      acList,
       tabularAttributeFilter,
     );
     const dataRight = applyTabularFilters(
       tabularLayerData,
       yearRight,
-      province,
-      ac,
+      provinces,
+      acList,
       tabularAttributeFilter,
     );
     const sumLeft = dataLeft.reduce((a, r) => a + (Number(r.value) || 0), 0);

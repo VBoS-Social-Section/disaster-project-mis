@@ -31,7 +31,7 @@ function EmptyState() {
 export function ContextPanelContent() {
   const { context, hasTabular } = usePanelContext();
   const scenario = useScenario();
-  const { province } = useAreaStore();
+  const { provinces } = useAreaStore();
   const rightSidebarExpanded = useUiStore((s) => s.rightSidebarExpanded);
 
   if (context === "empty") {
@@ -63,7 +63,7 @@ export function ContextPanelContent() {
             <ComparisonMode />
           </div>
         )}
-        {!province && scenario.uiConfig.showStats && (
+        {provinces.length === 0 && scenario.uiConfig.showStats && (
           <div className="rounded-md border border-border bg-muted px-3 py-2">
             <p className="text-xs text-muted-foreground">
               Showing national data. Select a province above for area-level breakdown.

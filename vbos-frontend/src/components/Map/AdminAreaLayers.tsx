@@ -31,13 +31,15 @@ export function AdminAreaMapLayers({
   const setMapHoverFeature = useUiStore((s) => s.setMapHoverFeature);
   const { comparisonMode } = useComparisonStore();
   const { data: provincesGeojson, isPending, error } = useProvinces();
-  const { ac, province } = useDeferredArea();
+  const { provinces, acList } = useDeferredArea();
   const acGeoJSON = useAreaStore((s) => s.acGeoJSON);
   const { layers, getLayerMetadata } = useLayerStore();
   const { getOpacity } = useOpacityStore();
   const { getEffectiveOpacity } = useFocusStore();
   const adminAreaGeoJSON: ProvincesGeoJSON | AreaCouncilGeoJSON =
-    province && acGeoJSON ? acGeoJSON : (provincesGeojson ?? EMPTY_GEOJSON);
+    provinces.length > 0 && acGeoJSON.features.length > 0
+      ? acGeoJSON
+      : (provincesGeojson ?? EMPTY_GEOJSON);
   const {
     geojson: adminAreaStatsGeojson,
     maxValue,
@@ -56,11 +58,13 @@ export function AdminAreaMapLayers({
 
   const getProvinceStyle = (feature?: GeoJSON.Feature) => {
     const name = feature?.properties?.name as string | undefined;
-    const show = !province || (name && name.toUpperCase() === province.toUpperCase());
+    const show =
+      provinces.length === 0 ||
+      (name && provinces.some((p) => name.toUpperCase() === p.toUpperCase()));
     return {
       color: mapPalette.provinceBorder,
-      weight: ac ? 1 : 2,
-      opacity: ac ? 0.5 : show ? 1 : 0,
+      weight: acList.length > 0 ? 1 : 2,
+      opacity: acList.length > 0 ? 0.5 : show ? 1 : 0,
       fill: false,
       fillOpacity: 0,
     };
@@ -68,11 +72,13 @@ export function AdminAreaMapLayers({
 
   const getAreaCouncilStyle = (feature?: GeoJSON.Feature) => {
     const name = feature?.properties?.name as string | undefined;
-    const show = !ac || (name && name.toLowerCase() === ac.toLowerCase());
+    const show =
+      acList.length === 0 ||
+      (name && acList.some((a) => name.toLowerCase() === a.toLowerCase()));
     return {
       color: mapPalette.areaCouncilBorder,
-      weight: ac ? 2 : 1.5,
-      opacity: ac ? 1 : show ? 0.5 : 0,
+      weight: acList.length > 0 ? 2 : 1.5,
+      opacity: acList.length > 0 ? 1 : show ? 0.5 : 0,
       fill: false,
       fillOpacity: 0,
     };
@@ -81,7 +87,11 @@ export function AdminAreaMapLayers({
   const getStatsStyle = (feature?: GeoJSON.Feature) => {
     const value = feature?.properties?.value as number | undefined;
     const name = feature?.properties?.name as string | undefined;
-    if (typeof value !== "number" || !isFinite(value) || (ac && name?.toLowerCase() !== ac.toLowerCase())) {
+    const nameInAcList =
+      !name ||
+      acList.length === 0 ||
+      acList.some((a) => name.toLowerCase() === a.toLowerCase());
+    if (typeof value !== "number" || !isFinite(value) || !nameInAcList) {
       return { fillOpacity: 0, stroke: false };
     }
     const t = maxValue !== minValue

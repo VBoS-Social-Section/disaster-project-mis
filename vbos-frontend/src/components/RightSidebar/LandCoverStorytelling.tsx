@@ -11,21 +11,21 @@ import { useLandAccounts } from "@/hooks/useLandAccounts";
 import { useMemo } from "react";
 
 export function LandCoverStorytelling() {
-  const { province } = useAreaStore();
+  const { provinces } = useAreaStore();
   const { landAccountsData } = useLandAccounts();
 
-  const provinces = useMemo(() => {
-    return province
-      ? [province]
+  const provincesList = useMemo(() => {
+    return provinces.length > 0
+      ? provinces
       : LAND_ACCOUNT_PROVINCES.filter((p) => landAccountsData.provinces[p] != null);
-  }, [province, landAccountsData]);
+  }, [provinces, landAccountsData]);
 
   const changes = useMemo(() => {
     const result: { category: string; netChange: number; totalOpening: number; impact: string }[] = [];
     for (const cat of LAND_ACCOUNT_CATEGORIES) {
       let opening = 0;
       let netChange = 0;
-      for (const p of provinces) {
+      for (const p of provincesList) {
         const pa = landAccountsData.provinces[p]?.physical_account;
         if (pa) {
           opening += pa.opening[cat as keyof typeof pa.opening] ?? 0;
@@ -42,7 +42,7 @@ export function LandCoverStorytelling() {
       });
     }
     return result.filter((c) => Math.abs(c.netChange) > 0.1).sort((a, b) => Math.abs(b.netChange) - Math.abs(a.netChange));
-  }, [provinces, landAccountsData]);
+  }, [provincesList, landAccountsData]);
 
   if (changes.length === 0) return null;
 

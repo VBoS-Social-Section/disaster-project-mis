@@ -11,19 +11,21 @@ import { useLayerStore } from "@/store/layer-store";
 function applyTabularFilters(
   data: TabularData[],
   year: string,
-  province: string,
-  ac: string,
+  provinces: string[],
+  acList: string[],
   attributeFilter: string | null,
 ): TabularData[] {
   let result = data.filter((i) => i.date.startsWith(year));
 
-  if (ac) {
+  if (acList.length > 0) {
+    const acSet = new Set(acList.map((a) => a.toLowerCase()));
     result = result.filter(
-      (i) => i.area_council?.toLowerCase() === ac.toLowerCase(),
+      (i) => i.area_council && acSet.has(i.area_council.toLowerCase()),
     );
-  } else if (province) {
+  } else if (provinces.length > 0) {
+    const provSet = new Set(provinces.map((p) => p.toLowerCase()));
     result = result.filter(
-      (i) => i.province?.toLowerCase() === province.toLowerCase(),
+      (i) => i.province && provSet.has(i.province.toLowerCase()),
     );
   }
 
@@ -40,7 +42,7 @@ function applyTabularFilters(
 
 export function useFilteredTabularData(): TabularData[] {
   const { tabularLayerData, tabularAttributeFilter } = useLayerStore();
-  const { province, ac } = useAreaStore();
+  const { provinces, acList } = useAreaStore();
   const { year } = useDateStore();
 
   return useMemo(
@@ -48,11 +50,11 @@ export function useFilteredTabularData(): TabularData[] {
       applyTabularFilters(
         tabularLayerData,
         year,
-        province,
-        ac,
+        provinces,
+        acList,
         tabularAttributeFilter,
       ),
-    [tabularLayerData, year, province, ac, tabularAttributeFilter],
+    [tabularLayerData, year, provinces, acList, tabularAttributeFilter],
   );
 }
 

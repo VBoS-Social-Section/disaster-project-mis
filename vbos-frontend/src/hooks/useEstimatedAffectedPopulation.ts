@@ -17,23 +17,43 @@ import { isPopulationAttr, isHazardAttr } from "@/config/impactMode";
 export function useEstimatedAffectedPopulation() {
   const { tabularLayerData } = useLayerStore();
   const { year } = useDateStore();
-  const { province, ac } = useAreaStore();
+  const { provinces, acList } = useAreaStore();
   const { enabled: impactModeEnabled } = useImpactModeStore();
 
   return useMemo(() => {
     if (!impactModeEnabled || !tabularLayerData.length) return null;
 
-    const filtered = tabularLayerData.filter((i) => i.date.startsWith(year));
+    let filtered = tabularLayerData.filter((i) => i.date.startsWith(year));
+    if (acList.length > 0) {
+      const acSet = new Set(acList.map((a) => a.toLowerCase()));
+      filtered = filtered.filter(
+        (i) => i.area_council && acSet.has(i.area_council.toLowerCase()),
+      );
+    } else if (provinces.length > 0) {
+      const provSet = new Set(provinces.map((p) => p.toLowerCase()));
+      filtered = filtered.filter(
+        (i) => i.province && provSet.has(i.province.toLowerCase()),
+      );
+    }
+
     const attributes = getAttributes(filtered);
     const popAttr = attributes.find(isPopulationAttr);
     const hazardAttr = attributes.find(isHazardAttr);
 
     if (!popAttr || !hazardAttr) return null;
 
-    const useAreaCouncil = Boolean(province);
+    const useAreaCouncil = provinces.length > 0;
     const places = useAreaCouncil
-      ? [...new Set(filtered.filter((i) => i.province?.toLowerCase() === province?.toLowerCase()).map((i) => i.area_council).filter(Boolean))] as string[]
-      : [...new Set(filtered.map((i) => i.province).filter(Boolean))] as string[];
+      ? (acList.length > 0
+          ? acList
+          : [
+              ...new Set(
+                filtered.map((i) => i.area_council).filter(Boolean),
+              ),
+            ] as string[])
+      : (provinces.length > 0
+          ? provinces
+          : [...new Set(filtered.map((i) => i.province).filter(Boolean))] as string[]);
 
     let affected = 0;
     const getValue = useAreaCouncil
@@ -51,5 +71,5 @@ export function useEstimatedAffectedPopulation() {
     }
 
     return { affected, populationAttr: popAttr, hazardAttr };
-  }, [impactModeEnabled, tabularLayerData, year, province, ac]);
+  }, [impactModeEnabled, tabularLayerData, year, provinces, acList]);
 }

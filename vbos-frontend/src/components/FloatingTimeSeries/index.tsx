@@ -27,7 +27,7 @@ const FloatingTimeSeries = () => {
   const theme = useHighchartsTheme();
   const { layers, tabularLayerData, getLayerMetadata } = useLayerStore();
   const zoom = useMapStore((s) => s.viewState.zoom);
-  const { province, ac } = useDeferredArea();
+  const { provinces, acList } = useDeferredArea();
   const { isTimeSeriesOpen, setTimeSeriesOpen } = useUiStore();
   const tabularLayerId = layers.split(",").find((i) => i.startsWith("t"));
   const layerMetadata: Dataset | undefined = tabularLayerId
@@ -206,7 +206,12 @@ const FloatingTimeSeries = () => {
         ) : (
           <div className="mb-3">
             <h4 className="text-sm font-medium text-muted-foreground">
-              {ac ? ac : province ? province : "National Level"} —{" "}
+              {acList.length > 0
+                ? acList.join(", ")
+                : provinces.length > 0
+                  ? provinces.join(", ")
+                  : "National Level"}{" "}
+              —{" "}
               {layerMetadata
                 ? layerMetadata.name
                 : "Selected Data Over Time"}

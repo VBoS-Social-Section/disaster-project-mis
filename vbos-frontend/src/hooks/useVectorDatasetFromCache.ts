@@ -31,19 +31,19 @@ export function useVectorDatasetFromCache() {
       }
 
       let features = cachedData.features;
-      const province = areaFilters.get("province");
-      const areaCouncil = areaFilters.get("area_council");
+      const provinces = areaFilters.getAll("province").map((x) => x.toLowerCase());
+      const areaCouncils = areaFilters.getAll("area_council").map((x) => x.toLowerCase());
 
-      if (province || areaCouncil) {
+      if (provinces.length > 0 || areaCouncils.length > 0) {
         features = features.filter((f) => {
           const props = f.properties ?? {};
           const p = (props.province ?? "").toString().toLowerCase();
           const ac = (props.area_council ?? "").toString().toLowerCase();
-          if (areaCouncil && province) {
-            return p === province.toLowerCase() && ac === areaCouncil.toLowerCase();
+          if (areaCouncils.length > 0 && provinces.length > 0) {
+            return provinces.includes(p) && areaCouncils.includes(ac);
           }
-          if (province) return p === province.toLowerCase();
-          if (areaCouncil) return ac === areaCouncil.toLowerCase();
+          if (provinces.length > 0) return provinces.includes(p);
+          if (areaCouncils.length > 0) return areaCouncils.includes(ac);
           return true;
         });
       }

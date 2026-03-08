@@ -12,10 +12,10 @@ export function useSessionSave() {
   const layers = useLayerStore((s) => s.layers);
   const scenarioId = useViewStore((s) => s.scenarioId);
   const year = useDateStore((s) => s.year);
-  const province = useAreaStore((s) => s.province);
+  const provinces = useAreaStore((s) => s.provinces);
   const saveSession = useSessionStore((s) => s.saveSession);
 
   useEffect(() => {
-    saveSession({ layers, scenarioId, year, province });
-  }, [layers, scenarioId, year, province, saveSession]);
+    saveSession({ layers, scenarioId, year, province: provinces[0] ?? "" });
+  }, [layers, scenarioId, year, provinces, saveSession]);
 }

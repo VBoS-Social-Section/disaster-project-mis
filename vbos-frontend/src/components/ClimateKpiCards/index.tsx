@@ -12,21 +12,24 @@ import type { KpiDrillDownData } from "@/config/kpis";
 
 const ClimateKpiCards = () => {
   const scenario = useScenario();
-  const { province } = useAreaStore();
+  const { provinces } = useAreaStore();
   const zoom = useMapStore((s) => s.viewState.zoom);
   const { landAccountsData } = useLandAccounts();
   const [drillDown, setDrillDown] = useState<KpiDrillDownData | null>(null);
 
-  const provinces = useMemo(() => {
-    const list = province
-      ? [province]
+  const provincesList = useMemo(() => {
+    const list = provinces.length > 0
+      ? provinces
       : LAND_ACCOUNT_PROVINCES.filter((p) =>
           landAccountsData.provinces[p] != null,
         );
     return list;
-  }, [province, landAccountsData]);
+  }, [provinces, landAccountsData]);
 
-  const ctx = useMemo(() => ({ provinces, landAccountsData }), [provinces, landAccountsData]);
+  const ctx = useMemo(
+    () => ({ provinces: provincesList, landAccountsData }),
+    [provincesList, landAccountsData],
+  );
 
   if (scenario.id !== "climate") return null;
 

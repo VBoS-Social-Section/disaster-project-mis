@@ -23,10 +23,13 @@ function formatYAxis(value: number): string {
 
 export function StatsChart({ stats, unit, expanded }: StatsChartType) {
   const theme = useHighchartsTheme();
-  const { province, ac } = useDeferredArea();
-  const isAreaCouncilLevel = Boolean(ac);
+  const { provinces, acList } = useDeferredArea();
+  const isAreaCouncilLevel = acList.length > 0;
 
-  const consolidated = consolidateStats(stats, province ? "area_council" : "province");
+  const consolidated = consolidateStats(
+    stats,
+    provinces.length > 0 ? "area_council" : "province",
+  );
   const allAttributes = getAttributes(stats);
   const attributes = getTopAttributes(stats, 10);
   const otherAttrs = allAttributes.length > 10 ? allAttributes.filter((a) => !attributes.includes(a)) : [];

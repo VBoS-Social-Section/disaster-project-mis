@@ -23,12 +23,14 @@ export function TabularDeltaOverlay() {
 
   const { comparisonMode, comparisonView, yearLeft, yearRight } = useComparisonStore();
   const { layers } = useLayerStore();
-  const { ac, province, acGeoJSON } = useAreaStore();
+  const { acList, provinces, acGeoJSON } = useAreaStore();
   const { data: provincesGeojson } = useProvinces();
   const { getOpacity } = useOpacityStore();
 
   const adminAreaGeoJSON: ProvincesGeoJSON | AreaCouncilGeoJSON =
-    province && acGeoJSON ? acGeoJSON : (provincesGeojson ?? featureCollection([]) as ProvincesGeoJSON);
+    provinces.length > 0 && acGeoJSON.features.length > 0
+      ? acGeoJSON
+      : (provincesGeojson ?? featureCollection([]) as ProvincesGeoJSON);
 
   const { geojson, minDelta, maxDelta } = useAdminAreaStatsDelta(
     adminAreaGeoJSON,
@@ -51,11 +53,11 @@ export function TabularDeltaOverlay() {
     const getStyle = (feature?: GeoJSON.Feature): L.PathOptions => {
       const delta = feature?.properties?.delta as number | undefined;
       const name = feature?.properties?.name as string | undefined;
-      if (
-        typeof delta !== "number" ||
-        !isFinite(delta) ||
-        (ac && name?.toLowerCase() !== ac.toLowerCase())
-      ) {
+      const nameInAcList =
+        !name ||
+        acList.length === 0 ||
+        acList.some((a) => name.toLowerCase() === a.toLowerCase());
+      if (typeof delta !== "number" || !isFinite(delta) || !nameInAcList) {
         return { fillOpacity: 0, stroke: false };
       }
       const t = range > 0 ? Math.max(-1, Math.min(1, delta / range)) : 0;
@@ -86,7 +88,7 @@ export function TabularDeltaOverlay() {
     minDelta,
     maxDelta,
     tabularOpacity,
-    ac,
+    acList,
     mapPalette,
   ]);
 

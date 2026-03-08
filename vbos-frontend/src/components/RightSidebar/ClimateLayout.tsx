@@ -46,24 +46,25 @@ const WHY_THIS_MATTERS =
 
 export function ClimateLayout() {
   const theme = useHighchartsTheme();
-  const { province } = useDeferredArea();
+  const { provinces } = useDeferredArea();
   const { colorMode } = useColorMode();
   const { landAccountsData } = useLandAccounts();
   const [viewMode, setViewMode] = useState<"km2" | "percent">("percent");
 
-  const provinces = useMemo(() => {
-    const list = province
-      ? [province]
-      : LAND_ACCOUNT_PROVINCES.filter((p) =>
-          landAccountsData.provinces[p] != null,
-        );
+  const provincesList = useMemo(() => {
+    const list =
+      provinces.length > 0
+        ? provinces
+        : LAND_ACCOUNT_PROVINCES.filter((p: string) =>
+            landAccountsData.provinces[p] != null,
+          );
     return list;
-  }, [province, landAccountsData]);
+  }, [provinces, landAccountsData]);
 
   type ChartRow = { province: string } & Record<LandAccountCategory, number>;
 
   const chartData = useMemo((): ChartRow[] => {
-    return provinces.map((p) => {
+    return provincesList.map((p) => {
       const pa = landAccountsData.provinces[p]?.physical_account;
       const row: ChartRow = {
         province: p,
@@ -81,7 +82,7 @@ export function ClimateLayout() {
       }
       return row;
     });
-  }, [provinces, landAccountsData]);
+  }, [provincesList, landAccountsData]);
 
   const rowTotals = useMemo(() => {
     return chartData.map((row) => {
@@ -130,7 +131,7 @@ export function ClimateLayout() {
       xAxis: {
         categories: barData.map((r) => r.province),
         labels: {
-          rotation: provinces.length > 3 ? -45 : 0,
+          rotation: provincesList.length > 3 ? -45 : 0,
           style: { fontSize: "10px" },
         },
       },
@@ -163,14 +164,14 @@ export function ClimateLayout() {
       },
       legend: { enabled: true },
     });
-  }, [theme, barData, provinces.length, viewMode, palette]);
+  }, [theme, barData, provincesList.length, viewMode, palette]);
 
   const physicalRows = useMemo(() => {
     const rows: { category: string; opening: number; closing: number; netChange: number }[] = [];
     for (const cat of LAND_ACCOUNT_CATEGORIES) {
       let opening = 0;
       let closing = 0;
-      for (const p of provinces) {
+      for (const p of provincesList) {
         const pa = landAccountsData.provinces[p]?.physical_account;
         if (pa) {
           opening += pa.opening[cat] ?? 0;
@@ -185,7 +186,7 @@ export function ClimateLayout() {
       });
     }
     return rows;
-  }, [provinces, landAccountsData]);
+  }, [provincesList, landAccountsData]);
 
   const totalOpening = physicalRows.reduce((s, r) => s + r.opening, 0);
   const totalClosing = physicalRows.reduce((s, r) => s + r.closing, 0);
@@ -198,7 +199,7 @@ export function ClimateLayout() {
         <div>
           <h2 className="text-base font-semibold tracking-tight">Land Accounts</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {province ? `${province} · ` : ""}2020 → 2023
+            {provincesList.length > 0 ? `${provincesList.join(", ")} · ` : ""}2020 → 2023
           </p>
         </div>
         <Popover>

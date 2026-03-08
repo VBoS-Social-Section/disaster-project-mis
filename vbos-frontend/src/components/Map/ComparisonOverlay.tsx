@@ -74,12 +74,14 @@ export function ComparisonOverlay() {
 
   const { comparisonMode, comparisonView, yearLeft, yearRight } = useComparisonStore();
   const { layers } = useLayerStore();
-  const { ac, province, acGeoJSON } = useAreaStore();
+  const { acList, provinces, acGeoJSON } = useAreaStore();
   const { data: provincesGeojson } = useProvinces();
   const { getOpacity } = useOpacityStore();
 
   const adminAreaGeoJSON: ProvincesGeoJSON | AreaCouncilGeoJSON =
-    province && acGeoJSON ? acGeoJSON : (provincesGeojson ?? featureCollection([]) as ProvincesGeoJSON);
+    provinces.length > 0 && acGeoJSON.features.length > 0
+      ? acGeoJSON
+      : (provincesGeojson ?? featureCollection([]) as ProvincesGeoJSON);
 
   const { geojson: geojsonLeft, minValue: minLeft, maxValue: maxLeft } =
     useAdminAreaStatsForYear(adminAreaGeoJSON, yearLeft);
@@ -103,11 +105,11 @@ export function ComparisonOverlay() {
       return (feature?: GeoJSON.Feature) => {
         const value = feature?.properties?.value as number | undefined;
         const name = feature?.properties?.name as string | undefined;
-        if (
-          typeof value !== "number" ||
-          !isFinite(value) ||
-          (ac && name?.toLowerCase() !== ac.toLowerCase())
-        ) {
+        const nameInAcList =
+          !name ||
+          acList.length === 0 ||
+          acList.some((a) => name.toLowerCase() === a.toLowerCase());
+        if (typeof value !== "number" || !isFinite(value) || !nameInAcList) {
           return { fillOpacity: 0, stroke: false };
         }
         const t =
@@ -176,7 +178,7 @@ export function ComparisonOverlay() {
     minRight,
     maxRight,
     tabularOpacity,
-    ac,
+    acList,
     mapPalette,
   ]);
 
