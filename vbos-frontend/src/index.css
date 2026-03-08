@@ -364,14 +364,20 @@ html {
 
 /* Sidebar: width spring animation */
 .sidebar-spring {
-  transition: width 0.35s var(--ease-spring), opacity 0.25s var(--ease-smooth);
+  transition: width 0.45s var(--ease-smooth), opacity 0.3s var(--ease-smooth);
+}
+
+/* Right panel overlay: when expanded, overlays map (map stays fixed) */
+.right-panel-overlay {
+  transition: width 0.5s var(--ease-smooth);
 }
 
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .hover-lift,
   .kpi-bento-card,
-  .sidebar-spring {
+  .sidebar-spring,
+  .right-panel-overlay {
     transition: none;
   }
   .hover-lift:hover,

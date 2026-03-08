@@ -14,7 +14,7 @@ export function useAuth() {
 
     if (user) return; // Already have user, token was validated
 
-    getCurrentUser(token)
+    getCurrentUser()
       .then((userData) => {
         setUser(userData);
       })

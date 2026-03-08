@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { LuArrowDown, LuArrowUp, LuArrowUpDown } from "react-icons/lu";
+import { useUiStore } from "@/store/ui-store";
+import { cn } from "@/lib/utils";
 import { useDeferredArea } from "@/hooks/useDeferredArea";
 import { TabularData } from "@/types/api";
 import { consolidateStats } from "@/utils/consolidateStats";
@@ -21,6 +23,7 @@ type StatsTableProps = {
 
 export function StatsTable({ stats, unit }: StatsTableProps) {
   const { province, ac } = useDeferredArea();
+  const rightSidebarExpanded = useUiStore((s) => s.rightSidebarExpanded);
   const [sortCol, setSortCol] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
@@ -63,7 +66,13 @@ export function StatsTable({ stats, unit }: StatsTableProps) {
   };
 
   return (
-    <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+    <div
+      className={cn(
+        "rounded-lg border border-border/60 bg-muted/20 p-4",
+        rightSidebarExpanded &&
+          "rounded-xl border-border/40 bg-white p-5 shadow-sm dark:bg-card/80",
+      )}
+    >
       <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Data table
       </h4>

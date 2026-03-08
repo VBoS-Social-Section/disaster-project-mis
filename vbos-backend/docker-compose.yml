@@ -45,4 +45,13 @@ services:
       - ./:/code
     ports:
       - "8001:8001"
-  # TiTiler removed – use precomputed tiles instead (see scripts/generate_raster_tiles.sh)
+  titiler:
+    build: ./titiler-local
+    platform: linux/amd64
+    environment:
+      WEB_CONCURRENCY: 1
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./raster_data:/data
+    restart: unless-stopped

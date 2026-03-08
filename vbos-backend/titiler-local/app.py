@@ -4,7 +4,7 @@ Use when raster files are in vbos-backend/raster_data/ (mounted as /data).
 Mirrors vbos-titiler but uses local path instead of DigitalOcean Spaces.
 """
 import json
-from pathlib import Path
+from pathlib import Path as libPath
 from typing import Annotated, Literal, Optional
 
 import jinja2
@@ -34,7 +34,7 @@ from titiler.core.resources.enums import MediaType
 from titiler.core.utils import accept_media_type, create_html_response, update_openapi
 
 api_settings = ApiSettings()
-DATA_ROOT = Path("/data")
+DATA_ROOT = libPath("/data")
 
 templates_location = [
     jinja2.PackageLoader("titiler.application", "templates"),
@@ -61,7 +61,7 @@ app = FastAPI(
     docs_url="/api.html",
     description=api_settings.description,
     version=titiler_version,
-    root_path=api_settings.root_path,
+    root_path="/titiler",
 )
 update_openapi(app)
 

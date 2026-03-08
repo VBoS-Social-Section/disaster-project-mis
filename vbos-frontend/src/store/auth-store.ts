@@ -18,9 +18,9 @@ export interface AuthUser {
 interface AuthState {
   token: string | null;
   user: AuthUser | null;
-  setAuth: (token: string, user: AuthUser) => void;
+  setAuth: (token: string, user: AuthUser | null) => void;
   clearAuth: () => void;
-  setUser: (user: AuthUser) => void;
+  setUser: (user: AuthUser | null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(

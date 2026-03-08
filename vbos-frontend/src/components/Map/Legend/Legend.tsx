@@ -61,7 +61,7 @@ export function Legend({ embedded = false }: LegendProps = {}) {
       className={
         embedded
           ? "w-full overflow-hidden rounded-lg border border-border bg-muted/20 shadow-sm"
-          : "absolute left-2 bottom-[7.5rem] z-[1000] w-[280px] overflow-hidden rounded-lg border border-border shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface md:bottom-[8rem] md:w-[320px]"
+          : "absolute left-2 bottom-4 z-[1000] w-[280px] overflow-hidden rounded-lg border border-border shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface md:w-[320px]"
       }
       role="list"
     >

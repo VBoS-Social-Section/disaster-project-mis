@@ -5,12 +5,14 @@ import { LuLayers } from "react-icons/lu";
 import { usePanelContext } from "@/hooks/usePanelContext";
 import { useScenario } from "@/hooks/useScenario";
 import { useAreaStore } from "@/store/area-store";
+import { useUiStore } from "@/store/ui-store";
 import { ClimateLayout } from "@/components/RightSidebar/ClimateLayout";
 import { ComparisonMode } from "@/components/RightSidebar/ComparisonMode";
 import { LandCoverTotalsChart } from "@/components/RightSidebar/LandCoverTotalsChart";
 import { Stats } from "@/components/RightSidebar/Stats";
 import { ImpactModeCard } from "@/components/RightSidebar/ImpactModeCard";
 import { FeatureInsights } from "./FeatureInsights";
+import { cn } from "@/lib/utils";
 
 function EmptyState() {
   return (
@@ -30,6 +32,7 @@ export function ContextPanelContent() {
   const { context, hasTabular } = usePanelContext();
   const scenario = useScenario();
   const { province } = useAreaStore();
+  const rightSidebarExpanded = useUiStore((s) => s.rightSidebarExpanded);
 
   if (context === "empty") {
     return <EmptyState />;
@@ -45,10 +48,15 @@ export function ContextPanelContent() {
 
   if (context === "tabular") {
     return (
-      <div className="space-y-4">
+      <div className={cn("space-y-4", rightSidebarExpanded && "space-y-6")}>
         {scenario.id === "disaster" && <ImpactModeCard />}
         {hasTabular && (
-          <div className="rounded-lg border border-border bg-muted/30 px-3 py-3">
+          <div
+            className={cn(
+              "rounded-lg border border-border bg-muted/30 px-3 py-3",
+              rightSidebarExpanded && "rounded-xl border-border/50 bg-card/80 px-4 py-4 shadow-sm",
+            )}
+          >
             <p className="mb-2 text-xs text-muted-foreground">
               Compare years (swipe or delta heatmap)
             </p>
@@ -60,6 +68,14 @@ export function ContextPanelContent() {
             <p className="text-xs text-muted-foreground">
               Showing national data. Select a province above for area-level breakdown.
             </p>
+          </div>
+        )}
+        {rightSidebarExpanded && hasTabular && (
+          <div className="flex items-center gap-3">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Analytics
+            </h3>
+            <div className="h-px flex-1 bg-border/60" />
           </div>
         )}
         <Stats />

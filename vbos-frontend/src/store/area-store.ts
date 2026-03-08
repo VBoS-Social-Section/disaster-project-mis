@@ -30,7 +30,7 @@ export const useAreaStore = create<AreaState>((set) => ({
   },
 
   setProvince: (province: string) => {
-    set({ province, ac: "" });
+    set({ province, ac: "", acGeoJSON: featureCollection([]) });
     queueMicrotask(() => {
       const params = new URLSearchParams(window.location.search);
       params.delete("ac");

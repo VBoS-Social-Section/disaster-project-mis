@@ -14,16 +14,17 @@ import {
 } from "react-leaflet";
 import L, { type Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
+import type { Feature } from "geojson";
 import { bbox } from "@turf/bbox";
 import { featureCollection } from "@turf/helpers";
 import { useMapStore, BASEMAP_STYLES } from "@/store/map-store";
 import { useAreaStore } from "@/store/area-store";
+import useProvinces from "@/hooks/useProvinces";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useLayerStore } from "@/store/layer-store";
 import { usePanelStore } from "@/store/panel-store";
 import { AdminAreaMapLayers } from "./AdminAreaLayers";
 import { VectorLayers } from "./VectorLayers";
-import { TabularLayers } from "./TabularLayer";
 import { Legend } from "./Legend";
 import { MapPopup } from "./MapPopup";
 import { RasterLayers } from "./RasterLayer";
@@ -88,7 +89,8 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
   const [map, setMap] = useState<LeafletMap | null>(null);
   const { viewState, setViewState, syncToUrl, mapStyle, setMapStyle } = useMapStore();
   const { colorMode } = useColorMode();
-  const { ac, acGeoJSON } = useAreaStore();
+  const { ac, acGeoJSON, province } = useAreaStore();
+  const { data: provincesGeojson } = useProvinces();
   const { layers } = useLayerStore();
   const setSelectedFeatureInfo = usePanelStore((s) => s.setSelectedFeatureInfo);
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
@@ -157,25 +159,55 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
   }, [setSelectedFeatureInfo]);
 
   useEffect(() => {
-    if (!acGeoJSON?.features?.length || !map) return;
-    const acBbox = ac
-      ? bbox(
-          featureCollection(
-            acGeoJSON.features.filter(
-              (i) => (i.properties?.name as string)?.toLowerCase() === ac.toLowerCase(),
-            ),
-          ),
-        )
-      : bbox(acGeoJSON);
-    const bounds: L.LatLngBoundsExpression = [
-      [acBbox[1], acBbox[0]] as L.LatLngTuple,
-      [acBbox[3], acBbox[2]] as L.LatLngTuple,
-    ];
-    const id = requestAnimationFrame(() => {
+    if (!map) return;
+
+    const fitToBounds = (geojson: { features: Feature[] }, filterAc?: string) => {
+      const features = filterAc
+        ? geojson.features.filter(
+            (i) => (i.properties?.name as string)?.toLowerCase() === filterAc.toLowerCase(),
+          )
+        : geojson.features;
+      const fc = featureCollection(features);
+      if (!fc.features.length) return;
+      const acBbox = bbox(fc);
+      const bounds: L.LatLngBoundsExpression = [
+        [acBbox[1], acBbox[0]] as L.LatLngTuple,
+        [acBbox[3], acBbox[2]] as L.LatLngTuple,
+      ];
       map.fitBounds(bounds, { animate: true });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [ac, acGeoJSON, map]);
+    };
+
+    const VANUATU_BOUNDS: L.LatLngBoundsExpression = [
+      [-20.50641, -194.18335] as L.LatLngTuple,
+      [-12.84665, -189.9646] as L.LatLngTuple,
+    ];
+
+    if (!province) {
+      const id = requestAnimationFrame(() => {
+        map.fitBounds(VANUATU_BOUNDS, { animate: true });
+      });
+      return () => cancelAnimationFrame(id);
+    }
+
+    if (acGeoJSON?.features?.length) {
+      const id = requestAnimationFrame(() => {
+        fitToBounds(acGeoJSON, ac || undefined);
+      });
+      return () => cancelAnimationFrame(id);
+    }
+
+    if (provincesGeojson?.features?.length) {
+      const provinceFeature = provincesGeojson.features.find(
+        (f) => (f.properties?.name as string)?.toLowerCase() === province.toLowerCase(),
+      );
+      if (provinceFeature) {
+        const id = requestAnimationFrame(() => {
+          fitToBounds({ features: [provinceFeature as Feature] });
+        });
+        return () => cancelAnimationFrame(id);
+      }
+    }
+  }, [ac, acGeoJSON, map, province, provincesGeojson]);
 
   return (
     <MapContainer
@@ -186,8 +218,12 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
       attributionControl={false}
     >
       <TileLayer
+        key={currentStyle.id}
         url={currentStyle.url}
         attribution={currentStyle.attribution}
+        {...("subdomains" in currentStyle && {
+          subdomains: [...(currentStyle.subdomains as readonly string[])],
+        })}
       />
       <MapReady onMapReady={setMap}>
         <MapEventHandler
@@ -196,14 +232,12 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
           onClick={onClick}
         />
         <AdminAreaMapLayers
-          map={map}
           setPopupInfo={setPopupInfo}
           activeFeatureName={
             popupInfo?.properties?.name as string | undefined
           }
         />
         <VectorLayers setPopupInfo={setPopupInfo} />
-        <TabularLayers />
         <RasterLayers />
         <PMTilesLayers />
         <ComparisonOverlay />

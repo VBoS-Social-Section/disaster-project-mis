@@ -4,8 +4,11 @@ import { Dataset, TabularData } from "@/types/api";
 interface LayersState {
   layers: string; // used to store only the layerIds, ex: t1,v34,r54
   tabularLayerData: TabularData[];
+  /** When set, filter tabular display to this attribute only (e.g. "ecce") */
+  tabularAttributeFilter: string | null;
   allDatasets: Dataset[]; // used to store the metadata of all dataset layers
   setLayers: (layers: string) => void;
+  setTabularAttributeFilter: (attr: string | null) => void;
   switchLayer: (layer: string) => void;
   reorderLayers: (fromIndex: number, toIndex: number) => void;
   setTabularLayerData: (data: TabularData[]) => void;
@@ -17,7 +20,10 @@ interface LayersState {
 export const useLayerStore = create<LayersState>((set, get) => ({
   layers: "",
   tabularLayerData: [],
+  tabularAttributeFilter: null as string | null,
   allDatasets: [],
+
+  setTabularAttributeFilter: (attr) => set({ tabularAttributeFilter: attr }),
 
   setLayers: (layers: string) => {
     set({ layers });
@@ -37,10 +43,14 @@ export const useLayerStore = create<LayersState>((set, get) => ({
     const isRasterLayer = layer.startsWith("r");
     if (layerArray.includes(layer)) {
       layerArray = layerArray.filter((l) => l !== layer);
-      if (isTabularLayer) get().setTabularLayerData([]);
+      if (isTabularLayer) {
+        get().setTabularLayerData([]);
+        get().setTabularAttributeFilter(null);
+      }
     } else {
       if (isTabularLayer) {
         layerArray = layerArray.filter((l) => !l.startsWith("t"));
+        get().setTabularAttributeFilter(null);
       }
       if (isRasterLayer) {
         layerArray = layerArray.filter((l) => !l.startsWith("r"));

@@ -14,10 +14,10 @@ import { useAutoLock } from "./hooks/useAutoLock";
 import { useUiStore } from "@/store/ui-store";
 import { useLockStore } from "@/store/lock-store";
 import { useViewStore } from "@/store/view-store";
-import { useLayerStore } from "@/store/layer-store";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { LeftSidebar } from "./components/LeftSidebar";
 import { RightSidebar } from "./components/RightSidebar";
+import { TabularLayers } from "./components/Map/TabularLayer";
 import { MapEmptyState } from "./components/MapEmptyState";
 import { MapBottomPanel } from "./components/Map/MapBottomPanel";
 import { MapCursorRing } from "./components/Map/MapCursorRing";
@@ -33,9 +33,6 @@ const Map = lazy(() => import("./components/Map").then((m) => ({ default: m.defa
 // Lazy-load overlay components – only fetched when their mode is active
 const ClimateKpiCards = lazy(() =>
   import("./components/ClimateKpiCards").then((m) => ({ default: m.default })),
-);
-const FloatingKpiCards = lazy(() =>
-  import("./components/FloatingKpiCards").then((m) => ({ default: m.default })),
 );
 const FloatingTimeSeries = lazy(() =>
   import("./components/FloatingTimeSeries").then((m) => ({ default: m.default })),
@@ -104,9 +101,7 @@ function App() {
   const { isMobile, mobileOpenPanel, setMobileOpenPanel } = useUiStore();
   const { isLocked } = useLockStore();
   const scenarioId = useViewStore((s) => s.scenarioId);
-  const layers = useLayerStore((s) => s.layers);
   const isTimeSeriesOpen = useUiStore((s) => s.isTimeSeriesOpen);
-  const hasTabularLayer = layers.split(",").some((l) => l.startsWith("t"));
   useUrlSync();
   useSmartDefaults();
   useSessionSave();
@@ -126,7 +121,7 @@ function App() {
       <Header />
       <div
         id="main"
-        className="grid h-[calc(100vh-3.5rem)] min-w-0 grid-rows-[auto_1fr_auto] overflow-hidden md:grid-cols-[auto_1fr_auto] md:grid-rows-1"
+        className="grid h-[calc(100vh-3.5rem)] min-w-0 overflow-hidden md:grid-rows-1 grid-rows-[auto_1fr_auto] md:grid-cols-[auto_1fr_28rem]"
       >
         <div className="min-h-0">
           <ErrorBoundary
@@ -143,7 +138,7 @@ function App() {
           </ErrorBoundary>
         </div>
         <div
-          className="relative map-area min-w-0 min-h-0"
+          className="relative map-area min-w-0 min-h-0 overflow-hidden"
           onClick={() => {
             if (isMobile && mobileOpenPanel) setMobileOpenPanel(null);
           }}
@@ -151,6 +146,7 @@ function App() {
           <ErrorBoundary fallbackRender={MapErrorFallback}>
             <div className="relative flex h-full min-h-0 flex-col">
               <MapCursorRing />
+              <TabularLayers />
               <Suspense fallback={<MapLoadingSkeleton />}>
                 <Map ref={mapRef} />
               </Suspense>
@@ -160,11 +156,6 @@ function App() {
               {scenarioId === "climate" && (
                 <Suspense fallback={null}>
                   <ClimateKpiCards />
-                </Suspense>
-              )}
-              {hasTabularLayer && (
-                <Suspense fallback={null}>
-                  <FloatingKpiCards />
                 </Suspense>
               )}
               {isTimeSeriesOpen && (

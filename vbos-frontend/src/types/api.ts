@@ -25,6 +25,11 @@ export interface BaseDataset {
   unit?: string | null;
   filename_id?: string;
   titiler_url_params?: string;
+  /**
+   * Optional URL template for precomputed tiles (raster + tabular joins).
+   * Placeholders: {z}, {x}, {y}, {year}. When set, used instead of TiTiler.
+   */
+  precomputed_tile_url?: string | null;
   url?: string;
   source_layer?: string;
 }
@@ -37,11 +42,6 @@ export interface RasterDataset extends BaseDataset {
   dataType: "raster";
   /** When true, treated as categorical land cover; frontend auto-activates in Climate mode. */
   is_land_cover?: boolean;
-  /**
-   * Optional URL template for precomputed tiles (raster + tabular joins).
-   * Placeholders: {z}, {x}, {y}, {year}. When set, used instead of TiTiler.
-   */
-  precomputed_tile_url?: string | null;
 }
 
 export interface VectorDataset extends BaseDataset {

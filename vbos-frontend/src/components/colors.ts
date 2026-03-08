@@ -105,6 +105,16 @@ const chartColors = [
   "#22d3ee", /* cyan-400 */
 ];
 
+/** Softer palette for line charts (light blue, darker blue/purple like reference) */
+export const lineChartColors = [
+  "#38bdf8", /* sky-400 - light blue */
+  "#6366f1", /* indigo-500 - darker blue */
+  "#06b6d4", /* cyan-500 */
+  "#8b5cf6", /* violet-500 */
+  "#14b8a6", /* teal-500 */
+  "#818cf8", /* indigo-400 */
+];
+
 /**
  * TiTiler colormap for categorical land cover raster (explicit value→color).
  * Use in titiler_url_params: colormap=JSON.stringify(LAND_COVER_COLORMAP)

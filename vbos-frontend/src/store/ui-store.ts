@@ -15,6 +15,8 @@ interface UiState {
   setLeftSidebarIconMode: (v: boolean) => void;
   rightSidebarIconMode: boolean;
   setRightSidebarIconMode: (v: boolean) => void;
+  rightSidebarExpanded: boolean;
+  setRightSidebarExpanded: (v: boolean) => void;
   mapHoverFeature: boolean;
   setMapHoverFeature: (v: boolean) => void;
 }
@@ -44,6 +46,9 @@ export const useUiStore = create<UiState>()(
       rightSidebarIconMode: false,
       setRightSidebarIconMode: (v) => set({ rightSidebarIconMode: v }),
 
+      rightSidebarExpanded: false,
+      setRightSidebarExpanded: (v) => set({ rightSidebarExpanded: v }),
+
       mapHoverFeature: false,
       setMapHoverFeature: (v) => set({ mapHoverFeature: v }),
     }),
@@ -52,6 +57,7 @@ export const useUiStore = create<UiState>()(
       partialize: (s) => ({
         leftSidebarIconMode: s.leftSidebarIconMode,
         rightSidebarIconMode: s.rightSidebarIconMode,
+        rightSidebarExpanded: s.rightSidebarExpanded,
       }),
     },
   ),

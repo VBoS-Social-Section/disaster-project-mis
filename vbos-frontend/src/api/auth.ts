@@ -1,10 +1,11 @@
+import * as HTTP from "./http";
 import type { AuthUser } from "@/store/auth-store";
 
 const API_HOST = import.meta.env.VITE_API_HOST ?? "";
 
 export async function login(
   username: string,
-  password: string
+  password: string,
 ): Promise<{ token: string }> {
   const response = await fetch(`${API_HOST}/api-token-auth/`, {
     method: "POST",
@@ -26,12 +27,10 @@ export async function login(
   return response.json();
 }
 
-export async function getCurrentUser(token: string): Promise<AuthUser> {
-  const response = await fetch(`${API_HOST}/api/v1/users/me/`, {
-    headers: {
-      Authorization: `Token ${token}`,
-    },
-  });
+export async function getCurrentUser(): Promise<AuthUser> {
+  console.log("Fetching current user...");
+  const response = await HTTP.get("/api/v1/users/me/");
+  console.log("Response status:", response.status);
 
   if (!response.ok) {
     if (response.status === 401) {
@@ -40,5 +39,7 @@ export async function getCurrentUser(token: string): Promise<AuthUser> {
     throw new Error("Failed to fetch user");
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log("User data fetched:", data.username);
+  return data;
 }

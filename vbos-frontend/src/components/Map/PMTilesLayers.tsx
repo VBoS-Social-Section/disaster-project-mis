@@ -16,12 +16,14 @@ import { useColorMode } from "../ui/color-mode";
  */
 function resolvePmtilesUrl(url: string): string {
   try {
-    const parsed = new URL(url, "http://localhost");
-    if (parsed.pathname.startsWith("/media/") && parsed.pathname.endsWith(".pmtiles")) {
-      const filename = parsed.pathname.replace(/^\/media\//, "");
-      const base = import.meta.env.VITE_API_HOST ?? "";
-      const apiBase = base ? (base.startsWith("http") ? base : `https://${base}`) : "";
-      return `${apiBase}/api/v1/pmtiles-serve/${filename}`;
+    // If it's already a full URL to the proxy, return it
+    if (url.includes("/api/v1/pmtiles-serve/")) return url;
+
+    const parsed = new URL(url, window.location.origin);
+    if (parsed.pathname.includes("/media/") && parsed.pathname.endsWith(".pmtiles")) {
+      const filename = parsed.pathname.split("/media/").pop();
+      // Use relative path for the proxy so it works on both localhost and VM
+      return `/api/v1/pmtiles-serve/${filename}`;
     }
   } catch {
     /* ignore */

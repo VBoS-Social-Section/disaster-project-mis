@@ -27,7 +27,8 @@ export function Login() {
     try {
       const { token } = await login(username, password);
       const { getCurrentUser: fetchUser } = await import("@/api/auth");
-      const user = await fetchUser(token);
+      setAuth(token, null); // Set token first so HTTP helper can use it
+      const user = await fetchUser();
       setAuth(token, user);
       toast.success("Signed in successfully");
     } catch (err) {

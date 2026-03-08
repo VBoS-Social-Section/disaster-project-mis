@@ -11,9 +11,10 @@ import { useHighchartsTheme } from "@/hooks/useHighchartsTheme";
 type StatsPieChartProps = {
   stats: TabularData[];
   unit?: string | null;
+  expanded?: boolean;
 };
 
-export function StatsPieChart({ stats }: StatsPieChartProps) {
+export function StatsPieChart({ stats, expanded }: StatsPieChartProps) {
   const theme = useHighchartsTheme();
   const { province } = useDeferredArea();
   const consolidated = consolidateStats(stats, province ? "area_council" : "province");
@@ -71,14 +72,14 @@ export function StatsPieChart({ stats }: StatsPieChartProps) {
   if (!topAttr || consolidated.length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+    <div className="rounded-lg border border-border/30 bg-white p-4 shadow-sm dark:border-border/40 dark:bg-card/80">
       <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Distribution by {province ? "Area Council" : "Province"}
       </h4>
       <HighchartsReact
         highcharts={Highcharts}
         options={options!}
-        containerProps={{ style: { width: "100%", height: 220 } }}
+        containerProps={{ style: { width: "100%", height: expanded ? 300 : 220 } }}
       />
     </div>
   );

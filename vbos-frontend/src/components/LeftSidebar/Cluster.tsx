@@ -41,7 +41,9 @@ const Cluster = ({ name, id, isExpanded, searchQuery = "" }: ClusterProps) => {
         .filter((tg) => isClusterTypeAllowed(scenario, tg.type))
         .map((tg) => ({
           ...tg,
-          datasets: tg.datasets.filter((d) => isLayerAllowed(scenario, d.dataType)),
+          datasets: tg.datasets
+            .filter((d) => isLayerAllowed(scenario, d.dataType))
+            .filter((d) => d.dataType !== "tabular"),
         }))
         .filter((tg) => tg.datasets.length > 0);
     }

@@ -1,9 +1,14 @@
 import { startTransition } from "react";
 import { LuChartLine, LuCircleX } from "react-icons/lu";
-import { useDateStore } from "@/store/date-store";
+import { useAreaStore } from "@/store/area-store";
+import {
+  applyTabularFilters,
+  useFilteredTabularData,
+} from "@/hooks/useFilteredTabularData";
 import { useLayerStore } from "@/store/layer-store";
 import { useComparisonStore } from "@/store/comparison-store";
 import { useUiStore } from "@/store/ui-store";
+import { cn } from "@/lib/utils";
 import { DATASET_TYPES } from "@/utils/datasetTypes";
 import { Dataset } from "@/types/api";
 import { StatsChart } from "./StatsChart";
@@ -51,15 +56,28 @@ function StatsSkeleton() {
 export function Stats() {
   const { layers, tabularLayerData, getLayerMetadata, switchLayer } =
     useLayerStore();
-  const { year } = useDateStore();
   const { comparisonMode, yearLeft, yearRight } = useComparisonStore();
-  const { toggleTimeSeries, isTimeSeriesOpen } = useUiStore();
-  const filteredData = tabularLayerData.filter((i) => i.date.startsWith(year));
+  const { toggleTimeSeries, isTimeSeriesOpen, rightSidebarExpanded } = useUiStore();
+  const { province, ac } = useAreaStore();
+  const tabularAttributeFilter = useLayerStore((s) => s.tabularAttributeFilter);
+  const filteredData = useFilteredTabularData();
 
   const deltaPercent = (() => {
     if (!comparisonMode || !tabularLayerData.length) return null;
-    const dataLeft = tabularLayerData.filter((i) => i.date.startsWith(yearLeft));
-    const dataRight = tabularLayerData.filter((i) => i.date.startsWith(yearRight));
+    const dataLeft = applyTabularFilters(
+      tabularLayerData,
+      yearLeft,
+      province,
+      ac,
+      tabularAttributeFilter,
+    );
+    const dataRight = applyTabularFilters(
+      tabularLayerData,
+      yearRight,
+      province,
+      ac,
+      tabularAttributeFilter,
+    );
     const sumLeft = dataLeft.reduce((a, r) => a + (Number(r.value) || 0), 0);
     const sumRight = dataRight.reduce((a, r) => a + (Number(r.value) || 0), 0);
     if (sumLeft === 0) return sumRight > 0 ? 100 : 0;
@@ -89,10 +107,19 @@ export function Stats() {
 
   return (
     <div
-      className="mt-4 overflow-hidden rounded-lg border border-border bg-card shadow-sm"
+      className={cn(
+        "mt-4 overflow-hidden rounded-lg border border-border bg-card shadow-sm",
+        rightSidebarExpanded &&
+          "rounded-xl border-border/50 shadow-md ring-1 ring-black/5",
+      )}
       data-pdf-stats
     >
-      <div className="flex items-center border-b border-border/60 px-4 py-3">
+      <div
+        className={cn(
+          "flex items-center border-b border-border/60 px-4 py-3",
+          rightSidebarExpanded && "px-5 py-4",
+        )}
+      >
         <div className="flex-1">
           <p className="block text-xs text-muted-foreground">
             {layerMetadata.cluster ?? "Climate"} | {DATASET_TYPES[layerMetadata.type]}
@@ -134,12 +161,21 @@ export function Stats() {
           Please select a different time period or area.
         </div>
       ) : (
-        <div className="chart-stagger flex flex-col gap-4 p-4">
-          <StatsChart stats={filteredData} unit={unit} />
-          <StatsSankeyChart stats={filteredData} unit={unit} />
-          <StatsRadarChart stats={filteredData} unit={unit} />
-          <StatsPieChart stats={filteredData} unit={unit} />
-          <StatsTable stats={filteredData} unit={unit} />
+        <div
+          className={cn(
+            "chart-stagger gap-4 p-4",
+            rightSidebarExpanded
+              ? "grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 md:p-6"
+              : "flex flex-col",
+          )}
+        >
+          <StatsChart stats={filteredData} unit={unit} expanded={rightSidebarExpanded} />
+          <StatsSankeyChart stats={filteredData} unit={unit} expanded={rightSidebarExpanded} />
+          <StatsRadarChart stats={filteredData} unit={unit} expanded={rightSidebarExpanded} />
+          <StatsPieChart stats={filteredData} unit={unit} expanded={rightSidebarExpanded} />
+          <div className={cn(rightSidebarExpanded && "md:col-span-2")}>
+            <StatsTable stats={filteredData} unit={unit} />
+          </div>
         </div>
       )}
     </div>

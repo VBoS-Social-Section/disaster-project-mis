@@ -29,3 +29,11 @@ class Vm(Common):
 
     # CORS – allow VM origin (CORS_ALLOW_ALL_ORIGINS=True for simplicity on VM)
     CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_CREDENTIALS = True
+    
+    # CSRF - disable for VM if needed, or allow all
+    CSRF_ALLOW_ALL_ORIGINS = True
+    
+    # Ensure we trust the proxy (Nginx)
+    USE_X_FORWARDED_HOST = True
+    SECURE_PROXY_SSL_HEADER = None # Disable SSL check for VM (HTTP)

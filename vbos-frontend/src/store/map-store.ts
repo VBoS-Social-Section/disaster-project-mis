@@ -79,6 +79,23 @@ export const BASEMAP_STYLES = [
     hasLabels: true,
     hasTerrain: true,
   },
+  {
+    id: "satellite",
+    label: "Satellite",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
+    hasLabels: false,
+    hasTerrain: false,
+  },
+  {
+    id: "google_satellite",
+    label: "Google Satellite",
+    url: "https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+    subdomains: ["0", "1", "2", "3"],
+    attribution: '&copy; <a href="https://www.google.com/maps">Google</a>',
+    hasLabels: false,
+    hasTerrain: false,
+  },
 ] as const;
 
 interface MapState {

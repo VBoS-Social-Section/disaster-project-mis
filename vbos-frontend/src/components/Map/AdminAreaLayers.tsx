@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { GeoJSON } from "react-leaflet";
 import { useUiStore } from "@/store/ui-store";
 import { featureCollection } from "@turf/helpers";
@@ -17,7 +16,6 @@ import type { AreaCouncilGeoJSON, ProvincesGeoJSON } from "@/types/data";
 import type { PopupInfo } from "./index";
 
 type AdminAreaMapLayersProps = {
-  map: L.Map | null;
   setPopupInfo: (info: PopupInfo | null) => void;
   activeFeatureName?: string;
 };
@@ -25,7 +23,6 @@ type AdminAreaMapLayersProps = {
 const EMPTY_GEOJSON = featureCollection([]) as ProvincesGeoJSON;
 
 export function AdminAreaMapLayers({
-  map,
   setPopupInfo,
   activeFeatureName,
 }: AdminAreaMapLayersProps) {
@@ -46,16 +43,6 @@ export function AdminAreaMapLayers({
     maxValue,
     minValue,
   } = useAdminAreaStats(adminAreaGeoJSON);
-
-  useEffect(() => {
-    if (map && !province) {
-      // Vanuatu bounds: [minLng, minLat, maxLng, maxLat] -> Leaflet [[minLat, minLng], [maxLat, maxLng]]
-      map.fitBounds([
-        [-20.50641, -194.18335] as L.LatLngTuple,
-        [-12.84665, -189.9646] as L.LatLngTuple,
-      ] as L.LatLngBoundsExpression);
-    }
-  }, [province, map]);
 
   if (isPending || error) {
     return null;

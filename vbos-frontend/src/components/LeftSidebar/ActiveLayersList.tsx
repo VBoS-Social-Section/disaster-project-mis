@@ -20,7 +20,8 @@ export function ActiveLayersList() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { layers, switchLayer, setLayers, setTabularLayerData, getLayerMetadata } =
     useLayerStore();
-  const layerIds = layers ? layers.split(",").map((l) => l.trim()).filter(Boolean) : [];
+  const allLayerIds = layers ? layers.split(",").map((l) => l.trim()).filter(Boolean) : [];
+  const layerIds = allLayerIds.filter((id) => !id.startsWith("t"));
 
   if (layerIds.length === 0) return null;
 
@@ -54,8 +55,8 @@ export function ActiveLayersList() {
           <DialogHeader>
             <DialogTitle>Remove all datasets?</DialogTitle>
             <DialogDescription>
-              This will clear all {layerIds.length} selected dataset
-              {layerIds.length === 1 ? "" : "s"} from the map. You can add them back
+              This will clear all {allLayerIds.length} selected dataset
+              {allLayerIds.length === 1 ? "" : "s"} from the map. You can add them back
               from the Data Layers panel.
             </DialogDescription>
           </DialogHeader>

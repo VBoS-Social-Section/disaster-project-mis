@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { useDateStore } from "@/store/date-store";
+import { useFilteredTabularData } from "@/hooks/useFilteredTabularData";
 import { useLayerStore } from "@/store/layer-store";
-import { useMapStore } from "@/store/map-store";
+import { useUiStore } from "@/store/ui-store";
+import { cn } from "@/lib/utils";
 import { getAttributes, getAttributeValueSum } from "@/utils/getAttributes";
 import { abbreviateUnit } from "@/utils/abbreviateUnit";
 import { createTabularKpi } from "@/config/tabularKpis";
@@ -65,12 +66,11 @@ function Sparkline({ data }: { data: number[] }) {
 }
 
 const FloatingKpiCards = () => {
-  const { layers, tabularLayerData, getLayerMetadata } = useLayerStore();
-  const zoom = useMapStore((s) => s.viewState.zoom);
-  const { year } = useDateStore();
+  const { layers, getLayerMetadata } = useLayerStore();
+  const rightSidebarExpanded = useUiStore((s) => s.rightSidebarExpanded);
   const [drillDown, setDrillDown] = useState<{ title: string; rows: { label: string; value: string | number }[]; source?: string } | null>(null);
 
-  const filteredData = tabularLayerData.filter((i) => i.date.startsWith(year));
+  const filteredData = useFilteredTabularData();
   const tabularLayerId = layers.split(",").find((i) => i.startsWith("t"));
   const layerMetadata = tabularLayerId
     ? getLayerMetadata(tabularLayerId)
@@ -106,27 +106,23 @@ const FloatingKpiCards = () => {
     ...topAttributes.map((a) => getAttributeValueSum(filteredData, a)),
   );
 
-  const zoomNorm = Math.max(0, Math.min(1, (zoom - 6) / 6));
-  const scale = 1 + zoomNorm * 0.02;
-  const lift = -zoomNorm * 8;
-
   return (
     <>
       <div
-        className={`
-          contain-panel absolute left-4 top-4 z-[1000] max-w-[calc(100%-2rem)] overflow-hidden rounded-lg border border-border bg-card p-4 shadow-sm
-          md:left-6 md:top-6 md:max-w-[360px] md:p-5
-          -translate-y-0.5
-        `}
-        style={{
-          transform: `scale(${scale}) translateY(${lift}px)`,
-          transition: "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
-        }}
+        className={cn(
+          "space-y-4",
+          rightSidebarExpanded && "rounded-xl border border-border/40 bg-card/95 p-5 shadow-sm",
+        )}
       >
-        <p className="mb-4 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
           Key metrics
         </p>
-        <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory md:grid md:grid-cols-[repeat(auto-fit,minmax(140px,1fr))] md:overflow-visible md:snap-none sm:gap-4 md:gap-5">
+        <div
+          className={cn(
+            "grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3 md:gap-4",
+            rightSidebarExpanded && "grid-cols-2 gap-4 lg:grid-cols-4",
+          )}
+        >
           {topAttributes.map((attr) => {
             const kpi = createTabularKpi(attr);
             const ctx = {
@@ -146,7 +142,7 @@ const FloatingKpiCards = () => {
                 result={result}
                 unit={unit ?? ""}
                 onClick={drillData ? () => setDrillDown(drillData) : undefined}
-                className="min-w-[140px] shrink-0 snap-center md:min-w-0 md:shrink md:snap-align-none md:p-4"
+                className="p-4"
               >
                 <div className="mt-2 flex items-end justify-between gap-2">
                   <div className="opacity-70">

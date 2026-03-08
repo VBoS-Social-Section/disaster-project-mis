@@ -13,7 +13,7 @@ import {
 import { useDeferredArea } from "@/hooks/useDeferredArea";
 import { useUiStore } from "@/store/ui-store";
 import { useMapStore } from "@/store/map-store";
-import { chartColors } from "../colors";
+import { lineChartColors } from "../colors";
 import { abbreviateUnit } from "@/utils/abbreviateUnit";
 import { useHighchartsTheme } from "@/hooks/useHighchartsTheme";
 
@@ -117,13 +117,19 @@ const FloatingTimeSeries = () => {
 
   const options = useMemo((): Highcharts.Options => {
     const categories = chartData.map((d) => String(d[xKey]));
+    const markerSymbols = ["circle", "diamond"] as const;
     const series: Highcharts.SeriesLineOptions[] = attributes.map((attr, index) => ({
       type: "line",
       name: attr.replace(/_/g, " "),
       data: chartData.map((d) => (d[attr.replace(/_/g, " ")] as number) ?? null),
-      color: chartColors[index % chartColors.length],
+      color: lineChartColors[index % lineChartColors.length],
       lineWidth: 2,
-      marker: { radius: 4 },
+      marker: {
+        radius: 4,
+        symbol: markerSymbols[index % 2],
+        lineWidth: 1,
+        lineColor: "#ffffff",
+      },
       connectNulls: true,
     }));
 
@@ -148,7 +154,12 @@ const FloatingTimeSeries = () => {
           return s;
         },
       },
-      legend: { enabled: true },
+      legend: {
+        enabled: true,
+        align: "right",
+        verticalAlign: "middle",
+        layout: "vertical",
+      },
     });
   }, [theme, chartData, attributes, xKey, formattedUnit]);
 
@@ -162,8 +173,8 @@ const FloatingTimeSeries = () => {
   const lift = -zoomNorm * 8;
 
   return (
-    <div
-      className="contain-panel absolute bottom-4 left-4 right-4 z-[1000] max-w-full overflow-hidden rounded-lg border border-border shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface md:bottom-6 md:left-auto md:right-6 md:max-w-[420px]"
+      <div
+        className="contain-panel absolute bottom-4 left-4 right-4 z-[1000] max-w-full overflow-hidden rounded-lg border border-border/40 bg-white shadow-sm md:bottom-6 md:left-auto md:right-6 md:max-w-[440px] dark:border-border/50 dark:bg-card"
       style={{
         transform: `translate(${position.x}px, ${position.y + lift}px) scale(${scale})`,
         transition: "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
@@ -223,14 +234,14 @@ const FloatingTimeSeries = () => {
           </div>
         )}
         {chartData.length > 0 && (
-          <div className="min-h-[200px] w-full">
+          <div className="min-h-[240px] w-full">
             {isLoading ? (
-              <div className="h-[200px] animate-pulse rounded bg-muted" />
+              <div className="h-[240px] animate-pulse rounded bg-muted" />
             ) : (
               <HighchartsReact
                 highcharts={Highcharts}
                 options={options}
-                containerProps={{ style: { width: "100%", height: 200 } }}
+                containerProps={{ style: { width: "100%", height: 240 } }}
               />
             )}
           </div>

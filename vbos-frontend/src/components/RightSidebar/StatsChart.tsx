@@ -12,6 +12,7 @@ import { useHighchartsTheme } from "@/hooks/useHighchartsTheme";
 type StatsChartType = {
   stats: TabularData[];
   unit?: string | null;
+  expanded?: boolean;
 };
 
 function formatYAxis(value: number): string {
@@ -20,7 +21,7 @@ function formatYAxis(value: number): string {
   return String(value);
 }
 
-export function StatsChart({ stats, unit }: StatsChartType) {
+export function StatsChart({ stats, unit, expanded }: StatsChartType) {
   const theme = useHighchartsTheme();
   const { province, ac } = useDeferredArea();
   const isAreaCouncilLevel = Boolean(ac);
@@ -96,7 +97,7 @@ export function StatsChart({ stats, unit }: StatsChartType) {
   if (data.length === 0 || attributes.length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+    <div className="rounded-lg border border-border/30 bg-white p-4 shadow-sm dark:border-border/40 dark:bg-card/80">
       {capped && (
         <p className="mb-2 text-[10px] text-muted-foreground">
           Top 10 of {allAttributes.length} attributes
@@ -105,7 +106,7 @@ export function StatsChart({ stats, unit }: StatsChartType) {
       <HighchartsReact
         highcharts={Highcharts}
         options={options}
-        containerProps={{ style: { width: "100%", height: 280 } }}
+        containerProps={{ style: { width: "100%", height: expanded ? 360 : 280 } }}
       />
     </div>
   );

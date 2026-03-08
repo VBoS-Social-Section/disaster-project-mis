@@ -27,7 +27,7 @@ class UserViewSet(
             return CreateUserSerializer
         return self.serializer_class
 
-    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=["get"], url_path="me", permission_classes=[IsAuthenticated])
     def me(self, request):
         """Return the currently authenticated user."""
         serializer = self.get_serializer(request.user)

@@ -142,7 +142,7 @@ cd ~/disaster-project-mis/vbos-frontend
 
 # Replace 10.252.0.158 with your VM IP. App at http://10.252.0.158/
 echo 'VITE_API_HOST=http://10.252.0.158' > .env.production.local
-echo 'VITE_TITILER_API=http://10.252.0.158:8002' >> .env.production.local
+echo 'VITE_TITILER_API=http://10.252.0.158/titiler' >> .env.production.local
 ```
 
 **If using backend-only** (no nginx, direct ports):
@@ -185,12 +185,8 @@ pnpm build
 ```bash
 cd ~/disaster-project-mis
 # Ensure vbos-backend/.env has DJANGO_SECRET_KEY (compose reads from env_file)
-sudo docker compose -f deploy/vm/docker-compose.yml up -d
-```
-
-If your VM cannot reach `ghcr.io` (e.g. firewall, no outbound HTTPS), titiler will not pull. It's optional: the app runs without it (tabular/vector work; raster layers will fail). To include titiler when network allows:
-```bash
-sudo docker compose -f deploy/vm/docker-compose.yml --profile raster up -d
+# TiTiler is now built locally from vbos-backend/titiler-local
+sudo docker compose -f deploy/vm/docker-compose.yml up -d --build
 ```
 
 Access at **http://10.252.0.158/**.
@@ -244,15 +240,6 @@ docker compose exec web ./manage.py createsuperuser
 | Postgres | 5432 | Database (internal to Docker)  |
 
 ## Troubleshooting
-
-### Titiler image pull fails (ghcr.io timeout / permission denied)
-
-If the VM cannot reach `ghcr.io` (firewall, restricted network), titiler won't pull. The compose file puts titiler in a profile so it's optional:
-
-- **Without titiler** (default): `docker compose -f deploy/vm/docker-compose.yml up -d` — tabular and vector work; raster layers fail
-- **With titiler** (when network allows): `docker compose -f deploy/vm/docker-compose.yml --profile raster up -d`
-
-**Workaround:** On a machine with internet, run `docker pull ghcr.io/developmentseed/vbos-titiler:main`, then `docker save` the image, copy the tar to the VM, and `docker load` it.
 
 ### "Connection refused" on admin or API
 

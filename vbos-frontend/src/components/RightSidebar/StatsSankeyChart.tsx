@@ -19,11 +19,12 @@ import { useHighchartsTheme } from "@/hooks/useHighchartsTheme";
 type StatsSankeyChartProps = {
   stats: TabularData[];
   unit?: string | null;
+  expanded?: boolean;
 };
 
 type FlowLink = { from: string; to: string; weight: number; color?: string };
 
-export function StatsSankeyChart({ stats }: StatsSankeyChartProps) {
+export function StatsSankeyChart({ stats, expanded }: StatsSankeyChartProps) {
   const theme = useHighchartsTheme();
   const { province, ac } = useDeferredArea();
   const isAreaCouncilLevel = Boolean(ac);
@@ -158,7 +159,7 @@ export function StatsSankeyChart({ stats }: StatsSankeyChartProps) {
   );
 
   return (
-    <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+    <div className="rounded-lg border border-border/30 bg-white p-4 shadow-sm dark:border-border/40 dark:bg-card/80">
       <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Resource flow: {sourceLabel} → {isAreaCouncilLevel ? "Area Councils" : "Provinces"} → Sectors
       </h4>
@@ -170,7 +171,7 @@ export function StatsSankeyChart({ stats }: StatsSankeyChartProps) {
       <HighchartsReact
         highcharts={Highcharts}
         options={options}
-        containerProps={{ style: { width: "100%", height: 300 } }}
+        containerProps={{ style: { width: "100%", height: expanded ? 380 : 300 } }}
       />
     </div>
   );

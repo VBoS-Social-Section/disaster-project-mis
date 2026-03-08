@@ -1,5 +1,6 @@
 import { ReactNode, useState, useEffect, useRef } from "react";
-import { LuColumns2, LuLayers, LuPanelLeft, LuPanelRight, LuX } from "react-icons/lu";
+import * as ReactDOM from "react-dom";
+import { LuColumns2, LuLayers, LuMaximize2, LuMinimize2, LuPanelLeft, LuPanelRight, LuX } from "react-icons/lu";
 import { Tooltip as AppTooltip } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,8 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
     setMobileOpenPanel,
     leftSidebarIconMode,
     rightSidebarIconMode,
+    rightSidebarExpanded,
+    setRightSidebarExpanded,
   } = useUiStore();
 
   const iconMode = isLeftSidebar ? leftSidebarIconMode : rightSidebarIconMode;
@@ -88,17 +91,10 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
     return () => mq.removeEventListener("change", handler);
   }, [setIsMobile, setMobileOpenPanel]);
 
-  return (
-    <div
-      className={cn(
-        "relative border-border shadow-sm",
-        floating ? "h-fit max-h-[calc(100vh-3.5rem)]" : "h-full",
-        transparent ? "glass-surface-translucent" : "glass-surface",
-        isLeftSidebar ? "border-l-0 border-r" : "border-r-0 border-l",
-        floating && (isLeftSidebar ? "rounded-r-xl" : "rounded-l-xl"),
-        iconMode && !sideBarVisible && "z-[1001]",
-      )}
-    >
+  const isOverlay = sideBarVisible && !isLeftSidebar && rightSidebarExpanded;
+
+  const panelContent = (
+    <>
       <div
         className={cn(
           "flex flex-col overflow-hidden sidebar-spring will-change-[width,opacity]",
@@ -114,7 +110,7 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
           !sideBarVisible && iconMode && "md:w-12",
           !sideBarVisible && !iconMode && "md:w-0",
           sideBarVisible && isLeftSidebar && "md:w-80",
-          sideBarVisible && !isLeftSidebar && "md:w-[28rem]",
+          sideBarVisible && !isLeftSidebar && "md:min-w-0 md:w-full",
         )}
       >
         {(sideBarVisible || (iconMode && !isMobile && !sideBarVisible)) && (
@@ -158,7 +154,34 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
                     )}
                   </div>
                   <div className="flex gap-1">
-                    {!isMobile && (
+                    {!isMobile && !isLeftSidebar && (
+                      <AppTooltip
+                        content={rightSidebarExpanded ? "Restore panel width" : "Expand to full width"}
+                        positioning={{ placement: "bottom" }}
+                      >
+                        <Button
+                          variant={rightSidebarExpanded ? "secondary" : "ghost"}
+                          size={rightSidebarExpanded ? "sm" : "icon-xs"}
+                          className={rightSidebarExpanded ? "gap-1.5" : undefined}
+                          aria-label={rightSidebarExpanded ? "Restore panel width" : "Expand to full width"}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setRightSidebarExpanded(!rightSidebarExpanded);
+                          }}
+                        >
+                          {rightSidebarExpanded ? (
+                            <>
+                              <LuMinimize2 className="size-4 shrink-0" />
+                              <span className="text-xs font-medium">Restore</span>
+                            </>
+                          ) : (
+                            <LuMaximize2 className="size-4 icon-interactive" />
+                          )}
+                        </Button>
+                      </AppTooltip>
+                    )}
+                    {!isMobile && !(!isLeftSidebar && rightSidebarExpanded) && (
                       <AppTooltip
                         content={iconMode ? "Expand to full panel" : "Collapse to icon bar"}
                         positioning={{ placement: "bottom" }}
@@ -223,8 +246,37 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
           </>
         )}
       </div>
+    </>
+  );
 
-      {isMobile && !sideBarVisible && (
+  return (
+    <>
+      {isOverlay &&
+        typeof document !== "undefined" &&
+        ReactDOM.createPortal(
+          <div
+            className={cn(
+              "fixed right-0 top-[3.5rem] bottom-0 w-[min(85vw,1400px)] z-[1050] flex flex-col overflow-hidden border-l border-border bg-card shadow-xl right-panel-overlay",
+              transparent ? "glass-surface-translucent" : "glass-surface",
+            )}
+          >
+            {panelContent}
+          </div>,
+          document.body,
+        )}
+      <div
+        className={cn(
+          "relative border-border shadow-sm",
+          floating ? "h-fit max-h-[calc(100vh-3.5rem)]" : "h-full",
+          transparent ? "glass-surface-translucent" : "glass-surface",
+          isLeftSidebar ? "border-l-0 border-r" : "border-r-0 border-l",
+          floating && (isLeftSidebar ? "rounded-r-xl" : "rounded-l-xl"),
+          iconMode && !sideBarVisible && "z-[1001]",
+          isOverlay && "md:invisible md:w-[28rem]",
+        )}
+      >
+        {panelContent}
+        {isMobile && !sideBarVisible && (
         <Button
           variant="ghost"
           size="sm"
@@ -238,8 +290,7 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
           {isLeftSidebar ? <LuPanelLeft className="size-4 icon-interactive" /> : <LuPanelRight className="size-4 icon-interactive" />}
         </Button>
       )}
-
-      {!isMobile && !sideBarVisible && !(iconMode && !sideBarVisible) && (
+        {!isMobile && !sideBarVisible && !(iconMode && !sideBarVisible) && (
         <Button
           variant="ghost"
           size="icon-xs"
@@ -253,6 +304,7 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
           {isLeftSidebar ? <LuPanelLeft className="size-4 icon-interactive" /> : <LuPanelRight className="size-4 icon-interactive" />}
         </Button>
       )}
-    </div>
+      </div>
+    </>
   );
 };

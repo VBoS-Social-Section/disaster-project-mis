@@ -58,19 +58,10 @@ services:
     restart: always
 
   titiler:
-    profiles:
-      - raster
-    image: ghcr.io/developmentseed/vbos-titiler:main
+    build:
+      context: ../../vbos-backend/titiler-local
+      dockerfile: Dockerfile
     platform: linux/amd64
-    command:
-      - uvicorn
-      - app:app
-      - --host
-      - "0.0.0.0"
-      - --port
-      - "8000"
-      - --workers
-      - "1"
     environment:
       CPL_TMPDIR: /tmp
       GDAL_CACHEMAX: 75%
@@ -85,7 +76,7 @@ services:
     ports:
       - "8002:8000"
     volumes:
-      - ../../vbos-backend/data:/data
+      - ../../vbos-backend/raster_data:/data
     restart: unless-stopped
 
   nginx:

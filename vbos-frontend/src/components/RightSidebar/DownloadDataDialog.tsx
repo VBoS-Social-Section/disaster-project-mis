@@ -34,8 +34,9 @@ export const DownloadDataDialog = ({
   isOpen,
   setIsOpen,
 }: DownloadDataDialogProps) => {
-  const { layers, getLayerMetadata } = useLayerStore();
+  const { layers, getLayerMetadata, tabularAttributeFilter } = useLayerStore();
   const { province, ac } = useAreaStore();
+  const { year } = useDateStore();
   const getVectorDatasetFromCache = useVectorDatasetFromCache();
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
 
@@ -67,6 +68,13 @@ export const DownloadDataDialog = ({
       let result;
 
       if (dataset.dataType === "tabular") {
+        if (year) {
+          areaFilters.set("date_after", `${year}-01-01`);
+          areaFilters.set("date_before", `${year}-12-31`);
+        }
+        if (tabularAttributeFilter) {
+          areaFilters.set("attribute", tabularAttributeFilter);
+        }
         result = await getXLSXData(dataset.id, areaFilters);
       } else if (dataset.dataType === "vector") {
         result = getVectorDatasetFromCache(dataset.id, areaFilters);
@@ -99,11 +107,18 @@ export const DownloadDataDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Download Active Datasets</DialogTitle>
           <DialogDescription>
             Download tabular or vector data for the currently active layers.
+            {(province || ac || year) && (
+              <span className="block mt-1.5 text-xs font-medium">
+                Filters: {[province && `Province: ${province}`, ac && `Area: ${ac}`, year && `Year: ${year}`]
+                  .filter(Boolean)
+                  .join(" • ")}
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
         {activeDatasets.length === 0 ? (
@@ -231,9 +246,9 @@ const DatasetRow = ({
   };
 
   return (
-    <div className="flex items-center justify-between rounded-md border border-border bg-muted p-3">
-      <div className="flex-1">
-        <p className="text-sm font-medium">{dataset.name}</p>
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/50 p-3 hover:bg-muted/70 transition-colors">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{dataset.name}</p>
         <p className="text-xs text-muted-foreground">
           {typeLabel} • {getFileFormat()}
         </p>

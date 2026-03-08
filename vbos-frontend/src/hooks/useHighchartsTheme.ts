@@ -1,6 +1,6 @@
 /**
- * Highcharts theme options that follow the app's light/dark color mode.
- * Uses chartColors for series and system-like colors for chart chrome.
+ * Highcharts theme: clean, minimal design matching reference aesthetic.
+ * White background, extremely subtle grid, ample whitespace, legend on right.
  */
 import { useMemo } from "react";
 import type Highcharts from "highcharts";
@@ -8,20 +8,22 @@ import { useColorMode } from "@/components/ui/color-mode";
 import { chartColors } from "@/components/colors";
 
 const LIGHT = {
-  chartBg: "transparent",
-  text: "#0f172a",
+  chartBg: "#ffffff",
+  text: "#1e293b",
   mutedText: "#64748b",
-  gridLine: "#e2e8f0",
+  gridLine: "rgba(0,0,0,0.05)",
+  axisLine: "rgba(0,0,0,0.06)",
   tooltipBg: "#ffffff",
   tooltipBorder: "#e2e8f0",
-  tooltipText: "#0f172a",
+  tooltipText: "#1e293b",
 } as const;
 
 const DARK = {
   chartBg: "transparent",
   text: "#f8fafc",
   mutedText: "#94a3b8",
-  gridLine: "#334155",
+  gridLine: "rgba(255,255,255,0.05)",
+  axisLine: "rgba(255,255,255,0.06)",
   tooltipBg: "#0f172a",
   tooltipBorder: "#334155",
   tooltipText: "#f8fafc",
@@ -37,33 +39,54 @@ export function useHighchartsTheme(): Highcharts.Options {
       chart: {
         backgroundColor: c.chartBg,
         style: { fontFamily: "var(--font-work-sans), system-ui, sans-serif" },
+        spacing: [24, 20, 20, 24],
+        plotBorderWidth: 0,
       },
       colors: [...chartColors],
-      title: { style: { color: c.text, fontSize: "14px" } },
-      subtitle: { style: { color: c.mutedText } },
+      title: { style: { color: c.text, fontSize: "14px", fontWeight: "600" } },
+      subtitle: { style: { color: c.mutedText, fontSize: "11px" } },
       xAxis: {
-        lineColor: c.gridLine,
-        tickColor: c.gridLine,
-        labels: { style: { color: c.mutedText, fontSize: "10px" } },
-        title: { style: { color: c.text } },
+        lineColor: c.axisLine,
+        tickColor: c.axisLine,
+        lineWidth: 1,
+        tickLength: 4,
+        labels: { style: { color: c.mutedText, fontSize: "11px" } },
+        title: { style: { color: c.text, fontSize: "11px" } },
+        gridLineWidth: 0,
       },
       yAxis: {
-        lineColor: c.gridLine,
-        tickColor: c.gridLine,
-        labels: { style: { color: c.mutedText, fontSize: "10px" } },
-        title: { style: { color: c.text } },
+        lineColor: c.axisLine,
+        tickColor: c.axisLine,
+        lineWidth: 1,
+        tickLength: 4,
+        labels: { style: { color: c.mutedText, fontSize: "11px" } },
+        title: { style: { color: c.text, fontSize: "11px" } },
         gridLineColor: c.gridLine,
+        gridLineWidth: 1,
       },
       legend: {
-        itemStyle: { color: c.text, fontSize: "10px" },
+        itemStyle: { color: c.text, fontSize: "11px" },
         itemHoverStyle: { color: c.text },
+        itemDistance: 12,
+        symbolRadius: 4,
       },
       tooltip: {
         backgroundColor: c.tooltipBg,
         borderColor: c.tooltipBorder,
+        borderWidth: 1,
         style: { color: c.tooltipText, fontSize: "12px" },
         borderRadius: 6,
-        shadow: { color: "rgba(0,0,0,0.15)", offsetY: 4, width: 0, opacity: 1 },
+        shadow: false,
+        padding: 10,
+      },
+      plotOptions: {
+        series: { borderWidth: 0 },
+        bar: { borderWidth: 0, pointPadding: 0.1, groupPadding: 0.15 },
+        line: {
+          lineWidth: 2,
+          marker: { radius: 4, symbol: "circle", lineWidth: 1, lineColor: "#ffffff" },
+        },
+        pie: { borderWidth: 0 },
       },
       credits: { enabled: false },
     }),

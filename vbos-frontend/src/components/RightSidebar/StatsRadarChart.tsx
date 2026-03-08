@@ -13,15 +13,16 @@ import {
   getAreaCouncilAttributeValueSum,
 } from "@/utils/getAttributes";
 import { getTopAttributes } from "@/utils/getTopAttributes";
-import { chartColors } from "../colors";
+import { chartColors, lineChartColors } from "../colors";
 import { useHighchartsTheme } from "@/hooks/useHighchartsTheme";
 
 type StatsRadarChartProps = {
   stats: TabularData[];
   unit?: string | null;
+  expanded?: boolean;
 };
 
-export function StatsRadarChart({ stats }: StatsRadarChartProps) {
+export function StatsRadarChart({ stats, expanded }: StatsRadarChartProps) {
   const theme = useHighchartsTheme();
   const { ac } = useDeferredArea();
   const isAreaCouncilLevel = Boolean(ac);
@@ -62,13 +63,20 @@ export function StatsRadarChart({ stats }: StatsRadarChartProps) {
     );
 
     const categories = attributes.map((a) => a.replace(/_/g, " "));
+    const markerSymbols = ["circle", "diamond"] as const;
     const series: Highcharts.SeriesLineOptions[] = places.map((place, idx) => ({
       type: "line",
       name: place,
       data: normalized.map((row) => row[idx]),
-      color: chartColors[idx % chartColors.length],
-      fillOpacity: 0.25,
+      color: lineChartColors[idx % lineChartColors.length] ?? chartColors[idx % chartColors.length],
+      fillOpacity: 0.2,
       lineWidth: 2,
+      marker: {
+        radius: 3,
+        symbol: markerSymbols[idx % 2],
+        lineWidth: 1,
+        lineColor: "#ffffff",
+      },
     }));
 
     return Highcharts.merge(theme, {
@@ -94,7 +102,12 @@ export function StatsRadarChart({ stats }: StatsRadarChartProps) {
           return `${(y ?? 0)}% (normalized)`;
         },
       },
-      legend: { enabled: true },
+      legend: {
+        enabled: true,
+        align: "right",
+        verticalAlign: "middle",
+        layout: "vertical",
+      },
     });
   }, [theme, stats, attributes, places, isAreaCouncilLevel]);
 
@@ -104,7 +117,7 @@ export function StatsRadarChart({ stats }: StatsRadarChartProps) {
   const capped = allAttrs.length > 10;
 
   return (
-    <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+    <div className="rounded-lg border border-border/30 bg-white p-4 shadow-sm dark:border-border/40 dark:bg-card/80">
       <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Multi-attribute comparison
       </h4>
@@ -116,7 +129,7 @@ export function StatsRadarChart({ stats }: StatsRadarChartProps) {
       <HighchartsReact
         highcharts={Highcharts}
         options={options!}
-        containerProps={{ style: { width: "100%", height: 260 } }}
+        containerProps={{ style: { width: "100%", height: expanded ? 340 : 260 } }}
       />
     </div>
   );

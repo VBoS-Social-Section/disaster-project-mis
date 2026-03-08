@@ -53,7 +53,7 @@ type VectorMapLayerProps = {
   bbox: string;
 };
 
-const CLUSTER_THRESHOLD = 500;
+const CLUSTER_THRESHOLD = 200;
 const SIMPLIFY_ZOOM_THRESHOLD = 10;
 /** Max features to render; prevents browser freeze on large datasets (e.g. Roads). */
 const FEATURE_CAP = 2500;
@@ -83,7 +83,9 @@ function VectorMapLayer({ id, colorIndex, setPopupInfo, bbox }: VectorMapLayerPr
     const pointCount = features.filter(
       (f) => f.geometry?.type === "Point" || f.geometry?.type === "MultiPoint",
     ).length;
-    const useClustering = pointCount >= CLUSTER_THRESHOLD;
+    
+    // Enable clustering based on both point count and zoom level
+    const useClustering = pointCount >= CLUSTER_THRESHOLD || (pointCount >= 50 && zoom < 12);
 
     // Cap features to prevent browser freeze on large datasets (e.g. Roads)
     if (features.length > FEATURE_CAP) {

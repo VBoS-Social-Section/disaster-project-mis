@@ -10,6 +10,7 @@ import {
   LuMinus,
   LuMoon,
   LuPlus,
+  LuSatellite,
   LuSparkles,
   LuSun,
 } from "react-icons/lu";
@@ -33,22 +34,26 @@ export function MapControlsCluster({ map }: MapControlsClusterProps) {
     dark_nolabels: <LuMoon className="size-4" />,
     bright: <LuSparkles className="size-4" />,
     terrain: <LuSparkles className="size-4" />,
+    satellite: <LuSatellite className="size-4" />,
+    google_satellite: <LuSatellite className="size-4" />,
   };
 
   return (
     <div className="absolute right-4 top-4 z-[1000] flex flex-col gap-1 overflow-hidden rounded-lg border border-border p-1 shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface md:right-6 md:top-6">
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="secondary"
-            size="icon-xs"
-            className="h-9 w-full"
-            aria-label="Basemap"
-            title="Basemap"
-          >
-            {basemapIcons[currentId] ?? basemapIcons.positron}
-          </Button>
-        </DropdownMenuTrigger>
+        <Tooltip content="Basemap (Light, Dark, Satellite…)" positioning={{ placement: "left" }}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="secondary"
+              size="icon-xs"
+              className="h-9 w-full"
+              aria-label="Basemap (Light, Dark, Satellite)"
+              title="Basemap"
+            >
+              {basemapIcons[currentId] ?? basemapIcons.positron}
+            </Button>
+          </DropdownMenuTrigger>
+        </Tooltip>
         <DropdownMenuContent align="end" className="min-w-[11rem]">
           {BASEMAP_STYLES.map((s) => (
             <DropdownMenuItem
