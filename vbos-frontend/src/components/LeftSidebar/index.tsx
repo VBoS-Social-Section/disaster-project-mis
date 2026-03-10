@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { LuLayers } from "react-icons/lu";
+import { useEffect } from "react";
+import { LuBookOpen, LuLayers } from "react-icons/lu";
 import {
   Select,
   SelectContent,
@@ -12,20 +12,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useClusters } from "@/hooks/useClusters";
 import { useLayerStore } from "@/store/layer-store";
 import { useScenario } from "@/hooks/useScenario";
+import { useUiStore } from "@/store/ui-store";
 import { SelectedClusterPanel } from "./SelectedClusterPanel";
 import { DriversSection } from "./DriversSection";
+import { DisasterSection } from "./DisasterSection";
+import { CycloneNameBanner } from "./CycloneNameBanner";
 import { ActiveLayersList } from "./ActiveLayersList";
-import { getClusterIcon } from "./clusterIcons";
+import { DISASTER_VIEW_TYPES } from "@/store/ui-store";
 
 const LeftSidebar = () => {
   const scenario = useScenario();
+  const rightSidebarExpanded = useUiStore((s) => s.rightSidebarExpanded);
   const {
     data: clusters,
     isPending: clustersLoading,
     error: clustersError,
   } = useClusters();
   const { layers } = useLayerStore();
-  const [selectedCluster, setSelectedCluster] = useState<string>("");
+  const selectedCluster = useUiStore((s) => s.selectedCluster);
+  const setSelectedCluster = useUiStore((s) => s.setSelectedCluster);
+  const selectedViewType = useUiStore((s) => s.selectedViewType);
 
   const activeLayerCount = layers ? layers.split(",").filter(Boolean).length : 0;
 
@@ -33,7 +39,7 @@ const LeftSidebar = () => {
     if (clusters?.length && !selectedCluster) {
       setSelectedCluster(clusters[0].name);
     }
-  }, [clusters, selectedCluster]);
+  }, [clusters, selectedCluster, setSelectedCluster]);
 
   const collapsedIcons = (onExpand: () => void) => (
     <button
@@ -48,7 +54,7 @@ const LeftSidebar = () => {
 
   if (clustersError) {
     return (
-      <Sidebar direction="left" title="Data Layers" transparent>
+      <Sidebar direction="left" title="Data Layers" transparent collapseWhen={rightSidebarExpanded}>
         <div className="p-4 text-sm text-amber-600 dark:text-amber-400">
           Error loading data: {String(clustersError)}
         </div>
@@ -58,7 +64,7 @@ const LeftSidebar = () => {
 
   if (clustersLoading) {
     return (
-      <Sidebar direction="left" title="Data Layers" transparent>
+      <Sidebar direction="left" title="Data Layers" transparent collapseWhen={rightSidebarExpanded}>
         <div className="space-y-3 px-2 py-3" role="status" aria-label="Loading clusters">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="rounded-lg border border-border bg-muted/30 p-4">
@@ -82,6 +88,7 @@ const LeftSidebar = () => {
       subtitle={scenario.uiConfig.sidebarLayout === "climate" ? "Baseline datasets only" : undefined}
       collapsedIcons={collapsedIcons}
       transparent
+      collapseWhen={rightSidebarExpanded}
     >
       <div className="border-b border-border px-4 py-3 md:px-5 md:py-3">
         <Select value={selectedCluster} onValueChange={setSelectedCluster}>
@@ -89,25 +96,23 @@ const LeftSidebar = () => {
             <SelectValue placeholder="Select cluster..." />
           </SelectTrigger>
           <SelectContent>
-            {clusters?.map((cluster) => {
-              const Icon = getClusterIcon(cluster.name);
-              return (
-                <SelectItem key={cluster.id} value={cluster.name}>
-                  <span className="flex items-center gap-2">
-                    <Icon className="size-4 shrink-0" />
-                    {cluster.name}
-                  </span>
-                </SelectItem>
-              );
-            })}
+            {clusters?.map((cluster) => (
+              <SelectItem key={cluster.id} value={cluster.name}>
+                {cluster.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
-      <div className="scrollbar-thin overflow-y-auto py-3 px-4 md:py-4 md:px-5">
+      <div className="scrollbar-thin flex-1 overflow-y-auto py-3 px-4 md:py-4 md:px-5">
+        <CycloneNameBanner />
         {selectedCluster ? (
           <>
             <SelectedClusterPanel clusterName={selectedCluster} />
             {scenario.uiConfig.sidebarLayout === "climate" && <DriversSection />}
+            {scenario.uiConfig.sidebarLayout !== "climate" &&
+              selectedViewType &&
+              DISASTER_VIEW_TYPES.includes(selectedViewType) && <DisasterSection />}
           </>
         ) : (
           <p className="py-6 text-center text-sm text-muted-foreground">
@@ -116,6 +121,17 @@ const LeftSidebar = () => {
         )}
       </div>
       <ActiveLayersList />
+      <div className="shrink-0 border-t border-border px-4 py-2 md:px-5">
+        <a
+          href="https://vbos-social-section.github.io/disaster-mis-user-manual/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <LuBookOpen className="size-3.5 shrink-0" />
+          <span>User manual</span>
+        </a>
+      </div>
     </Sidebar>
   );
 };

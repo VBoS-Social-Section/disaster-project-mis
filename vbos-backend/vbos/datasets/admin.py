@@ -96,6 +96,15 @@ class PMTilesDatasetAdmin(admin.ModelAdmin):
     list_display = ["id", "name", "cluster", "type", "updated"]
     list_filter = ["cluster", "type"]
 
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if "intensity_data" in form.base_fields:
+            form.base_fields["intensity_data"].help_text = (
+                "For cyclone datasets: JSON array of {acname, Province, Intensity, intensity_color}. "
+                "Export from RAP GeoJSON features.properties."
+            )
+        return form
+
 
 @admin.register(VectorDataset)
 class VectorDatasetAdmin(admin.ModelAdmin):
@@ -233,6 +242,18 @@ class VectorItemAdmin(admin.GISModelAdmin):
                             if not geom:
                                 raise ValueError("Feature has no geometry")
 
+                            geos_geom = GEOSGeometry(json.dumps(geom))
+                            # Simplify polygon geometries to prevent browser crash (heavy coastlines)
+                            if geos_geom.geom_type in ("Polygon", "MultiPolygon"):
+                                try:
+                                    n = geos_geom.num_coords
+                                except (AttributeError, TypeError):
+                                    n = 0
+                                if n > 500:
+                                    geos_geom = geos_geom.simplify(
+                                        tolerance=0.01, preserve_topology=True
+                                    )
+
                             VectorItem.objects.create(
                                 dataset=dataset,
                                 metadata=metadata.properties,
@@ -241,7 +262,7 @@ class VectorItemAdmin(admin.GISModelAdmin):
                                 attribute=attribute,
                                 province=province,
                                 area_council=area_council,
-                                geometry=GEOSGeometry(json.dumps(geom)),
+                                geometry=geos_geom,
                             )
                             created_count += 1
                         except Exception as e:

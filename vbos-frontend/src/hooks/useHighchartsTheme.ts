@@ -36,6 +36,7 @@ export function useHighchartsTheme(): Highcharts.Options {
 
   return useMemo(
     (): Highcharts.Options => ({
+      accessibility: { enabled: false },
       chart: {
         backgroundColor: c.chartBg,
         style: { fontFamily: "var(--font-work-sans), system-ui, sans-serif" },

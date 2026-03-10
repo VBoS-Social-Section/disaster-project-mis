@@ -47,7 +47,7 @@ export function usePrefetchLayerMetadata() {
     ).then((results) => {
       const datasets = results.filter((d): d is NonNullable<typeof d> => d != null);
       if (datasets.length > 0) {
-        setAllDatasets(datasets);
+        setAllDatasets(datasets, { replace: false });
         toFetch.forEach(({ layerId }) => prefetchedRef.current.add(layerId));
       }
     });

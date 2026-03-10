@@ -13,6 +13,8 @@ type StatsChartType = {
   stats: TabularData[];
   unit?: string | null;
   expanded?: boolean;
+  /** Chart title (e.g. "Attribute distribution by province") */
+  title?: string;
 };
 
 function formatYAxis(value: number): string {
@@ -21,7 +23,7 @@ function formatYAxis(value: number): string {
   return String(value);
 }
 
-export function StatsChart({ stats, unit, expanded }: StatsChartType) {
+export function StatsChart({ stats, unit, expanded, title }: StatsChartType) {
   const theme = useHighchartsTheme();
   const { provinces, acList } = useDeferredArea();
   const isAreaCouncilLevel = acList.length > 0;
@@ -69,6 +71,7 @@ export function StatsChart({ stats, unit, expanded }: StatsChartType) {
 
     return Highcharts.merge(theme, {
       chart: { type: "bar" },
+      title: { text: title ?? "Attribute distribution" },
       xAxis: {
         categories: data.map((d) => String(d.place)),
         labels: { style: { fontSize: "10px" }, rotation: -45 },
@@ -95,7 +98,7 @@ export function StatsChart({ stats, unit, expanded }: StatsChartType) {
       },
       legend: { enabled: true },
     });
-  }, [theme, data, attrLabels, isAreaCouncilLevel, unit]);
+  }, [theme, data, attrLabels, isAreaCouncilLevel, unit, title]);
 
   if (data.length === 0 || attributes.length === 0) return null;
 

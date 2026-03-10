@@ -9,8 +9,10 @@ import { useLayerStore } from "@/store/layer-store";
 import { useOpacityStore } from "@/store/opacity-store";
 import { useFocusStore } from "@/store/focus-store";
 import { useAdminAreaStats } from "@/hooks/useAdminAreaStats";
+import { useHasDisasterLayerActive } from "@/hooks/useHasDisasterLayerActive";
 import { useComparisonStore } from "@/store/comparison-store";
 import { MAP_COLORS, getChoroplethColor } from "../colors";
+import { abbreviateUnit } from "@/utils/abbreviateUnit";
 import { useColorMode } from "../ui/color-mode";
 import type { AreaCouncilGeoJSON, ProvincesGeoJSON } from "@/types/data";
 import type { PopupInfo } from "./index";
@@ -22,6 +24,38 @@ type AdminAreaMapLayersProps = {
 
 const EMPTY_GEOJSON = featureCollection([]) as ProvincesGeoJSON;
 
+/** Fallback unit when dataset has unit="number" or no unit. Infer from cluster or dataset name. */
+function inferTooltipUnit(
+  metadata: { cluster?: string | null; name?: string } | undefined,
+): string | undefined {
+  if (!metadata) return undefined;
+  const cluster = (metadata.cluster ?? "").toLowerCase();
+  const name = (metadata.name ?? "").toLowerCase();
+
+  const clusterUnits: Record<string, string> = {
+    business: "businesses",
+    "emergency telecommunications": "towers",
+    education: "schools",
+    health: "facilities",
+    shelter: "households",
+    "food security": "households",
+    energy: "households",
+    wash: "households",
+    logistics: "km",
+    "gender & protection": "people",
+  };
+  const unit = clusterUnits[cluster];
+  if (unit) return unit;
+
+  if (name.includes("tower")) return "towers";
+  if (name.includes("school")) return "schools";
+  if (name.includes("facility") || name.includes("health")) return "facilities";
+  if (name.includes("household")) return "households";
+  if (name.includes("business")) return "businesses";
+  if (name.includes("road") || name.includes("km")) return "km";
+  return undefined;
+}
+
 export function AdminAreaMapLayers({
   setPopupInfo,
   activeFeatureName,
@@ -30,6 +64,7 @@ export function AdminAreaMapLayers({
   const mapPalette = MAP_COLORS[colorMode === "dark" ? "dark" : "light"];
   const setMapHoverFeature = useUiStore((s) => s.setMapHoverFeature);
   const { comparisonMode } = useComparisonStore();
+  const hasDisasterLayerActive = useHasDisasterLayerActive();
   const { data: provincesGeojson, isPending, error } = useProvinces();
   const { provinces, acList } = useDeferredArea();
   const acGeoJSON = useAreaStore((s) => s.acGeoJSON);
@@ -52,6 +87,11 @@ export function AdminAreaMapLayers({
 
   const tabularLayers = layers.split(",").filter((i) => i.startsWith("t"));
   const activeTabularLayerId = tabularLayers.length ? tabularLayers[0] : null;
+  const tabularMetadata = activeTabularLayerId ? getLayerMetadata(activeTabularLayerId) : undefined;
+  const tooltipUnit =
+    tabularMetadata?.unit && tabularMetadata.unit !== "number"
+      ? abbreviateUnit(tabularMetadata.unit)
+      : inferTooltipUnit(tabularMetadata);
   const tabularOpacity = activeTabularLayerId
     ? getEffectiveOpacity(activeTabularLayerId, getOpacity(activeTabularLayerId) / 100)
     : 1;
@@ -98,7 +138,7 @@ export function AdminAreaMapLayers({
       ? (value - minValue) / (maxValue - minValue)
       : 1;
     const fillColor = getChoroplethColor(t, mapPalette);
-    const opacity = maxValue !== minValue ? 0.15 + t * 0.85 : 1;
+    const opacity = maxValue !== minValue ? 0.25 + t * 0.45 : 0.7;
     const isActive = activeFeatureName && name?.toLowerCase() === activeFeatureName.toLowerCase();
     return {
       fillColor,
@@ -115,19 +155,20 @@ export function AdminAreaMapLayers({
     mouseout: () => setMapHoverFeature(false),
   };
 
-  const buildStatsTooltip = (props: Record<string, unknown>) => {
+  const buildStatsTooltip = (props: Record<string, unknown>, unit?: string | null) => {
     const name = props.name as string | undefined;
     const value = props.value as number | undefined;
     const lines: string[] = [];
     if (name) lines.push(`<strong>${name}</strong>`);
     if (typeof value === "number" && isFinite(value)) {
-      lines.push(value.toLocaleString(undefined, { maximumFractionDigits: 1 }));
+      const formatted = value.toLocaleString(undefined, { maximumFractionDigits: 1 });
+      lines.push(unit ? `${formatted} ${unit}` : formatted);
     }
     return lines.length ? lines.join("<br/>") : null;
   };
 
   const onEachStatsFeature = (feature: GeoJSON.Feature, layer: L.Layer) => {
-    const tooltipContent = buildStatsTooltip(feature.properties || {});
+    const tooltipContent = buildStatsTooltip(feature.properties || {}, tooltipUnit);
     if (tooltipContent) {
       (layer as L.Path).bindTooltip(tooltipContent, {
         permanent: false,
@@ -187,6 +228,8 @@ export function AdminAreaMapLayers({
         />
       )}
       {!comparisonMode &&
+      activeTabularLayerId &&
+      !hasDisasterLayerActive &&
       adminAreaStatsGeojson.features.length > 0 &&
       (maxValue !== 0 || minValue !== 0) && (
         <GeoJSON

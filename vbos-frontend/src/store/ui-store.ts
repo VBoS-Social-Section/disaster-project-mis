@@ -1,7 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { DatasetType } from "@/types/api";
 
 export type ColorModeOption = "light" | "dark";
+
+/** Data view types that show the Disaster overlay (Damage, Resources, Financial) */
+export const DISASTER_VIEW_TYPES: DatasetType[] = [
+  "estimated_damage",
+  "aid_resources_needed",
+  "estimate_financial_damage",
+];
 
 interface UiState {
   isTimeSeriesOpen: boolean;
@@ -19,6 +27,12 @@ interface UiState {
   setRightSidebarExpanded: (v: boolean) => void;
   mapHoverFeature: boolean;
   setMapHoverFeature: (v: boolean) => void;
+  /** Cluster selected in left sidebar; drives Dataset filter in right sidebar */
+  selectedCluster: string;
+  setSelectedCluster: (v: string) => void;
+  /** Data view tab (Baseline, Damage, Resources, Financial); Disaster overlay shown when Damage/Resources/Financial */
+  selectedViewType: DatasetType | null;
+  setSelectedViewType: (v: DatasetType | null) => void;
 }
 
 export const useUiStore = create<UiState>()(
@@ -51,6 +65,12 @@ export const useUiStore = create<UiState>()(
 
       mapHoverFeature: false,
       setMapHoverFeature: (v) => set({ mapHoverFeature: v }),
+
+      selectedCluster: "",
+      setSelectedCluster: (v) => set({ selectedCluster: v }),
+
+      selectedViewType: null,
+      setSelectedViewType: (v) => set({ selectedViewType: v }),
     }),
     {
       name: "vbos-ui",

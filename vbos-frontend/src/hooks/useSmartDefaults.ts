@@ -63,7 +63,7 @@ export function useSmartDefaults() {
 
     if (scenarioId === "climate") {
       if (landCover) {
-        setAllDatasets([landCover.dataset]);
+        setAllDatasets([landCover.dataset], { replace: false });
         setLayers(landCover.layerId);
         setYear(CLIMATE_DEFAULT_YEAR);
         setYearLeft(CLIMATE_COMPARISON_YEARS.left);

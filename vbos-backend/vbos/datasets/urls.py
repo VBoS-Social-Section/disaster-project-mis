@@ -36,6 +36,11 @@ urlpatterns = [
         views.PMTilesDatasetDetailView.as_view(),
         name="pmtiles-detail",
     ),
+    path(
+        "pmtiles/<int:pk>/intensity/",
+        views.PMTilesIntensityView.as_view(),
+        name="pmtiles-intensity",
+    ),
     # vector
     path("vector/", views.VectorDatasetListView.as_view(), name="vector-list"),
     path(

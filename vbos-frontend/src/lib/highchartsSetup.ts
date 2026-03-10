@@ -6,4 +6,6 @@ import Highcharts from "highcharts";
 import "highcharts/highcharts-more";
 import "highcharts/modules/sankey";
 
+Highcharts.setOptions({ accessibility: { enabled: false } });
+
 export default Highcharts;

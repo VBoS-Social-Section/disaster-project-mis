@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip } from "@/components/ui";
 import { LuDownload } from "react-icons/lu";
 import { AreaSelect } from "./AreaSelect";
+import { CycloneSummaryBanner } from "./CycloneSummaryBanner";
 import { AttributeFilterSelect } from "./AttributeFilterSelect";
 import { TabularDatasetSelect } from "./TabularDatasetSelect";
 import { YearSelect } from "./YearSelect";
@@ -29,10 +30,14 @@ const FloatingKpiCards = lazy(() =>
 
 const RightSidebar = () => {
   const [downloadDialogIsOpen, setDownloadDialogIsOpen] = useState(false);
-  const { context, hasActiveLayers } = usePanelContext();
+  const { context, hasActiveLayers, hasTabularInSelectedCluster } = usePanelContext();
   const scenarioId = useViewStore((s) => s.scenarioId);
+  const selectedCluster = useUiStore((s) => s.selectedCluster);
   const rightSidebarExpanded = useUiStore((s) => s.rightSidebarExpanded);
-  const hasRelevantContent = context !== "empty";
+  const hasRelevantContent =
+    context !== "empty" ||
+    hasTabularInSelectedCluster ||
+    (!!selectedCluster && scenarioId !== "climate");
 
   return (
     <Sidebar
@@ -42,11 +47,12 @@ const RightSidebar = () => {
     >
       <div
         className={cn(
-          "border-b border-border bg-card",
+          "space-y-3 border-b border-border bg-card",
           rightSidebarExpanded ? "px-6 py-4" : "px-5 py-4 md:px-6 md:py-4",
         )}
       >
         <AreaSelect />
+        <CycloneSummaryBanner />
       </div>
       <div
         className={cn(
@@ -56,6 +62,14 @@ const RightSidebar = () => {
             : "px-5 py-4 md:px-6 md:py-5 space-y-4",
         )}
       >
+        {!hasTabularInSelectedCluster &&
+          selectedCluster &&
+          scenarioId !== "climate" && (
+            <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+              This cluster has no tabular dataset. Select province and area
+              council to filter map layers.
+            </p>
+          )}
         {rightSidebarExpanded ? (
           <div className="w-full space-y-6">
             <div className="flex flex-wrap items-end gap-6 rounded-xl border border-border/40 bg-card/95 p-5 shadow-sm">

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { LuDownload, LuExternalLink } from "react-icons/lu";
 import { useLayerStore } from "@/store/layer-store";
+import { useAuthStore } from "@/store/auth-store";
 import { useAreaStore } from "@/store/area-store";
 import { getXLSXData } from "@/api/getXLSXData";
 import { Dataset } from "@/types/api";
@@ -55,6 +56,7 @@ export const DownloadDataDialog = ({
     tabular: activeDatasets.filter((d) => d.layerId.startsWith("t")),
     raster: activeDatasets.filter((d) => d.layerId.startsWith("r")),
     vector: activeDatasets.filter((d) => d.layerId.startsWith("v")),
+    pmtiles: activeDatasets.filter((d) => d.layerId.startsWith("p")),
   };
 
   const handleDownload = async (layerId: string, dataset: Dataset) => {
@@ -194,6 +196,24 @@ export const DownloadDataDialog = ({
                 </div>
               </div>
             )}
+
+            {groupedDatasets.pmtiles.length > 0 && (
+              <div>
+                <p className="mb-2 text-sm font-semibold text-foreground">
+                  PMTiles (Map Layers)
+                </p>
+                <div className="flex flex-col gap-2">
+                  {groupedDatasets.pmtiles.map(({ layerId, metadata }) => (
+                    <PMTilesDatasetRow
+                      key={layerId}
+                      dataset={metadata}
+                      provinces={provinces}
+                      acList={acList}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
         <DialogFooter>
@@ -214,6 +234,77 @@ type DatasetRowProps = {
   provinces?: string[];
   acList?: string[];
   year?: string;
+};
+
+function getPmtilesServeUrl(url: string | null | undefined): string | null {
+  if (!url?.endsWith(".pmtiles")) return null;
+  const filename = url.includes("/media/") ? url.split("/media/").pop() : url.split("/").pop();
+  if (!filename || filename.includes("/")) return null;
+  const base = import.meta.env.VITE_API_HOST ?? "";
+  return `${base || ""}/api/v1/pmtiles-serve/${filename}`.replace(/\/+/g, "/");
+}
+
+const PMTilesDatasetRow = ({
+  dataset,
+  provinces,
+  acList,
+}: {
+  dataset: Dataset;
+  provinces: string[];
+  acList: string[];
+}) => {
+  const serveUrl = getPmtilesServeUrl(dataset.url);
+  const filterSuffix =
+    (provinces.length > 0 || acList.length > 0)
+      ? " — " + [provinces.join(", "), acList.join(", ")].filter(Boolean).join(" • ")
+      : "";
+  const displayName = `${dataset.name}${filterSuffix}`;
+
+  const [downloading, setDownloading] = useState(false);
+  const token = useAuthStore((s) => s.token);
+  const handleDownload = async () => {
+    if (!serveUrl) return;
+    setDownloading(true);
+    try {
+      const headers: HeadersInit = {};
+      if (token) headers["Authorization"] = `Token ${token}`;
+      const res = await fetch(serveUrl, { credentials: "include", headers });
+      if (!res.ok) throw new Error("Download failed");
+      const blob = await res.blob();
+      downloadFile(blob, `${sanitizeFilename(dataset.name)}.pmtiles`);
+      toast.success("Download started", `${dataset.name}.pmtiles`);
+    } catch {
+      toast.error("Download failed", "Could not fetch PMTiles file.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/50 p-3 hover:bg-muted/70 transition-colors">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate" title={displayName}>
+          {displayName}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {(dataset.type ?? "").replace(/_/g, " ")} • PMTiles
+        </p>
+      </div>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={handleDownload}
+        disabled={!serveUrl || downloading}
+      >
+        {downloading ? "Downloading…" : (
+          <>
+            <LuDownload className="size-4" />
+            Download
+          </>
+        )}
+      </Button>
+    </div>
+  );
 };
 
 const DatasetRow = ({

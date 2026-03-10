@@ -1,0 +1,140 @@
+---
+title: "DRMIS User Manual"
+subtitle: "Disaster Risk Management Information System — Frontend Guide"
+format:
+  html:
+    embed-resources: true
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    theme: cosmo
+---
+
+## Introduction
+
+This user manual guides you through the **DRMIS** (Disaster Risk Management Information System) web application. You will learn how to sign in, explore disaster and climate data on the map, apply filters, and download datasets.
+
+## 1. Signing In
+
+To access DRMIS, you must sign in with credentials provided by your administrator.
+
+1. Open the application in your web browser.
+2. You will see the **Sign in** screen with the DRMIS logo and title.
+
+![Login screen with username and password fields](screenshots/01-login_.png){fig-align="center"}
+
+3. Enter your **Username** in the first field.
+4. Enter your **Password** in the second field.
+5. Click **Sign in**.
+
+If your credentials are correct, you will be taken to the main dashboard. If you see an error, contact your administrator for access.
+
+::: {.callout-tip}
+## Contact Your Administrator
+
+If you need access or have forgotten your password, contact your system administrator. DRMIS does not provide a self-service password reset.
+:::
+
+## 2. Main Dashboard
+
+After signing in, you will see the main dashboard:
+
+- **Header:** Logo, title, and view mode (Disaster / Climate).
+- **Left sidebar:** Data layers — choose which datasets to display on the map.
+- **Center:** Interactive map showing geographic data.
+- **Right sidebar:** Context panel — filters, charts, and download options.
+
+![Main dashboard with map and sidebars](screenshots/02-dashboard_.png){fig-align="center"}
+
+### View Modes
+
+- **Disaster:** Disaster risk data and related datasets.
+- **Climate:** Climate and land cover baseline datasets.
+
+Switch between modes using the tabs in the header.
+
+## 3. Enabling Data Layers
+
+The left sidebar shows available **Data Layers** grouped by cluster (e.g., Education, Health, Infrastructure).
+
+1. **Select a cluster** from the dropdown at the top.
+2. Browse the list of datasets in that cluster.
+3. **Enable a layer** by clicking on it or its checkbox. The layer will appear on the map.
+4. You can enable multiple layers at once.
+
+![Left sidebar with datasets and clusters](screenshots/03-left-sidebar_.png){fig-align="center"}
+
+## 4. Filtering by Area and Year
+
+The right sidebar lets you filter data by location and time.
+
+### Administrative Area
+
+- **Province:** Select one or more provinces using the checkboxes in the dropdown.
+- **Area Council:** After selecting a province, you can optionally select one or more area councils.
+
+![Right sidebar with Province and Area Council dropdowns](screenshots/04-right-sidebar_.png){fig-align="center"}
+
+### Year
+
+- **Year:** Select the year for tabular data (e.g., 2024). This filter is available in Disaster mode.
+
+### Attribute Filter
+
+- If you have a tabular layer active, you can filter by **attribute** (e.g., education type, population).
+
+### Expand to Full Width
+
+The right panel can be expanded to full width for a larger view of charts and statistics:
+
+1. In the right sidebar header, click the **Expand to full width** button (expand icon).
+2. The panel will overlay the map, giving you more space for filters, charts, and KPIs.
+3. Click **Restore panel width** to return to the normal sidebar layout.
+
+![Right sidebar expanded full width](screenshots/05-expanded-full width-right-sidebar_.png){fig-align="center"}
+
+This is useful when you want to focus on data analysis without the map, or when viewing multiple charts side by side.
+
+## 5. Downloading Data
+
+You can download tabular (XLSX) or vector (GeoJSON) data for the layers you have enabled.
+
+1. **Enable at least one layer** from the left sidebar.
+2. **Apply filters** (province, area council, year) if desired.
+3. Click **Download Data** at the bottom of the right sidebar.
+4. The **Download Active Datasets** dialog opens.
+
+![Download dialog with active datasets and filters](screenshots/06-download-dialog_.png){fig-align="center" width="500px"}
+
+5. The dialog shows:
+   - **Active filters** (Province, Area, Year).
+   - **Tabular Datasets** — XLSX format.
+   - **Vector Datasets** — GeoJSON format.
+   - **Raster Datasets** — VRT or GeoTIFF links (if applicable).
+
+6. Click **Download** next to the dataset you want. The file will download to your browser’s default download folder.
+
+::: {.callout-note}
+## Filtered Downloads
+
+Downloads respect your current filters. If you select Province: Shefa and Year: 2024, the downloaded file will only include data for Shefa in 2024.
+:::
+
+## 6. Quick Reference
+
+| Action | What to do |
+|--------|------------|
+| Sign in | Enter username and password, click Sign in |
+| Switch view | Use Disaster / Climate tabs in header |
+| Add data to map | Enable layers from left sidebar |
+| Filter by area | Use Province and Area Council dropdowns (multi-select) |
+| Filter by year | Use Year dropdown in right sidebar |
+| Expand right panel | Click expand icon in right sidebar header for full-width view |
+| Download data | Click Download Data, then Download for each dataset |
+
+## 7. Signing Out
+
+Sign out from the user menu in the header:
+
+1. Click your **avatar** or **username** in the top-right.
+2. Select **Sign out**.

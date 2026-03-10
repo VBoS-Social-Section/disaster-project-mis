@@ -70,7 +70,7 @@ export function SelectedClusterPanel({ clusterName }: SelectedClusterPanelProps)
           </div>
         ) : filteredTypeGroups?.length === 0 ? (
           <p className="px-2 py-4 text-xs text-muted-foreground">
-            No datasets in this cluster.
+            No map layers in this cluster. Tabular data appears in the right panel.
           </p>
         ) : (
           <>

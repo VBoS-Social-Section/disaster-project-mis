@@ -82,7 +82,7 @@ export function ClusterFlyout({ clusterName, onExpand }: ClusterFlyoutProps) {
                     <div className="flex flex-col gap-1 px-3 pb-2 pt-0">
                       {typeGroup.datasets.map((dataset) => (
                         <LayerSwitch
-                          key={dataset.id}
+                          key={`${dataset.dataType}-${dataset.id}`}
                           dataType={dataset.dataType}
                           id={dataset.id}
                           title={dataset.name}

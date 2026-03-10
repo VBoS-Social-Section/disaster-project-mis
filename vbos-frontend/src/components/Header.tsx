@@ -143,17 +143,13 @@ export const Header = () => {
         <ColorModeButton aria-label="Toggle light/dark theme" />
 
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="rounded-full"
-              aria-label="Open menu"
-            >
-              <span className="flex size-8 items-center justify-center rounded-full bg-primary/20 text-primary">
-                <LuUser className="size-4 icon-interactive" />
-              </span>
-            </Button>
+          <DropdownMenuTrigger
+            className="rounded-full hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 size-8 inline-flex items-center justify-center"
+            aria-label="Open menu"
+          >
+            <span className="flex size-8 items-center justify-center rounded-full bg-primary/20 text-primary">
+              <LuUser className="size-4 icon-interactive" />
+            </span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-[11rem]">
             <DropdownMenuLabel className="font-normal text-muted-foreground">

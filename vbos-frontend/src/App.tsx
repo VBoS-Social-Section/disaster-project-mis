@@ -19,9 +19,9 @@ import { LeftSidebar } from "./components/LeftSidebar";
 import { RightSidebar } from "./components/RightSidebar";
 import { TabularLayers } from "./components/Map/TabularLayer";
 import { MapEmptyState } from "./components/MapEmptyState";
-import { MapBottomPanel } from "./components/Map/MapBottomPanel";
 import { MapCursorRing } from "./components/Map/MapCursorRing";
 import { MapModeBadge } from "./components/Map/MapModeBadge";
+import { ClimatePlaceholderPopover } from "./components/ClimatePlaceholderPopover";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { LayerAnnouncer } from "./components/LayerAnnouncer";
 import { LockScreen } from "./components/LockScreen";
@@ -31,9 +31,6 @@ import { Login } from "./components/Login";
 const Map = lazy(() => import("./components/Map").then((m) => ({ default: m.default })));
 
 // Lazy-load overlay components – only fetched when their mode is active
-const ClimateKpiCards = lazy(() =>
-  import("./components/ClimateKpiCards").then((m) => ({ default: m.default })),
-);
 const FloatingTimeSeries = lazy(() =>
   import("./components/FloatingTimeSeries").then((m) => ({ default: m.default })),
 );
@@ -98,7 +95,7 @@ function MapErrorFallback(error: Error, retry: () => void) {
 function App() {
   const mapRef = useRef<MapRef>(null);
   const { isAuthenticated } = useAuth();
-  const { isMobile, mobileOpenPanel, setMobileOpenPanel } = useUiStore();
+  const { isMobile, mobileOpenPanel, setMobileOpenPanel, rightSidebarExpanded, leftSidebarIconMode } = useUiStore();
   const { isLocked } = useLockStore();
   const scenarioId = useViewStore((s) => s.scenarioId);
   const isTimeSeriesOpen = useUiStore((s) => s.isTimeSeriesOpen);
@@ -121,22 +118,32 @@ function App() {
       <Header />
       <div
         id="main"
-        className="grid h-[calc(100vh-3.5rem)] min-w-0 overflow-hidden md:grid-rows-1 grid-rows-[auto_1fr_auto] md:grid-cols-[auto_1fr_28rem]"
+        className={cn(
+          "grid h-[calc(100vh-3.5rem)] min-w-0 overflow-hidden md:grid-rows-1 grid-rows-[auto_1fr_auto]",
+          scenarioId === "climate" ? "grid-cols-1" : "md:grid-cols-[auto_1fr_28rem]",
+        )}
       >
-        <div className="min-h-0">
-          <ErrorBoundary
-            fallbackRender={(error, retry) => (
-              <SidebarErrorFallback
-                error={error}
-                retry={retry}
-                title="Data layers failed"
-                side="left"
-              />
+        {scenarioId !== "climate" && (
+          <div
+            className={cn(
+              "min-h-0",
+              rightSidebarExpanded && !leftSidebarIconMode && "z-[1060] relative",
             )}
           >
-            <LeftSidebar />
-          </ErrorBoundary>
-        </div>
+            <ErrorBoundary
+              fallbackRender={(error, retry) => (
+                <SidebarErrorFallback
+                  error={error}
+                  retry={retry}
+                  title="Data layers failed"
+                  side="left"
+                />
+              )}
+            >
+              <LeftSidebar />
+            </ErrorBoundary>
+          </div>
+        )}
         <div
           className="relative map-area min-w-0 min-h-0 overflow-hidden"
           onClick={() => {
@@ -145,41 +152,43 @@ function App() {
         >
           <ErrorBoundary fallbackRender={MapErrorFallback}>
             <div className="relative flex h-full min-h-0 flex-col">
-              <MapCursorRing />
-              <TabularLayers />
-              <Suspense fallback={<MapLoadingSkeleton />}>
-                <Map ref={mapRef} />
-              </Suspense>
-              {scenarioId === "climate" && <MapBottomPanel />}
-              <MapEmptyState />
-              <MapModeBadge />
-              {scenarioId === "climate" && (
-                <Suspense fallback={null}>
-                  <ClimateKpiCards />
-                </Suspense>
-              )}
-              {isTimeSeriesOpen && (
-                <Suspense fallback={null}>
-                  <FloatingTimeSeries />
-                </Suspense>
+              {scenarioId === "climate" ? (
+                <ClimatePlaceholderPopover />
+              ) : (
+                <>
+                  <MapCursorRing />
+                  <TabularLayers />
+                  <Suspense fallback={<MapLoadingSkeleton />}>
+                    <Map ref={mapRef} />
+                  </Suspense>
+                  <MapEmptyState />
+                  <MapModeBadge />
+                  {isTimeSeriesOpen && (
+                    <Suspense fallback={null}>
+                      <FloatingTimeSeries />
+                    </Suspense>
+                  )}
+                </>
               )}
             </div>
           </ErrorBoundary>
         </div>
-        <div className="min-h-0">
-          <ErrorBoundary
-            fallbackRender={(error, retry) => (
-              <SidebarErrorFallback
-                error={error}
-                retry={retry}
-                title="Context panel failed"
-                side="right"
-              />
-            )}
-          >
-            <RightSidebar />
-          </ErrorBoundary>
-        </div>
+        {scenarioId !== "climate" && (
+          <div className="min-h-0">
+            <ErrorBoundary
+              fallbackRender={(error, retry) => (
+                <SidebarErrorFallback
+                  error={error}
+                  retry={retry}
+                  title="Context panel failed"
+                  side="right"
+                />
+              )}
+            >
+              <RightSidebar />
+            </ErrorBoundary>
+          </div>
+        )}
       </div>
     </div>
   );

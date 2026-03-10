@@ -58,7 +58,8 @@ export function Login() {
               Disaster Risk Management Information System
             </h1>
             <p className="text-sm text-muted-foreground">
-              Disaster & Climate Risk Data
+              Secure access to vital information for disaster
+              preparedness and response.
             </p>
           </CardHeader>
           <CardContent className="space-y-6">

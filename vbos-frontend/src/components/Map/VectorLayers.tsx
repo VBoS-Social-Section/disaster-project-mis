@@ -92,16 +92,24 @@ function VectorMapLayer({ id, colorIndex, setPopupInfo, bbox }: VectorMapLayerPr
       features = features.slice(0, FEATURE_CAP);
     }
 
+    const hasPolygons = features.some(
+      (f) =>
+        f.geometry?.type === "Polygon" ||
+        f.geometry?.type === "MultiPolygon",
+    );
     const shouldSimplify =
       (zoom < SIMPLIFY_ZOOM_THRESHOLD && features.length > 100) ||
-      features.length > 500; // Aggressive simplify for large line datasets
+      features.length > 500 ||
+      (hasPolygons && features.length > 10); // Always simplify polygon layers (e.g. area councils)
     let displayData: typeof data = { ...data, features };
 
     if (shouldSimplify) {
       const tolerance =
         features.length > 500
           ? 0.02 * Math.pow(2, Math.max(0, SIMPLIFY_ZOOM_THRESHOLD - zoom))
-          : 0.01 * Math.pow(2, SIMPLIFY_ZOOM_THRESHOLD - zoom);
+          : hasPolygons && features.length <= 100
+            ? 0.02 * Math.pow(2, Math.max(0, SIMPLIFY_ZOOM_THRESHOLD - zoom))
+            : 0.01 * Math.pow(2, SIMPLIFY_ZOOM_THRESHOLD - zoom);
       try {
         displayData = {
           ...data,
@@ -152,9 +160,14 @@ function VectorMapLayer({ id, colorIndex, setPopupInfo, bbox }: VectorMapLayerPr
   const getStyle = (feat?: GeoJSON.Feature) => {
     const geomType = feat?.geometry?.type;
     if (geomType === "Point") return {};
+    const props = feat?.properties as Record<string, unknown> | undefined;
+    const fillColor =
+      (props?.intensity_color as string) || layerColor;
     return {
-      color: layerColor,
-      weight: 2,
+      color: fillColor,
+      fillColor,
+      fillOpacity: opacity,
+      weight: 1,
       opacity,
       renderer: L.canvas(),
     };

@@ -34,6 +34,7 @@ import { ComparisonOverlay } from "./ComparisonOverlay";
 import { RasterComparisonOverlay } from "./RasterComparisonOverlay";
 import { TabularDeltaOverlay } from "./TabularDeltaOverlay";
 import { LandCoverLegend } from "./LandCoverLegend";
+import { CycloneNameMapOverlay } from "./CycloneNameMapOverlay";
 
 export interface PopupInfo {
   latitude: number;
@@ -255,6 +256,7 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
         <RasterComparisonOverlay />
         <LandCoverLegend />
         <Legend />
+        <CycloneNameMapOverlay />
         <MapControlsCluster map={mapRefAdapter} />
         {popupInfo && <MapPopup {...popupInfo} />}
       </MapReady>

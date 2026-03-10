@@ -11,20 +11,14 @@
  * - Returns array of LegendLayer objects ready for display
  */
 
-import { useMemo } from "react";
-import { useQueryClient, useIsFetching } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLayerStore } from "@/store/layer-store";
-import { useAreaStore } from "@/store/area-store";
 import { useDateStore } from "@/store/date-store";
-import { useAdminAreaStats } from "@/hooks/useAdminAreaStats";
-import useProvinces from "@/hooks/useProvinces";
-import { featureCollection } from "@turf/helpers";
 import type {
   LegendLayer,
   VectorLegendLayer,
 } from "@/components/Map/Legend/types";
 import type { PaginatedVectorData } from "@/types/api";
-import type { AreaCouncilGeoJSON, ProvincesGeoJSON } from "@/types/data";
 import { MAP_COLORS, VECTOR_LAYER_COLORS, VECTOR_CLUSTER_COLORS } from "../../../colors";
 import { useColorMode } from "../../../ui/color-mode";
 import { getVectorIconKey } from "../../vectorIcons";
@@ -49,26 +43,9 @@ import { getVectorIconKey } from "../../vectorIcons";
 export function useLegendLayers(): LegendLayer[] {
   const { colorMode } = useColorMode();
   const mapPalette = MAP_COLORS[colorMode === "dark" ? "dark" : "light"];
-  const {
-    layers: layerString,
-    getLayerMetadata,
-    tabularLayerData,
-  } = useLayerStore();
-  const { provinces, acGeoJSON } = useAreaStore();
+  const { layers: layerString, getLayerMetadata } = useLayerStore();
   const { year: dataYear } = useDateStore();
-  const { data: provincesGeojson } = useProvinces();
   const queryClient = useQueryClient();
-  const isFetching = useIsFetching();
-
-  // Stable empty fallback - prevents useAdminAreaStats infinite loop when provincesGeojson is undefined
-  const emptyGeoJSON = useMemo(() => featureCollection([]) as ProvincesGeoJSON, []);
-  const adminAreaGeoJSON: ProvincesGeoJSON | AreaCouncilGeoJSON =
-    provinces.length > 0 && acGeoJSON.features.length > 0
-      ? acGeoJSON
-      : (provincesGeojson ?? emptyGeoJSON);
-
-  // Get min/max values from the same source as the map rendering
-  const { minValue, maxValue } = useAdminAreaStats(adminAreaGeoJSON);
 
   // Parse active layer IDs from the store
   const activeLayerIds = layerString
@@ -86,28 +63,9 @@ export function useLegendLayers(): LegendLayer[] {
     const dataset = getLayerMetadata(layerId);
 
     // Only include layers that have metadata loaded
-    if (dataset) {
-      if (dataset.dataType === "tabular") {
-        const filters = new URLSearchParams();
-        const queryKey = ["dataset", "tabular", dataset.id, filters.toString()];
-
-        const isPending =
-          isFetching > 0 && queryClient.isFetching({ queryKey }) > 0;
-
-        // Filter data for the current year
-        const filteredData = tabularLayerData.filter((i) =>
-          i.date.startsWith(dataYear),
-        );
-
-        legendLayers.push({
-          ...dataset,
-          colorScheme: "sequential", // Could be made configurable
-          dataRange: { min: minValue, max: maxValue },
-          isPending,
-          hasData: filteredData.length > 0,
-          dataYear,
-        });
-      } else if (dataset.dataType === "vector") {
+    // Tabular: context/sidebar only, never in map legend
+    if (dataset && dataset.dataType !== "tabular") {
+      if (dataset.dataType === "vector") {
         const vectorDataQueryKey = ["dataset", "vector", dataset.id, ""];
 
         const vectorData =

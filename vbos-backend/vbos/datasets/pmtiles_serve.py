@@ -36,11 +36,14 @@ def _parse_range_header(range_header: str, file_size: int) -> tuple[int, int] | 
 def serve_pmtiles(request, path: str):
     """
     Serve a PMTiles file with Range request support.
-    Path must be a filename like 'roads.pmtiles' (no path traversal).
+    Path can be 'roads.pmtiles' or 'media/roads.pmtiles' (media/ prefix is stripped).
     """
     if not path.endswith(".pmtiles"):
         return HttpResponse("Not found", status=404)
-    # Prevent path traversal - only allow simple filenames
+    # Strip "media/" prefix if present (API may return media/filename.pmtiles)
+    if path.startswith("media/"):
+        path = path[6:]  # len("media/") == 6
+    # Prevent path traversal - only allow simple filenames (no slashes after strip)
     if "/" in path or "\\" in path or path.startswith("."):
         return HttpResponse("Invalid path", status=400)
     media_root = Path(settings.MEDIA_ROOT)

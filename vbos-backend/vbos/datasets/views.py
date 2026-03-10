@@ -53,6 +53,18 @@ from .serializers import (
 # Driver overlay names: fetched by name across all clusters (e.g. Roads in Logistics)
 DRIVER_DATASET_NAMES = ["Population growth", "Roads", "Urban expansion"]
 
+# Disaster overlay names: fetched by name across all clusters.
+# Frontend lists all; disabled until admin uploads matching dataset.
+DISASTER_DATASET_NAMES = [
+    "Cyclone Intensity",
+    "Volcano",
+    "Flood",
+    "Earthquake",
+    "Tsunami",
+    "Landslide",
+    "Drought",
+    "Wildfire",
+]
 
 class ClusterDatasetsView(APIView):
     """Single endpoint returning all dataset types for a cluster in one response.
@@ -85,10 +97,27 @@ class ClusterDatasetsView(APIView):
             raster = RasterDatasetSerializer(raster_qs, many=True).data
             vector = VectorDatasetSerializer(vector_qs, many=True).data
             pmtiles = PMTilesDatasetSerializer(pmtiles_qs, many=True).data
+        elif cluster_name.lower() == "disaster":
+            # Disaster overlay: fetch by name across ALL clusters (Cyclone Intensity, Volcano, Flood)
+            from django.db.models import Q
+            name_q = Q()
+            for n in DISASTER_DATASET_NAMES:
+                name_q |= Q(name__icontains=n)
+            raster_qs = RasterDataset.objects.filter(name_q)
+            vector_qs = VectorDataset.objects.filter(name_q)
+            pmtiles_qs = PMTilesDataset.objects.filter(name_q)
+            tabular = []
+            raster = RasterDatasetSerializer(raster_qs, many=True).data
+            vector = VectorDatasetSerializer(vector_qs, many=True).data
+            pmtiles = PMTilesDatasetSerializer(pmtiles_qs, many=True).data
         else:
+            tabular_ids = list(
+                TabularDataset.objects.filter(
+                    cluster__name__iexact=cluster_name
+                ).values_list("id", flat=True)
+            )
             tabular = TabularDatasetSerializer(
-                TabularDataset.objects.filter(cluster__name__iexact=cluster_name),
-                many=True,
+                TabularDataset.objects.filter(id__in=tabular_ids), many=True
             ).data
             # Rasters are Climate-mode only: return all rasters for every cluster
             raster = RasterDatasetSerializer(
@@ -174,6 +203,57 @@ class PMTilesDatasetDetailView(RetrieveAPIView):
     queryset = PMTilesDataset.objects.all()
     serializer_class = PMTilesDatasetSerializer
     permission_classes = [IsAuthenticated]
+
+
+class PMTilesIntensityView(APIView):
+    """Return cyclone intensity data for a PMTiles dataset, filtered by province/area_council.
+    Requires intensity_data JSONField to be populated (from RAP GeoJSON export)."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            dataset = PMTilesDataset.objects.get(pk=pk)
+        except PMTilesDataset.DoesNotExist:
+            return Response(
+                {"detail": "PMTiles dataset not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        intensity_data = dataset.intensity_data or []
+        if not isinstance(intensity_data, list):
+            return Response(
+                {"type": "FeatureCollection", "features": []},
+                status=status.HTTP_200_OK,
+            )
+        provinces = [p.strip().lower() for p in request.query_params.getlist("province") if p]
+        area_councils = [a.strip().lower() for a in request.query_params.getlist("area_council") if a]
+        filtered = []
+        for item in intensity_data:
+            if not isinstance(item, dict):
+                continue
+            ac = (item.get("acname") or item.get("area_council") or item.get("name") or "").strip()
+            prov = (item.get("Province") or item.get("province") or "").strip()
+            ac_lower = ac.lower()
+            prov_lower = prov.lower()
+            match_province = not provinces or prov_lower in provinces
+            match_ac = not area_councils or ac_lower in area_councils
+            if match_province and match_ac:
+                filtered.append({
+                    "type": "Feature",
+                    "properties": {
+                        "acname": ac,
+                        "area_council": ac,
+                        "Province": prov,
+                        "province": prov,
+                        "Intensity": item.get("Intensity") or item.get("intensity") or "",
+                        "intensity": item.get("Intensity") or item.get("intensity") or "",
+                        "intensity_color": item.get("intensity_color") or "",
+                    },
+                    "geometry": None,
+                })
+        return Response({
+            "type": "FeatureCollection",
+            "features": filtered,
+        })
 
 
 @method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache

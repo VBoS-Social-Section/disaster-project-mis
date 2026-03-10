@@ -30,6 +30,10 @@ CLUSTER_ICONS = [
     ("Shelter", "fi-sr-shield"),
     ("Business", "fi-sr-briefcase"),
     ("WASH", "fi-sr-bottle-droplet"),
+    # Water / plumbing (faucet = water valve)
+    ("Water valve", "fi-sr-faucet"),
+    ("Tap", "fi-sr-tap"),
+    ("Water", "fi-sr-water"),
 ]
 
 

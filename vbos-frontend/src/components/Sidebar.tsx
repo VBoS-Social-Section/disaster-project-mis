@@ -69,7 +69,7 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
   const prevCollapseWhen = useRef(collapseWhen);
   useEffect(() => {
     if (isMobile) return;
-    if (collapseWhen && sideBarVisible) {
+    if (collapseWhen && !prevCollapseWhen.current && sideBarVisible) {
       setIconMode(true);
       setDesktopVisible(false);
     } else if (!collapseWhen && prevCollapseWhen.current) {
@@ -92,6 +92,7 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
   }, [setIsMobile, setMobileOpenPanel]);
 
   const isOverlay = sideBarVisible && !isLeftSidebar && rightSidebarExpanded;
+  const overlayLeft = leftSidebarIconMode ? "3rem" : "20rem";
 
   const panelContent = (
     <>
@@ -256,9 +257,10 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
         ReactDOM.createPortal(
           <div
             className={cn(
-              "fixed right-0 top-[3.5rem] bottom-0 w-[min(85vw,1400px)] z-[1050] flex flex-col overflow-hidden border-l border-border bg-card shadow-xl right-panel-overlay",
+              "fixed right-0 top-[3.5rem] bottom-0 z-[1050] flex flex-col overflow-hidden border-l border-border bg-card shadow-xl right-panel-overlay",
               transparent ? "glass-surface-translucent" : "glass-surface",
             )}
+            style={{ left: overlayLeft }}
           >
             {panelContent}
           </div>,

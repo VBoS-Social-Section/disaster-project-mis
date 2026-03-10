@@ -48,7 +48,7 @@ export function DriversSection() {
               {availableDatasets.map(({ name, dataset }) => {
                 const Icon = DRIVER_ICONS[name];
                 return (
-                  <div key={dataset.id} className="flex items-center gap-2">
+                  <div key={`${dataset.dataType}-${dataset.id}`} className="flex items-center gap-2">
                     {Icon && <Icon className="size-4 shrink-0 text-muted-foreground" />}
                     <LayerSwitch
                       dataType={dataset.dataType}

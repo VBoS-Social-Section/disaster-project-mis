@@ -21,6 +21,7 @@ class GeoJSONProperties:
                 "area_council",
                 "area council",
                 "Area council",
+                "acname",
                 "AC_NAME",
                 "area_council_name",
                 "ACNAME22",

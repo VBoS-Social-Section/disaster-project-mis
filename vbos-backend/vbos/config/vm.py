@@ -14,6 +14,9 @@ class Vm(Common):
     # Static files in Docker volume at /app/staticfiles (shared with nginx)
     STATIC_ROOT = "/app/staticfiles"
 
+    # Media files: Docker mounts vbos-backend/media to /app/media (see docker-compose volume)
+    MEDIA_ROOT = "/app/media"
+
     # Allow cookies over HTTP for VM (no HTTPS)
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False

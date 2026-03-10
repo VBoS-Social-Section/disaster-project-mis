@@ -17,7 +17,10 @@ function useClusters() {
   };
 }
 
-function useClusterDatasets(cluster: string, options?: { enabled?: boolean }) {
+function useClusterDatasets(
+  cluster: string,
+  options?: { enabled?: boolean; replace?: boolean },
+) {
   const { setAllDatasets } = useLayerStore();
   const { isPending, error, data } = useQuery({
     queryKey: ["datasets", cluster],
@@ -28,9 +31,9 @@ function useClusterDatasets(cluster: string, options?: { enabled?: boolean }) {
   useEffect(() => {
     if (data) {
       const datasets = data.flatMap((t) => t.datasets);
-      setAllDatasets(datasets);
+      setAllDatasets(datasets, { replace: options?.replace !== false });
     }
-  }, [data, setAllDatasets]);
+  }, [data, setAllDatasets, options?.replace]);
 
   return {
     isPending,

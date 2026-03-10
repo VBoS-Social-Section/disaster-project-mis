@@ -1,13 +1,14 @@
 /**
  * Side-by-side year comparison overlay using leaflet-side-by-side.
- * Renders when comparison mode is on and a tabular layer is active.
- * Adds floating year labels on the split divider.
+ * Tabular comparison is shown on map when no disaster layer is active.
+ * When a disaster layer (Cyclone Intensity, etc.) is active, tabular is right-panel only.
  */
 import { useEffect, useRef } from "react";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet-side-by-side";
 import { useComparisonStore } from "@/store/comparison-store";
+import { useHasDisasterLayerActive } from "@/hooks/useHasDisasterLayerActive";
 import { useLayerStore } from "@/store/layer-store";
 import { useAreaStore } from "@/store/area-store";
 import useProvinces from "@/hooks/useProvinces";
@@ -90,12 +91,14 @@ export function ComparisonOverlay() {
 
   const tabularLayers = layers.split(",").filter((i) => i.startsWith("t"));
   const hasTabularLayer = tabularLayers.length > 0;
+  const hasDisasterLayerActive = useHasDisasterLayerActive();
   const tabularOpacity = hasTabularLayer
     ? (getOpacity(tabularLayers[0]) ?? 100) / 100
     : 1;
 
   useEffect(() => {
-    if (!comparisonMode || comparisonView !== "swipe" || !hasTabularLayer || !sideBySide) return;
+    // When disaster layer is active, tabular is right-panel only — no map comparison
+    if (!comparisonMode || comparisonView !== "swipe" || (hasTabularLayer && hasDisasterLayerActive) || !sideBySide) return;
     if (!geojsonLeft.features.length && !geojsonRight.features.length) return;
 
     const getStyle = (
@@ -115,7 +118,7 @@ export function ComparisonOverlay() {
         const t =
           maxVal !== minVal ? (value - minVal) / (maxVal - minVal) : 1;
         const fillColor = getChoroplethColor(t, mapPalette);
-        const opacity = maxVal !== minVal ? 0.15 + t * 0.85 : 1;
+        const opacity = maxVal !== minVal ? 0.25 + t * 0.45 : 0.7;
         return {
           fillColor,
           fillOpacity: tabularOpacity * opacity,
@@ -170,6 +173,7 @@ export function ComparisonOverlay() {
     comparisonMode,
     comparisonView,
     hasTabularLayer,
+    hasDisasterLayerActive,
     map,
     geojsonLeft,
     geojsonRight,

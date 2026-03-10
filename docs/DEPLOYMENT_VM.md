@@ -89,7 +89,8 @@ cd disaster-project-mis
 From your **local** machine (where the project lives):
 
 ```bash
-rsync -avz --exclude 'node_modules' --exclude '.git' --exclude 'media' \
+# Include media so PMTiles (roads.pmtiles) and uploads are available on VM
+rsync -avz --exclude 'node_modules' --exclude '.git' \
   "/home/htevilili/Documents/Work/Disaster Project/disaster-project-mis/" \
   vbosadmin@10.252.0.158:/var/www/disaster-project-mis/
 ```
@@ -261,3 +262,25 @@ docker compose exec web ./manage.py createsuperuser
 ### Bulk delete fails in admin
 
 `DATA_UPLOAD_MAX_NUMBER_FIELDS` is set to 50000. If you need more, increase it in `vbos/config/common.py`.
+
+### PMTiles (roads.pmtiles) returns 404
+
+The map requests `roads.pmtiles` via `/api/v1/pmtiles-serve/roads.pmtiles`. If you get 404:
+
+1. **Verify the file exists** on the VM:
+   ```bash
+   ls -la /var/www/disaster-project-mis/vbos-backend/media/roads.pmtiles
+   ```
+
+2. **Verify the Docker volume mount** – the web container must see the file:
+   ```bash
+   cd /var/www/disaster-project-mis
+   docker compose -f deploy/vm/docker-compose.yml exec web ls -la /app/media/
+   ```
+   You should see `roads.pmtiles`. If not, ensure you run `docker compose` from the project root so the volume path `../../vbos-backend/media` resolves correctly.
+
+3. **Include media in rsync** when copying to the VM:
+   ```bash
+   rsync -avz --exclude 'node_modules' --exclude '.git' \
+     "disaster-project-mis/" vbosadmin@10.252.0.158:/var/www/disaster-project-mis/
+   ```

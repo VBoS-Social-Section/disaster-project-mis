@@ -1,10 +1,12 @@
 /**
  * Difference heatmap: single map colored by delta (yearRight - yearLeft) or % change.
+ * Only shown when tabular is on map (no disaster layer active).
  */
 import { useEffect, useRef } from "react";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
 import { useComparisonStore } from "@/store/comparison-store";
+import { useHasDisasterLayerActive } from "@/hooks/useHasDisasterLayerActive";
 import { useLayerStore } from "@/store/layer-store";
 import { useAreaStore } from "@/store/area-store";
 import useProvinces from "@/hooks/useProvinces";
@@ -41,12 +43,14 @@ export function TabularDeltaOverlay() {
 
   const tabularLayers = layers.split(",").filter((i) => i.startsWith("t"));
   const hasTabularLayer = tabularLayers.length > 0;
+  const hasDisasterLayerActive = useHasDisasterLayerActive();
   const tabularOpacity = hasTabularLayer
     ? (getOpacity(tabularLayers[0]) ?? 100) / 100
     : 1;
 
   useEffect(() => {
-    if (!comparisonMode || comparisonView !== "delta" || !hasTabularLayer) return;
+    if (!comparisonMode || comparisonView !== "delta") return;
+    if (hasTabularLayer && hasDisasterLayerActive) return;
     if (!geojson.features.length) return;
 
     const range = Math.max(Math.abs(maxDelta), Math.abs(minDelta), 1);
@@ -64,7 +68,7 @@ export function TabularDeltaOverlay() {
       const fillColor = getDeltaColor(t, mapPalette);
       return {
         fillColor,
-        fillOpacity: tabularOpacity * 0.85,
+        fillOpacity: tabularOpacity * 0.55,
         color: fillColor,
         weight: 1,
         opacity: 0.8,
@@ -83,6 +87,7 @@ export function TabularDeltaOverlay() {
     comparisonMode,
     comparisonView,
     hasTabularLayer,
+    hasDisasterLayerActive,
     map,
     geojson,
     minDelta,

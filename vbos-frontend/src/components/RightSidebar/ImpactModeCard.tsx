@@ -14,7 +14,7 @@ export function ImpactModeCard() {
   const { enabled, setEnabled } = useImpactModeStore();
   const result = useEstimatedAffectedPopulation();
 
-  if (scenario.id !== "disaster") return null;
+  if (scenario.id !== "climate") return null;
 
   const canCompute = result !== null;
   const showCard = enabled && canCompute;

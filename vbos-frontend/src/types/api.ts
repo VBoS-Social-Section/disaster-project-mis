@@ -32,6 +32,8 @@ export interface BaseDataset {
   precomputed_tile_url?: string | null;
   url?: string;
   source_layer?: string;
+  /** Name of cyclone/event (e.g. Cyclone Lola). Shown when layer is active. */
+  cyclone_name?: string | null;
 }
 
 export interface TabularDataset extends BaseDataset {

@@ -1,21 +1,15 @@
 /**
- * When entering Climate mode: auto-activate land cover raster, clear disaster choropleths,
- * and set year to 2023 if needed.
+ * When entering Climate mode: clear all layers (Climate dashboard is placeholder).
+ * When in Disaster mode: remove raster layers (Land cover was Climate-only).
  */
 import { useEffect, useRef } from "react";
 import { useViewStore } from "@/store/view-store";
 import { useLayerStore } from "@/store/layer-store";
-import { useDateStore } from "@/store/date-store";
 import { useAuthStore } from "@/store/auth-store";
-import { useLandCoverRaster } from "./useLandCoverRaster";
-
-const CLIMATE_YEARS = ["2020", "2023"];
 
 export function useClimateModeEffect() {
   const scenarioId = useViewStore((s) => s.scenarioId);
-  const { setLayers, setAllDatasets, layers } = useLayerStore();
-  const { setYear, year } = useDateStore();
-  const landCover = useLandCoverRaster();
+  const { setLayers, layers } = useLayerStore();
   const prevModeRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -41,28 +35,9 @@ export function useClimateModeEffect() {
     const justEntered = prevModeRef.current !== "climate";
     prevModeRef.current = scenarioId;
 
-    const current = layers.split(",").filter(Boolean);
-    const hasLandCoverRaster = landCover && current.includes(landCover.layerId);
-    const hasTabular = current.some((l) => l.startsWith("t"));
-
-    // Set year to 2023 if current year isn't a land cover year (only on enter)
-    if (justEntered && !CLIMATE_YEARS.includes(year)) {
-      setYear("2023");
+    // Climate dashboard is placeholder: clear all layers for blank map
+    if (justEntered && layers.split(",").filter(Boolean).length > 0) {
+      setLayers("");
     }
-
-    // Auto-activate land cover raster when available and not yet active
-    if (landCover && !hasLandCoverRaster) {
-      setAllDatasets([landCover.dataset]);
-      const vectors = current.filter((l) => l.startsWith("v") || l.startsWith("p"));
-      const newLayers = [...vectors, landCover.layerId];
-      setLayers(newLayers.join(","));
-      return;
-    }
-
-    // In climate mode: always remove tabular layers (disaster choropleths)
-    if (hasTabular) {
-      const nonTabular = current.filter((l) => !l.startsWith("t"));
-      setLayers(nonTabular.join(","));
-    }
-  }, [scenarioId, landCover, setLayers, setAllDatasets, setYear, year, layers]);
+  }, [scenarioId, setLayers, layers]);
 }

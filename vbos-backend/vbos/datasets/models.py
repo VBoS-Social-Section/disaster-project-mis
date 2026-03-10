@@ -193,6 +193,12 @@ class VectorDataset(models.Model):
         null=True,
         help_text="Color for map markers. Leave empty for auto (cluster or index).",
     )
+    cyclone_name = models.CharField(
+        max_length=155,
+        blank=True,
+        null=True,
+        help_text="Name of the cyclone/event (e.g. Cyclone Lola). Shown when layer is active.",
+    )
 
     def __str__(self):
         return f"{self.name} - {self.cluster} / {self.type}"
@@ -215,6 +221,17 @@ class PMTilesDataset(models.Model):
     source = models.CharField(max_length=155, blank=True, null=True)
     url = models.CharField(max_length=1550)
     source_layer = models.CharField(max_length=155)
+    cyclone_name = models.CharField(
+        max_length=155,
+        blank=True,
+        null=True,
+        help_text="Name of the cyclone/event (e.g. Cyclone Lola). Shown when layer is active.",
+    )
+    intensity_data = models.JSONField(
+        blank=True,
+        default=list,
+        help_text="Optional. For cyclone datasets: list of {acname, Province, Intensity, intensity_color}. Enables right-panel intensity display for PMTiles.",
+    )
 
     def __str__(self):
         return f"{self.name} - {self.cluster} / {self.type}"

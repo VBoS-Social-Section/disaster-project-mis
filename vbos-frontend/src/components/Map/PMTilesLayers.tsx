@@ -1,7 +1,12 @@
 import { useMap } from "react-leaflet";
 import { useEffect } from "react";
 import L from "leaflet";
-import { leafletLayer, LineSymbolizer } from "protomaps-leaflet";
+import {
+  GeomType,
+  leafletLayer,
+  LineSymbolizer,
+  PolygonSymbolizer,
+} from "protomaps-leaflet";
 import type { PaintRule } from "protomaps-leaflet";
 import { useLayerStore } from "@/store/layer-store";
 import { useOpacityStore } from "@/store/opacity-store";
@@ -16,13 +21,17 @@ import { useColorMode } from "../ui/color-mode";
  */
 function resolvePmtilesUrl(url: string): string {
   try {
-    // If it's already a full URL to the proxy, return it
-    if (url.includes("/api/v1/pmtiles-serve/")) return url;
-
-    const parsed = new URL(url, window.location.origin);
-    if (parsed.pathname.includes("/media/") && parsed.pathname.endsWith(".pmtiles")) {
-      const filename = parsed.pathname.split("/media/").pop();
-      // Use relative path for the proxy so it works on both localhost and VM
+    // Extract filename for proxy: "media/roads.pmtiles" or "http://x/media/roads.pmtiles" -> "roads.pmtiles"
+    let filename: string | undefined;
+    if (url.includes("/media/") && url.endsWith(".pmtiles")) {
+      filename = url.split("/media/").pop() ?? undefined;
+    } else {
+      const parsed = new URL(url, window.location.origin);
+      if (parsed.pathname.includes("/media/") && parsed.pathname.endsWith(".pmtiles")) {
+        filename = parsed.pathname.split("/media/").pop();
+      }
+    }
+    if (filename && !filename.includes("/")) {
       return `/api/v1/pmtiles-serve/${filename}`;
     }
   } catch {
@@ -79,12 +88,24 @@ function PMTilesMapLayer({ id }: PMTilesMapLayerProps) {
     const paintRules: PaintRule[] = [
       {
         dataLayer: sourceLayer,
+        symbolizer: new PolygonSymbolizer({
+          fill: (_z, f) =>
+            (f?.props?.intensity_color as string) || "#cccccc",
+          opacity,
+          stroke: "#666",
+          width: 1,
+        }),
+        filter: (_z, f) => f?.geomType === GeomType.Polygon,
+      },
+      {
+        dataLayer: sourceLayer,
         symbolizer: new LineSymbolizer({
           color: mapPalette.areaCouncilBorder,
           width: 2,
           opacity,
         }),
         filter: (_z, f) => {
+          if (f?.geomType === GeomType.Polygon) return false;
           const featYear = f?.props?.year;
           if (featYear == null || featYear === undefined || featYear === "") return true;
           return featYear === Number(year) || String(featYear) === String(year);

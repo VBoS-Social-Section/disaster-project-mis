@@ -29,9 +29,8 @@ function TabularDatasetMapLayer({ id }: TabularDatasetMapLayerProps) {
   useEffect(() => {
     if (data && "results" in data && Array.isArray(data.results)) {
       setTabularLayerData(data.results);
-    } else {
-      setTabularLayerData([]);
     }
+    // Don't clear on undefined/error — avoids flickering "no data" during fetch or when switching clusters
   }, [setTabularLayerData, data]);
 
   if (isPending)

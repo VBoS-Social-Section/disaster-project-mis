@@ -24,11 +24,11 @@ const mapColors = {
   purple: "#8b5cf6",
   orange: "#f09000",
   red: "#e34a33",
-  /** Choropleth: low (cyan) -> high (purple/red) */
-  choroplethLow: "#06b6d4",
-  choroplethMid: "#10b981",
-  choroplethHigh: "#8b5cf6",
-  choroplethMax: "#e34a33",
+  /** Choropleth: low (light green) -> high (dark green) */
+  choroplethLow: "#bbf7d0",
+  choroplethMid: "#22c55e",
+  choroplethHigh: "#15803d",
+  choroplethMax: "#14532d",
 };
 
 /** Theme-aware map colors: province border, area council border, choropleth */
@@ -36,10 +36,10 @@ export const MAP_COLORS = {
   light: {
     provinceBorder: "#0891b2",
     areaCouncilBorder: "#dc2626",
-    choroplethLow: "#06b6d4",
-    choroplethMid: "#10b981",
-    choroplethHigh: "#8b5cf6",
-    choroplethMax: "#dc2626",
+    choroplethLow: "#bbf7d0",
+    choroplethMid: "#22c55e",
+    choroplethHigh: "#15803d",
+    choroplethMax: "#14532d",
     deltaNeg: "#dc2626",
     deltaZero: "#64748b",
     deltaPos: "#16a34a",
@@ -47,10 +47,10 @@ export const MAP_COLORS = {
   dark: {
     provinceBorder: "#22d3ee",
     areaCouncilBorder: "#f87171",
-    choroplethLow: "#22d3ee",
-    choroplethMid: "#34d399",
-    choroplethHigh: "#a78bfa",
-    choroplethMax: "#f87171",
+    choroplethLow: "#86efac",
+    choroplethMid: "#22c55e",
+    choroplethHigh: "#166534",
+    choroplethMax: "#052e16",
     deltaNeg: "#f87171",
     deltaZero: "#94a3b8",
     deltaPos: "#4ade80",

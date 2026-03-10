@@ -74,6 +74,7 @@ class VectorDatasetSerializer(serializers.ModelSerializer):
             "source",
             "icon",
             "color",
+            "cyclone_name",
         ]
 
 
@@ -93,6 +94,7 @@ class PMTilesDatasetSerializer(serializers.ModelSerializer):
             "source",
             "url",
             "source_layer",
+            "cyclone_name",
         ]
 
 
@@ -117,12 +119,14 @@ class VectorItemSerializer(GeoFeatureModelSerializer):
         ]
 
     def to_representation(self, instance):
-        """Ensure id is in both feature-level and properties for popup/tooltip display."""
+        """Ensure id in properties; merge metadata (Intensity, intensity_color, etc.) for map styling."""
         data = super().to_representation(instance)
         if "properties" in data and "id" not in data.get("properties", {}):
             data["properties"]["id"] = instance.id
         if "id" not in data:
             data["id"] = instance.id
+        if instance.metadata:
+            data["properties"].update(instance.metadata)
         return data
 
 

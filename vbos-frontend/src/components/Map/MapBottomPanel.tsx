@@ -113,7 +113,7 @@ export function MapBottomPanel() {
     // Swipe needs a raster layer; auto-activate land cover if none active
     const hasRasterLayer = layers.split(",").some((l) => l.startsWith("r"));
     if (landCover && !hasRasterLayer) {
-      setAllDatasets([landCover.dataset]);
+      setAllDatasets([landCover.dataset], { replace: false });
       const current = layers.split(",").filter(Boolean);
       const vectors = current.filter((l) => l.startsWith("v") || l.startsWith("p"));
       setLayers([...vectors, landCover.layerId].filter(Boolean).join(",") || landCover.layerId);

@@ -17,6 +17,7 @@ import { MAP_COLORS } from "../../colors";
 import { useColorMode } from "../../ui/color-mode";
 import { buildVectorIconSvg } from "../../Map/vectorIcons";
 import { abbreviateUnit } from "@/utils/abbreviateUnit";
+import { CYCLONE_INTENSITY_LEGEND } from "@/config/disaster";
 
 type LayerEntryProps = LegendLayer & {
   switchLayer: (layerId: string) => void;
@@ -183,10 +184,34 @@ function TabularEntry(props: TabularLegendLayer) {
 }
 
 function VectorEntry(props: VectorLegendLayer) {
-  const { name, geometryType, color, iconKey, unit } = props;
+  const { name, geometryType, color, iconKey, unit, cyclone_name } = props;
   const isPoint = geometryType.includes("Point");
   const isLine = geometryType.includes("Line");
   const formattedUnit = unit === "number" ? undefined : abbreviateUnit(unit);
+
+  const isCycloneIntensity =
+    cyclone_name || name?.toLowerCase().includes("cyclone intensity");
+
+  if (isCycloneIntensity) {
+    return (
+      <div className="flex w-full flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
+          {CYCLONE_INTENSITY_LEGEND.map(({ label, color: c }) => (
+            <div
+              key={label}
+              className="flex items-center gap-2"
+            >
+              <div
+                className="h-3 w-4 shrink-0 rounded-sm border border-border/60"
+                style={{ backgroundColor: c }}
+              />
+              <span className="text-xs text-muted-foreground">{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full flex-col gap-2">

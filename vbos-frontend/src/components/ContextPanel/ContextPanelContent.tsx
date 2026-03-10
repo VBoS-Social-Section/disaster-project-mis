@@ -11,6 +11,7 @@ import { ComparisonMode } from "@/components/RightSidebar/ComparisonMode";
 import { LandCoverTotalsChart } from "@/components/RightSidebar/LandCoverTotalsChart";
 import { Stats } from "@/components/RightSidebar/Stats";
 import { ImpactModeCard } from "@/components/RightSidebar/ImpactModeCard";
+import { CycloneIntensityCard } from "@/components/RightSidebar/CycloneIntensityCard";
 import { FeatureInsights } from "./FeatureInsights";
 import { cn } from "@/lib/utils";
 
@@ -49,20 +50,6 @@ export function ContextPanelContent() {
   if (context === "tabular") {
     return (
       <div className={cn("space-y-4", rightSidebarExpanded && "space-y-6")}>
-        {scenario.id === "disaster" && <ImpactModeCard />}
-        {hasTabular && (
-          <div
-            className={cn(
-              "rounded-lg border border-border bg-muted/30 px-3 py-3",
-              rightSidebarExpanded && "rounded-xl border-border/50 bg-card/80 px-4 py-4 shadow-sm",
-            )}
-          >
-            <p className="mb-2 text-xs text-muted-foreground">
-              Compare years (swipe or delta heatmap)
-            </p>
-            <ComparisonMode />
-          </div>
-        )}
         {provinces.length === 0 && scenario.uiConfig.showStats && (
           <div className="rounded-md border border-border bg-muted px-3 py-2">
             <p className="text-xs text-muted-foreground">
@@ -85,10 +72,13 @@ export function ContextPanelContent() {
 
   if (context === "raster") {
     return (
-      <div className="mt-6 rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center">
-        <p className="text-sm text-muted-foreground">
-          Legend and opacity controls are on the map. Use the legend at the bottom-left to adjust layers.
-        </p>
+      <div className="space-y-4">
+        <CycloneIntensityCard />
+        <div className="rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            Legend and opacity controls are on the map. Use the legend at the bottom-left to adjust layers.
+          </p>
+        </div>
       </div>
     );
   }
@@ -96,6 +86,18 @@ export function ContextPanelContent() {
   if (context === "climate") {
     return (
       <div className="space-y-4">
+        <ImpactModeCard />
+        <div
+          className={cn(
+            "rounded-lg border border-border bg-muted/30 px-3 py-3",
+            rightSidebarExpanded && "rounded-xl border-border/50 bg-card/80 px-4 py-4 shadow-sm",
+          )}
+        >
+          <p className="mb-2 text-xs text-muted-foreground">
+            Compare years (swipe or delta heatmap)
+          </p>
+          <ComparisonMode />
+        </div>
         <LandCoverTotalsChart />
         <ClimateLayout />
       </div>

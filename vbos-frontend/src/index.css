@@ -369,7 +369,7 @@ html {
 
 /* Right panel overlay: when expanded, overlays map (map stays fixed) */
 .right-panel-overlay {
-  transition: width 0.5s var(--ease-smooth);
+  transition: left 0.45s var(--ease-smooth), width 0.5s var(--ease-smooth);
 }
 
 /* Respect reduced motion */

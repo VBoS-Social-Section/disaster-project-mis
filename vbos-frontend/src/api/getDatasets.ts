@@ -124,6 +124,18 @@ export async function getDatasetData(
   return allResults as PaginatedVectorData | ListApiResponse;
 }
 
+/** Fetch cyclone intensity data for a PMTiles dataset, filtered by province/area_council. */
+export async function getPmtilesIntensity(
+  id: number,
+  filters: URLSearchParams,
+): Promise<{ type: string; features: Array<{ properties?: Record<string, unknown> }> }> {
+  const queryString = filters.toString();
+  const url = `${API_BASE}/pmtiles/${id}/intensity/${queryString ? `?${queryString}` : ""}`;
+  const response = await HTTP.get(url);
+  if (!response.ok) throw new Error(`Unable to fetch PMTiles intensity from ${url}`);
+  return response.json();
+}
+
 /** Aggregated tabular data by province or area_council. Replaces frontend aggregation. */
 export async function getTabularAggregate(
   id: number,

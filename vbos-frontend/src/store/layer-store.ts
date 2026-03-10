@@ -12,7 +12,7 @@ interface LayersState {
   switchLayer: (layer: string) => void;
   reorderLayers: (fromIndex: number, toIndex: number) => void;
   setTabularLayerData: (data: TabularData[]) => void;
-  setAllDatasets: (datasets: Dataset[]) => void;
+  setAllDatasets: (datasets: Dataset[], options?: { replace?: boolean }) => void;
   getLayerMetadata: (layer: string) => Dataset | undefined;
   syncFromUrl: () => void;
 }
@@ -69,16 +69,22 @@ export const useLayerStore = create<LayersState>((set, get) => ({
     get().setLayers(layerArray.join());
   },
 
-  setAllDatasets: (datasets: Dataset[]) => {
-    const { allDatasets } = get();
-    const existingIds = new Set(
-      allDatasets.map((d) => `${d.dataType[0]}${d.id}`),
-    );
-    const newDatasets = datasets.filter(
-      (d) => !existingIds.has(`${d.dataType[0]}${d.id}`),
-    );
-    if (newDatasets.length > 0) {
-      set({ allDatasets: [...allDatasets, ...newDatasets] });
+  setAllDatasets: (datasets: Dataset[], options?: { replace?: boolean }) => {
+    if (options?.replace !== false) {
+      // Replace when switching clusters so TabularDatasetSelect shows correct tabular
+      set({ allDatasets: datasets });
+    } else {
+      // Merge when prefetching (e.g. layers from URL on load)
+      const { allDatasets } = get();
+      const existingIds = new Set(
+        allDatasets.map((d) => `${d.dataType[0]}${d.id}`),
+      );
+      const newDatasets = datasets.filter(
+        (d) => !existingIds.has(`${d.dataType[0]}${d.id}`),
+      );
+      if (newDatasets.length > 0) {
+        set({ allDatasets: [...allDatasets, ...newDatasets] });
+      }
     }
   },
 

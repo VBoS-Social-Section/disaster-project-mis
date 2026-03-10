@@ -169,7 +169,16 @@ export function Stats() {
               : "flex flex-col",
           )}
         >
-          <StatsChart stats={filteredData} unit={unit} expanded={rightSidebarExpanded} />
+          <StatsChart
+            stats={filteredData}
+            unit={unit}
+            expanded={rightSidebarExpanded}
+            title={
+              acList.length > 0
+                ? "Attribute distribution by area council"
+                : "Attribute distribution by province"
+            }
+          />
           <StatsSankeyChart stats={filteredData} unit={unit} expanded={rightSidebarExpanded} />
           <StatsRadarChart stats={filteredData} unit={unit} expanded={rightSidebarExpanded} />
           <StatsPieChart stats={filteredData} unit={unit} expanded={rightSidebarExpanded} />

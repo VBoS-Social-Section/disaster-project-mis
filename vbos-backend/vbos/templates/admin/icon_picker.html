@@ -22,7 +22,7 @@
   <p class="help">{% trans "50,000+ icons from Flaticon Uicons. Search and click to select." %}</p>
 
   <div class="icon-picker-suggested" style="margin-bottom: 20px;">
-    <h3 style="margin: 0 0 12px 0; font-size: 14px;">{% trans "Suggested (humanitarian clusters)" %}</h3>
+    <h3 style="margin: 0 0 12px 0; font-size: 14px;">{% trans "Suggested" %}</h3>
     <div style="display: flex; flex-wrap: wrap; gap: 12px;">
       {% for label, icon_id in cluster_icons %}
       <div class="icon-picker-item icon-picker-suggested-item" data-icon="{{ icon_id }}" title="{{ label }} ({{ icon_id }})" style="flex-direction: column; width: 72px; height: 64px; padding: 4px;">
@@ -59,9 +59,28 @@
     if (item) selectIcon(item.dataset.icon);
   });
 
+  // Search aliases: "water valve" also matches faucet, tap, etc.
+  const SEARCH_ALIASES = {
+    'valve': ['valve', 'faucet', 'tap', 'pipe'],
+    'water valve': ['valve', 'faucet', 'tap', 'water'],
+    'faucet': ['faucet', 'tap', 'valve'],
+    'plumbing': ['faucet', 'tap', 'pipe', 'water'],
+  };
+  function getSearchTerms(term) {
+    const t = term.trim().toLowerCase();
+    const terms = [t];
+    for (const [key, aliases] of Object.entries(SEARCH_ALIASES)) {
+      if (t.includes(key) || key.includes(t)) terms.push(...aliases);
+    }
+    return [...new Set(terms)];
+  }
   function render(filter) {
-    const term = (filter || '').toLowerCase();
-    const filtered = term ? icons.filter(function(id) { return id.toLowerCase().indexOf(term) !== -1; }) : icons;
+    const term = (filter || '').trim().toLowerCase();
+    const searchTerms = term ? getSearchTerms(term) : [];
+    const filtered = term ? icons.filter(function(id) {
+      const lower = id.toLowerCase();
+      return searchTerms.some(function(t) { return lower.indexOf(t) !== -1; });
+    }) : icons;
     grid.innerHTML = '';
     if (filtered.length === 0) {
       grid.innerHTML = '<div class="icon-picker-empty">{% trans "No icons match your search." %}</div>';
