@@ -1,0 +1,41 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+  &rsaquo; {{ title }}
+</div>
+{% endblock %}
+{% block content %}
+<div id="content-main">
+  <h1 style="margin-bottom: 20px;">{{ title }}</h1>
+  <p style="margin-bottom: 16px;">
+    <a href="{% url 'admin_climate_import_geojson' %}" class="addlink">{% trans "Upload GeoJSON" %}</a>
+  </p>
+  <div class="module">
+    <table style="width: 100%;">
+      <caption style="display: none;">{{ title }}</caption>
+      <tbody>
+        {% for m in modules %}
+        <tr class="model-{{ m.id }}">
+          <th scope="row" style="padding: 12px 0; border-bottom: 1px solid #eee;">
+            {% if m.url %}
+            <a href="{{ m.url }}">{{ m.label }}</a>
+            {% else %}
+            <span style="color: #999;">{{ m.label }}</span>
+            <small style="color: #999;"> ({% trans "Coming soon" %})</small>
+            {% endif %}
+          </th>
+          <td style="padding: 12px 0; border-bottom: 1px solid #eee; text-align: right;">
+            {% if m.url %}
+            <a href="{{ m.url }}" class="addlink">{% trans "Manage" %}</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

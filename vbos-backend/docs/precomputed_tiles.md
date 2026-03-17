@@ -4,7 +4,7 @@ For heavy datasets that combine raster values with tabular statistics (e.g. popu
 
 ## How it works
 
-1. **RasterDataset** has an optional `precomputed_tile_url` field (Admin: Raster datasets → Precomputed tiles).
+1. **RasterDataset** has an optional `precomputed_tile_url` field (Admin: Climate → Raster datasets → Precomputed tiles).
 2. When set, the frontend uses this URL template instead of TiTiler for tile requests.
 3. Placeholders: `{z}`, `{x}`, `{y}` (Leaflet replaces these), and `{year}` (replaced with the current map year).
 

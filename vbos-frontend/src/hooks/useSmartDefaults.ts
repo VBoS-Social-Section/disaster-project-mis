@@ -54,7 +54,8 @@ export function useSmartDefaults() {
       if (sessionScenario === "climate") {
         setYearLeft(CLIMATE_COMPARISON_YEARS.left);
         setYearRight(CLIMATE_COMPARISON_YEARS.right);
-        setComparisonMode(true);
+        // Don't auto-enable comparison - single-year raster shows first
+        setComparisonMode(false);
       }
       return;
     }
@@ -68,7 +69,8 @@ export function useSmartDefaults() {
         setYear(CLIMATE_DEFAULT_YEAR);
         setYearLeft(CLIMATE_COMPARISON_YEARS.left);
         setYearRight(CLIMATE_COMPARISON_YEARS.right);
-        setComparisonMode(true);
+        // Single-year raster first; user can enable Compare years for swipe
+        setComparisonMode(false);
       }
       return;
     }

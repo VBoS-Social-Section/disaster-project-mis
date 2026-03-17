@@ -9,8 +9,11 @@ export interface AuthUser {
   first_name: string;
   last_name: string;
   email: string;
+  avatar: string | null;
   is_staff: boolean;
   is_superuser: boolean;
+  mfa_enabled?: boolean;
+  mfa_method?: "email" | "totp" | "";
   groups: string[];
   permissions: string[];
 }

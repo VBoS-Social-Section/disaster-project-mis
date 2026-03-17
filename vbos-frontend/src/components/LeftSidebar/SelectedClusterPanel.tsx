@@ -1,6 +1,7 @@
 /**
  * Displays datasets for a chosen cluster. Shown below the cluster dropdown.
  * In Climate mode, shows Land Cover | Datasets tabs.
+ * When a climate module is selected, only shows datasets relevant to that module.
  */
 import { useState, useMemo } from "react";
 import { Accordion } from "@/components/ui/accordion";
@@ -9,7 +10,13 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatasetSection } from "./DatasetSection";
 import { useClusterDatasets } from "@/hooks/useClusters";
 import { useScenario } from "@/hooks/useScenario";
+import { useUiStore } from "@/store/ui-store";
 import { isLayerAllowed, isClusterTypeAllowed } from "@/config/scenarios";
+import {
+  isDatasetForClimateModule,
+  CLIMATE_MODULES_WITH_LAYERS,
+  type ClimateModuleId,
+} from "@/config/climate";
 
 type SelectedClusterPanelProps = {
   clusterName: string;
@@ -17,6 +24,7 @@ type SelectedClusterPanelProps = {
 
 export function SelectedClusterPanel({ clusterName }: SelectedClusterPanelProps) {
   const scenario = useScenario();
+  const selectedClimateModule = useUiStore((s) => s.selectedClimateModule);
   const [layerTab, setLayerTab] = useState<"land_cover" | "datasets">("land_cover");
   const { data: clusterDatasets, isPending, error } = useClusterDatasets(
     clusterName,
@@ -38,6 +46,22 @@ export function SelectedClusterPanel({ clusterName }: SelectedClusterPanelProps)
   }, [clusterDatasets, scenario]);
 
   const isClimate = scenario.uiConfig.sidebarLayout === "climate";
+
+  /** In climate mode: filter datasets by selected module. land_use→Land cover only, coastal→Coastal shorelines only, others→empty. */
+  const moduleFilteredGroups = useMemo(() => {
+    if (!isClimate || !selectedClimateModule) return null;
+    const moduleId = selectedClimateModule as ClimateModuleId;
+    if (!CLIMATE_MODULES_WITH_LAYERS.includes(moduleId)) {
+      return []; // flood_risk, indicators, etc. → no datasets
+    }
+    return filteredTypeGroups
+      .map((tg) => ({
+        ...tg,
+        datasets: tg.datasets.filter((d) => isDatasetForClimateModule(moduleId, d)),
+      }))
+      .filter((tg) => tg.datasets.length > 0);
+  }, [isClimate, selectedClimateModule, filteredTypeGroups]);
+
   const rasterGroups = useMemo(
     () => filteredTypeGroups.filter((tg) => tg.datasets.some((d) => d.dataType === "raster")),
     [filteredTypeGroups],
@@ -46,8 +70,14 @@ export function SelectedClusterPanel({ clusterName }: SelectedClusterPanelProps)
     () => filteredTypeGroups.filter((tg) => !tg.datasets.some((d) => d.dataType === "raster")),
     [filteredTypeGroups],
   );
-  const displayGroups =
-    isClimate && layerTab === "land_cover" ? rasterGroups : isClimate && layerTab === "datasets" ? otherGroups : filteredTypeGroups;
+  const displayGroups = useMemo(() => {
+    if (moduleFilteredGroups !== null) return moduleFilteredGroups;
+    return isClimate && layerTab === "land_cover"
+      ? rasterGroups
+      : isClimate && layerTab === "datasets"
+        ? otherGroups
+        : filteredTypeGroups;
+  }, [moduleFilteredGroups, isClimate, layerTab, rasterGroups, otherGroups, filteredTypeGroups]);
 
   return (
     <div className="rounded-lg border border-border bg-card shadow-sm">
@@ -68,13 +98,17 @@ export function SelectedClusterPanel({ clusterName }: SelectedClusterPanelProps)
               </div>
             ))}
           </div>
-        ) : filteredTypeGroups?.length === 0 ? (
+        ) : displayGroups?.length === 0 ? (
           <p className="px-2 py-4 text-xs text-muted-foreground">
-            No map layers in this cluster. Tabular data appears in the right panel.
+            {isClimate &&
+            selectedClimateModule &&
+            !CLIMATE_MODULES_WITH_LAYERS.includes(selectedClimateModule as ClimateModuleId)
+              ? "Coming soon."
+              : "No map layers in this cluster. Tabular data appears in the right panel."}
           </p>
         ) : (
           <>
-            {isClimate && (
+            {isClimate && moduleFilteredGroups === null && (
               <Tabs
                 value={layerTab}
                 onValueChange={(v) => setLayerTab(v as "land_cover" | "datasets")}

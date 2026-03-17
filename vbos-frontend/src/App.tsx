@@ -9,23 +9,29 @@ import { useSmartDefaults } from "./hooks/useSmartDefaults";
 import { useSessionSave } from "./hooks/useSessionSave";
 import { usePrefetchLayerMetadata } from "./hooks/usePrefetchLayerMetadata";
 import { useClimateModeEffect } from "./hooks/useClimateModeEffect";
+import { useClimateModuleAutoLayers } from "./hooks/useClimateModuleAutoLayers";
 import { useAuth } from "./hooks/useAuth";
 import { useAutoLock } from "./hooks/useAutoLock";
+import { useOfflineAreaSync } from "./hooks/useOfflineAreaSync";
 import { useUiStore } from "@/store/ui-store";
-import { useLockStore } from "@/store/lock-store";
 import { useViewStore } from "@/store/view-store";
+import { useLockStore } from "@/store/lock-store";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { LeftSidebar } from "./components/LeftSidebar";
 import { RightSidebar } from "./components/RightSidebar";
 import { TabularLayers } from "./components/Map/TabularLayer";
 import { MapEmptyState } from "./components/MapEmptyState";
 import { MapCursorRing } from "./components/Map/MapCursorRing";
+import { MobilePanelFAB } from "./components/MobilePanelFAB";
 import { MapModeBadge } from "./components/Map/MapModeBadge";
-import { ClimatePlaceholderPopover } from "./components/ClimatePlaceholderPopover";
+import { ClimateKeyIndicators } from "./components/Map/ClimateKeyIndicators";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { LayerAnnouncer } from "./components/LayerAnnouncer";
 import { LockScreen } from "./components/LockScreen";
 import { Login } from "./components/Login";
+import { ProfilePage } from "./components/ProfilePage";
+import { AreaDataEntryPage } from "./components/AreaDataEntry/AreaDataEntryPage";
+import { FeedbackButton } from "./components/Feedback/FeedbackButton";
 
 // Lazy-load Map (Leaflet, layers) for faster initial paint
 const Map = lazy(() => import("./components/Map").then((m) => ({ default: m.default })));
@@ -95,20 +101,28 @@ function MapErrorFallback(error: Error, retry: () => void) {
 function App() {
   const mapRef = useRef<MapRef>(null);
   const { isAuthenticated } = useAuth();
-  const { isMobile, mobileOpenPanel, setMobileOpenPanel, rightSidebarExpanded, leftSidebarIconMode } = useUiStore();
-  const { isLocked } = useLockStore();
   const scenarioId = useViewStore((s) => s.scenarioId);
+  const { isMobile, mobileOpenPanel, setMobileOpenPanel, rightSidebarExpanded, rightSidebarIconMode, leftSidebarIconMode, profilePageOpen, dataEntryPageOpen } = useUiStore();
+  const { isLocked } = useLockStore();
   const isTimeSeriesOpen = useUiStore((s) => s.isTimeSeriesOpen);
   useUrlSync();
   useSmartDefaults();
   useSessionSave();
   usePrefetchLayerMetadata();
   useClimateModeEffect();
+  useClimateModuleAutoLayers();
   useKeyboardShortcuts();
   useAutoLock();
+  useOfflineAreaSync();
 
   if (!isAuthenticated) {
     return <Login />;
+  }
+  if (profilePageOpen) {
+    return <ProfilePage />;
+  }
+  if (dataEntryPageOpen) {
+    return <AreaDataEntryPage />;
   }
   return (
     <div className="grid h-screen max-h-screen min-w-0 grid-rows-[max-content_1fr] overflow-hidden bg-background">
@@ -120,13 +134,19 @@ function App() {
         id="main"
         className={cn(
           "grid h-[calc(100vh-3.5rem)] min-w-0 overflow-hidden md:grid-rows-1 grid-rows-[auto_1fr_auto]",
-          scenarioId === "climate" ? "grid-cols-1" : "md:grid-cols-[auto_1fr_28rem]",
+          scenarioId === "climate"
+            ? rightSidebarIconMode
+              ? "md:grid-cols-[1fr_3rem]"
+              : "md:grid-cols-[1fr_28rem]"
+            : rightSidebarIconMode
+              ? "md:grid-cols-[auto_1fr_3rem]"
+              : "md:grid-cols-[auto_1fr_28rem]",
         )}
       >
         {scenarioId !== "climate" && (
           <div
             className={cn(
-              "min-h-0",
+              "min-h-0 min-w-0 overflow-hidden",
               rightSidebarExpanded && !leftSidebarIconMode && "z-[1060] relative",
             )}
           >
@@ -152,43 +172,38 @@ function App() {
         >
           <ErrorBoundary fallbackRender={MapErrorFallback}>
             <div className="relative flex h-full min-h-0 flex-col">
-              {scenarioId === "climate" ? (
-                <ClimatePlaceholderPopover />
-              ) : (
-                <>
-                  <MapCursorRing />
-                  <TabularLayers />
-                  <Suspense fallback={<MapLoadingSkeleton />}>
-                    <Map ref={mapRef} />
-                  </Suspense>
-                  <MapEmptyState />
-                  <MapModeBadge />
-                  {isTimeSeriesOpen && (
-                    <Suspense fallback={null}>
-                      <FloatingTimeSeries />
-                    </Suspense>
-                  )}
-                </>
+              <MapCursorRing />
+              <TabularLayers />
+              <Suspense fallback={<MapLoadingSkeleton />}>
+                <Map ref={mapRef} />
+              </Suspense>
+              <ClimateKeyIndicators />
+              <MapEmptyState />
+              <MobilePanelFAB />
+              <MapModeBadge />
+              {!isLocked && <FeedbackButton />}
+              {isTimeSeriesOpen && (
+                <Suspense fallback={null}>
+                  <FloatingTimeSeries />
+                </Suspense>
               )}
             </div>
           </ErrorBoundary>
         </div>
-        {scenarioId !== "climate" && (
-          <div className="min-h-0">
-            <ErrorBoundary
-              fallbackRender={(error, retry) => (
-                <SidebarErrorFallback
-                  error={error}
-                  retry={retry}
-                  title="Context panel failed"
-                  side="right"
-                />
-              )}
-            >
-              <RightSidebar />
-            </ErrorBoundary>
-          </div>
-        )}
+        <div className="min-h-0 min-w-0 overflow-hidden">
+          <ErrorBoundary
+            fallbackRender={(error, retry) => (
+              <SidebarErrorFallback
+                error={error}
+                retry={retry}
+                title="Context panel failed"
+                side="right"
+              />
+            )}
+          >
+            <RightSidebar />
+          </ErrorBoundary>
+        </div>
       </div>
     </div>
   );

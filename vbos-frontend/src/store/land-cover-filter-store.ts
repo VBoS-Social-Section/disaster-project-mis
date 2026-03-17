@@ -3,9 +3,9 @@
  * Hidden classes are rendered transparent in the raster colormap.
  */
 import { create } from "zustand";
-import { LAND_COVER_TYPES } from "@/data/landCoverData";
+import { LAND_COVER_CLASS_ORDER } from "@/config/landCover";
 
-type LandCoverType = (typeof LAND_COVER_TYPES)[number];
+type LandCoverType = (typeof LAND_COVER_CLASS_ORDER)[number];
 
 interface LandCoverFilterState {
   /** Set of class names that are hidden (transparent) on the map */

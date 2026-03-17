@@ -17,6 +17,9 @@ interface UiState {
   setTimeSeriesOpen: (open: boolean) => void;
   mobileOpenPanel: "left" | "right" | null;
   setMobileOpenPanel: (panel: "left" | "right" | null) => void;
+  /** When true, mobile bottom sheet expands to full screen */
+  mobilePanelFullScreen: boolean;
+  setMobilePanelFullScreen: (v: boolean) => void;
   isMobile: boolean;
   setIsMobile: (v: boolean) => void;
   leftSidebarIconMode: boolean;
@@ -33,6 +36,15 @@ interface UiState {
   /** Data view tab (Baseline, Damage, Resources, Financial); Disaster overlay shown when Damage/Resources/Financial */
   selectedViewType: DatasetType | null;
   setSelectedViewType: (v: DatasetType | null) => void;
+  /** Climate module selected (Land Use, Coastal, etc.); one at a time */
+  selectedClimateModule: string;
+  setSelectedClimateModule: (v: string) => void;
+  /** Profile page visible (full-screen overlay) */
+  profilePageOpen: boolean;
+  setProfilePageOpen: (v: boolean) => void;
+  /** Area data entry page (for area administrators) */
+  dataEntryPageOpen: boolean;
+  setDataEntryPageOpen: (v: boolean) => void;
 }
 
 export const useUiStore = create<UiState>()(
@@ -49,7 +61,10 @@ export const useUiStore = create<UiState>()(
       },
 
       mobileOpenPanel: null as "left" | "right" | null,
-      setMobileOpenPanel: (panel) => set({ mobileOpenPanel: panel }),
+      setMobileOpenPanel: (panel) => set({ mobileOpenPanel: panel, mobilePanelFullScreen: false }),
+
+      mobilePanelFullScreen: false,
+      setMobilePanelFullScreen: (v) => set({ mobilePanelFullScreen: v }),
 
       isMobile: typeof window !== "undefined" && window.innerWidth < 768,
       setIsMobile: (v) => set({ isMobile: v, ...(v ? { mobileOpenPanel: null } : {}) }),
@@ -71,6 +86,15 @@ export const useUiStore = create<UiState>()(
 
       selectedViewType: null,
       setSelectedViewType: (v) => set({ selectedViewType: v }),
+
+      selectedClimateModule: "",
+      setSelectedClimateModule: (v) => set({ selectedClimateModule: v }),
+
+      profilePageOpen: false,
+      setProfilePageOpen: (v) => set({ profilePageOpen: v }),
+
+      dataEntryPageOpen: false,
+      setDataEntryPageOpen: (v) => set({ dataEntryPageOpen: v }),
     }),
     {
       name: "vbos-ui",
@@ -78,6 +102,7 @@ export const useUiStore = create<UiState>()(
         leftSidebarIconMode: s.leftSidebarIconMode,
         rightSidebarIconMode: s.rightSidebarIconMode,
         rightSidebarExpanded: s.rightSidebarExpanded,
+        selectedClimateModule: s.selectedClimateModule,
       }),
     },
   ),

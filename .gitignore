@@ -2,3 +2,9 @@
 Land_Accounts*.xlsx
 *.tar
 vbos-backend/59K_*.tif
+
+# Deployment secrets
+deploy/vm/.env
+
+# Editor lock files
+.~lock.*

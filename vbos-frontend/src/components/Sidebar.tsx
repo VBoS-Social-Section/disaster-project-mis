@@ -33,6 +33,8 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
     setIsMobile,
     mobileOpenPanel,
     setMobileOpenPanel,
+    mobilePanelFullScreen,
+    setMobilePanelFullScreen,
     leftSidebarIconMode,
     rightSidebarIconMode,
     rightSidebarExpanded,
@@ -61,8 +63,11 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
   const toggleSidebar = () => {
     if (isMobile) {
       setMobileOpenPanel(mobileOpenPanel === panelId ? null : panelId);
+      setMobilePanelFullScreen(false);
     } else {
+      const wasCollapsed = !desktopVisible || iconMode;
       setDesktopVisible((prev) => !prev);
+      if (wasCollapsed) setIconMode(false);
     }
   };
 
@@ -94,6 +99,9 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
   const isOverlay = sideBarVisible && !isLeftSidebar && rightSidebarExpanded;
   const overlayLeft = leftSidebarIconMode ? "3rem" : "20rem";
 
+  /** On mobile, render panel as fixed bottom sheet via portal so it's visible (grid cells have minimal height) */
+  const isMobileBottomSheet = isMobile && sideBarVisible;
+
   const panelContent = (
     <>
       <div
@@ -101,7 +109,7 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
           "flex flex-col overflow-hidden sidebar-spring will-change-[width,opacity]",
           floating ? "h-fit max-h-[calc(100vh-5rem)]" : "h-full max-h-[calc(100vh-3.5rem)]",
           transparent ? "glass-surface-translucent max-md:glass-surface-translucent" : "glass-surface max-md:glass-surface-mobile-overlay",
-          "max-md:rounded-t-2xl max-md:border-t",
+          "max-md:rounded-t-2xl max-md:border-t max-md:pt-1",
           "md:relative md:top-0 md:bottom-0",
           (sideBarVisible || (iconMode && !isMobile && !sideBarVisible)) ? "opacity-100" : "opacity-0",
           "max-md:absolute max-md:inset-x-0 max-md:bottom-0 max-md:top-auto max-md:z-[1000] max-md:max-h-[85vh] max-md:w-full max-md:max-w-none",
@@ -116,9 +124,15 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
       >
         {(sideBarVisible || (iconMode && !isMobile && !sideBarVisible)) && (
           <>
+            {/* Drag handle for mobile bottom sheets */}
+            {isMobile && (
+              <div className="flex shrink-0 justify-center pt-2 pb-1 md:hidden" aria-hidden>
+                <div className="h-1 w-10 shrink-0 rounded-full bg-muted-foreground/30" />
+              </div>
+            )}
             <div
               className={cn(
-                "flex h-10 min-h-10 shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-3",
+                "flex min-h-10 shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-3 max-md:min-h-12 max-md:gap-3 max-md:px-4 max-md:py-3",
                 transparent ? "bg-white/5 dark:bg-white/[0.03]" : "bg-muted",
                 iconMode && !sideBarVisible && !collapsedIcons && "flex-col min-h-0",
                 iconMode && !sideBarVisible && collapsedIcons && "flex-col min-h-0 px-2",
@@ -128,7 +142,7 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative"
+                  className="relative min-h-11 min-w-11 touch-manipulation"
                   aria-label={`Open ${title}`}
                   onClick={toggleSidebar}
                 >
@@ -206,14 +220,30 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
                       </AppTooltip>
                     )}
                     {isMobile && (
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label="Close panel"
-                        onClick={toggleSidebar}
-                      >
-                        <LuX className="size-4" />
-                      </Button>
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="min-h-11 min-w-11 touch-manipulation"
+                          aria-label={mobilePanelFullScreen ? "Restore panel size" : "Expand to full screen"}
+                          onClick={() => setMobilePanelFullScreen(!mobilePanelFullScreen)}
+                        >
+                          {mobilePanelFullScreen ? (
+                            <LuMinimize2 className="size-5" />
+                          ) : (
+                            <LuMaximize2 className="size-5" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="min-h-11 min-w-11 touch-manipulation -mr-1"
+                          aria-label="Close panel"
+                          onClick={toggleSidebar}
+                        >
+                          <LuX className="size-5" />
+                        </Button>
+                      </>
                     )}
                   </div>
                 </>
@@ -225,7 +255,7 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="relative"
+                    className="relative min-h-11 min-w-11 touch-manipulation"
                     aria-label="Expand sidebar"
                     onClick={toggleSidebar}
                   >
@@ -266,9 +296,34 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
           </div>,
           document.body,
         )}
+      {isMobileBottomSheet &&
+        typeof document !== "undefined" &&
+        ReactDOM.createPortal(
+          <>
+            <div
+              className="fixed inset-0 z-[1095] bg-black/20 backdrop-blur-[1px]"
+              aria-hidden
+              onClick={toggleSidebar}
+            />
+            <div
+              className={cn(
+                "fixed inset-x-0 bottom-0 top-auto z-[1100] flex flex-col overflow-hidden border-t border-border bg-card shadow-xl transition-[min-height,max-height] duration-200",
+                mobilePanelFullScreen
+                  ? "inset-0 min-h-full max-h-full rounded-none"
+                  : "min-h-[min(50vh,400px)] max-h-[85vh] rounded-t-2xl",
+                transparent ? "glass-surface-translucent" : "glass-surface glass-surface-mobile-overlay",
+              )}
+            >
+              <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+                {panelContent}
+              </div>
+            </div>
+          </>,
+          document.body,
+        )}
       <div
         className={cn(
-          "relative border-border shadow-sm",
+          "relative min-w-0 overflow-hidden border-border shadow-sm",
           floating ? "h-fit max-h-[calc(100vh-3.5rem)]" : "h-full",
           transparent ? "glass-surface-translucent" : "glass-surface",
           isLeftSidebar ? "border-l-0 border-r" : "border-r-0 border-l",
@@ -277,27 +332,14 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
           isOverlay && "md:invisible md:w-[28rem]",
         )}
       >
-        {panelContent}
-        {isMobile && !sideBarVisible && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "absolute top-0 z-[1001] pointer-events-auto rounded-md bg-card",
-            isLeftSidebar ? "left-4" : "right-4",
-          )}
-          aria-label={`Open ${title}`}
-          onClick={toggleSidebar}
-        >
-          {isLeftSidebar ? <LuPanelLeft className="size-4 icon-interactive" /> : <LuPanelRight className="size-4 icon-interactive" />}
-        </Button>
-      )}
+        {!isMobileBottomSheet && panelContent}
+        {/* Mobile triggers hidden when using MobilePanelFAB (shown only when both panels closed) */}
         {!isMobile && !sideBarVisible && !(iconMode && !sideBarVisible) && (
         <Button
           variant="ghost"
-          size="icon-xs"
+          size="icon"
           className={cn(
-            "absolute top-10 z-20 rounded-md bg-card",
+            "absolute top-10 z-20 min-h-11 min-w-11 touch-manipulation rounded-md bg-card",
             isLeftSidebar ? "-right-8 rounded-l-none" : "-left-8 rounded-r-none",
           )}
           aria-label={`Open ${title}`}

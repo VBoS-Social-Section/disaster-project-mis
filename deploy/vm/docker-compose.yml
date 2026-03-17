@@ -30,6 +30,7 @@ services:
       - ../../vbos-backend/.env
     working_dir: /app
     environment:
+      TZ: ${TZ:-Pacific/Fiji}
       DJANGO_CONFIGURATION: Vm
       # DJANGO_SECRET_KEY comes from env_file (vbos-backend/.env)
       DJANGO_DB_URL: postgis://postgres:postgres@postgres:5432/vbos

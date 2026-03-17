@@ -6,11 +6,8 @@ import { usePanelContext } from "@/hooks/usePanelContext";
 import { useScenario } from "@/hooks/useScenario";
 import { useAreaStore } from "@/store/area-store";
 import { useUiStore } from "@/store/ui-store";
-import { ClimateLayout } from "@/components/RightSidebar/ClimateLayout";
-import { ComparisonMode } from "@/components/RightSidebar/ComparisonMode";
-import { LandCoverTotalsChart } from "@/components/RightSidebar/LandCoverTotalsChart";
+import { ClimateContextByModule } from "@/components/RightSidebar/ClimateContextByModule";
 import { Stats } from "@/components/RightSidebar/Stats";
-import { ImpactModeCard } from "@/components/RightSidebar/ImpactModeCard";
 import { CycloneIntensityCard } from "@/components/RightSidebar/CycloneIntensityCard";
 import { FeatureInsights } from "./FeatureInsights";
 import { cn } from "@/lib/utils";
@@ -85,22 +82,7 @@ export function ContextPanelContent() {
 
   if (context === "climate") {
     return (
-      <div className="space-y-4">
-        <ImpactModeCard />
-        <div
-          className={cn(
-            "rounded-lg border border-border bg-muted/30 px-3 py-3",
-            rightSidebarExpanded && "rounded-xl border-border/50 bg-card/80 px-4 py-4 shadow-sm",
-          )}
-        >
-          <p className="mb-2 text-xs text-muted-foreground">
-            Compare years (swipe or delta heatmap)
-          </p>
-          <ComparisonMode />
-        </div>
-        <LandCoverTotalsChart />
-        <ClimateLayout />
-      </div>
+      <ClimateContextByModule />
     );
   }
 

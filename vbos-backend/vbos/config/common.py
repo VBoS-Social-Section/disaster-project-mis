@@ -13,12 +13,14 @@ class Common(Configuration):
     INSTALLED_APPS = (
         "django.contrib.admin",
         "django.contrib.gis",
-        "django.contrib.auth",
+        "vbos.auth_config.RolesAndPermissionsConfig",  # was django.contrib.auth
         "django.contrib.contenttypes",
         "django.contrib.sessions",
         "django.contrib.messages",
         "django.contrib.staticfiles",
         # Third party apps
+        "django_otp",
+        "django_otp.plugins.otp_totp",
         "rest_framework",  # utilities for rest apis
         "rest_framework.authtoken",  # token authentication
         "rest_framework_gis",
@@ -28,8 +30,13 @@ class Common(Configuration):
         "adminsortable2",  # drag-and-drop reordering in admin
         # Your apps
         "vbos.users",
-        "vbos.datasets",
+        "vbos.climate",
         "vbos.land_accounts",
+        "vbos.coastal_changes",
+        "vbos.datasets.apps.DatasetsConfig",
+        "vbos.feedback",
+        "vbos.area_submissions",
+        "vbos.field_check",
     )
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
@@ -40,6 +47,7 @@ class Common(Configuration):
         "django.middleware.common.CommonMiddleware",
         "django.middleware.csrf.CsrfViewMiddleware",
         "django.contrib.auth.middleware.AuthenticationMiddleware",
+        "django_otp.middleware.OTPMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
     )
@@ -75,8 +83,8 @@ class Common(Configuration):
 
     # General
     APPEND_SLASH = False
-    # Allow bulk delete of many TabularItems in admin (one POST field per selected item)
-    DATA_UPLOAD_MAX_NUMBER_FIELDS = 50000
+    # Allow bulk delete and changelist edits for many items (TabularItems, VectorItems)
+    DATA_UPLOAD_MAX_NUMBER_FIELDS = int(os.getenv("DATA_UPLOAD_MAX_NUMBER_FIELDS", 200000))
     TIME_ZONE = "UTC"
     LANGUAGE_CODE = "en-us"
     # If you set this to False, Django will make some optimizations so as not

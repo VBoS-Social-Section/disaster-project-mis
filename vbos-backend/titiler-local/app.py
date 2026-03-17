@@ -9,7 +9,7 @@ from typing import Annotated, Literal, Optional
 
 import jinja2
 import rasterio
-from fastapi import FastAPI, Path, Query
+from fastapi import FastAPI, HTTPException, Path, Query
 from rio_tiler.io import Reader
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
@@ -51,8 +51,16 @@ def DatasetPathParams(
     dataset_id: Annotated[str, Path(description="Dataset")],
     year: Annotated[int, Path(description="Year")],
 ) -> str:
-    """Return local file path for dataset/year. Files at /data/{dataset_id}_{year}.vrt"""
-    return str(DATA_ROOT / f"{dataset_id}_{year}.vrt")
+    """Return local file path for dataset/year. Tries .vrt then .tif. Files at /data/{dataset_id}_{year}.vrt or .tif"""
+    base = DATA_ROOT / f"{dataset_id}_{year}"
+    for ext in (".vrt", ".tif"):
+        p = base.with_suffix(ext)
+        if p.exists():
+            return str(p)
+    raise HTTPException(
+        status_code=404,
+        detail=f"Raster not found: {dataset_id}_{year}.vrt or .tif in /data",
+    )
 
 
 app = FastAPI(

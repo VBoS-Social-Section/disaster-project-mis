@@ -16,7 +16,7 @@ Output: `media/tiles/landcover/2020/` and `media/tiles/2023/` (zoom levels 0–1
 
 ## 2. Configure in Admin
 
-1. Go to **Admin → Raster datasets → Land cover** (or create it).
+1. Go to **Admin → Climate → Raster datasets → Land cover** (or create it).
 2. Set **Precomputed tile url** to (relative URL works with Vite proxy in dev):
    ```
    /media/tiles/landcover/{year}/{z}/{x}/{y}.png

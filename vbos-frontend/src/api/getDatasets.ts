@@ -28,9 +28,14 @@ interface ClusterDatasetsResponse {
   pmtiles: Record<string, unknown>[];
 }
 
-export async function getDatasets(cluster: string): Promise<ClusterDatasets[]> {
+export async function getDatasets(
+  cluster: string,
+  scenario?: "disaster" | "climate",
+): Promise<ClusterDatasets[]> {
+  const params = new URLSearchParams({ cluster });
+  if (scenario) params.set("scenario", scenario);
   const response = await HTTP.get(
-    `${API_BASE}/datasets/?cluster=${encodeURIComponent(cluster)}`,
+    `${API_BASE}/datasets/?${params.toString()}`,
   );
   if (!response.ok)
     throw new Error(`Unable to fetch datasets for cluster ${cluster}`);
@@ -93,10 +98,19 @@ export async function getDatasetData(
     throw new Error(`Unable to fetch data from ${baseUrl}`);
 
   const firstData = await firstResponse.json();
-  const allResults = firstData as PaginatedVectorData | ListApiResponse;
+  let allResults = firstData as PaginatedVectorData | ListApiResponse;
 
-  const count = "count" in firstData ? firstData.count : null;
-  const hasNext = "next" in firstData && firstData.next != null;
+  // Normalize: some backends return { type: "FeatureCollection", features } or { results }
+  if (dataType === "vector") {
+    if ("results" in firstData && Array.isArray(firstData.results) && !("features" in firstData)) {
+      allResults = { ...firstData, features: firstData.results } as PaginatedVectorData;
+    } else if ("type" in firstData && firstData.type === "FeatureCollection" && "features" in firstData) {
+      allResults = firstData as PaginatedVectorData;
+    }
+  }
+
+  const count = "count" in allResults ? (allResults as { count?: number }).count : null;
+  const hasNext = "next" in allResults && (allResults as { next?: string | null }).next != null;
   const totalPages =
     count != null && count > 0 ? Math.ceil(count / PAGE_SIZE) : 1;
 
@@ -114,7 +128,8 @@ export async function getDatasetData(
       throw new Error(`Unable to fetch data from ${pageUrls[i]}`);
     const data = await responses[i].json();
     if (dataType === "vector" && "features" in allResults) {
-      (allResults as PaginatedVectorData).features.push(...data.features);
+      const pageFeatures = data.features ?? data.results ?? [];
+      (allResults as PaginatedVectorData).features.push(...pageFeatures);
     }
     if (dataType === "tabular" && "results" in allResults) {
       (allResults as ListApiResponse).results.push(...data.results);

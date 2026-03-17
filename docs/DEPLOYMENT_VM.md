@@ -134,23 +134,33 @@ python3 -c "import secrets; print(secrets.token_urlsafe(50))"
 
 ### Frontend (for build)
 
-Create `vbos-frontend/.env.production.local` with your VM's URL.
+Create `vbos-frontend/.env.production.local` before running `pnpm build`.
 
-**If using the VM docker-compose** (nginx on port 80, API proxied):
+**If using the VM docker-compose** (nginx on port 80, API proxied) – **recommended for LAN access** (tablet, phone on same WiFi):
+
+Use **empty** `VITE_API_HOST` so API requests use the same origin. Login and all API calls will work when you access the app from any device (e.g. `http://192.168.1.81/`):
 
 ```bash
 cd ~/disaster-project-mis/vbos-frontend
+cp .env.production.local.example .env.production.local
+# Or manually:
+echo 'VITE_API_HOST=' > .env.production.local
+echo 'VITE_TITILER_API=/titiler' >> .env.production.local
+```
 
-# Replace 10.252.0.158 with your VM IP. App at http://10.252.0.158/
-echo 'VITE_API_HOST=http://10.252.0.158' > .env.production.local
-echo 'VITE_TITILER_API=http://10.252.0.158/titiler' >> .env.production.local
+**If you need a fixed URL** (e.g. for a specific VM hostname):
+
+```bash
+# Replace with your VM IP or hostname
+echo 'VITE_API_HOST=http://192.168.1.81' > .env.production.local
+echo 'VITE_TITILER_API=http://192.168.1.81/titiler' >> .env.production.local
 ```
 
 **If using backend-only** (no nginx, direct ports):
 
 ```bash
-echo 'VITE_API_HOST=http://10.252.0.158:8000' > .env.production.local
-echo 'VITE_TITILER_API=http://10.252.0.158:8002' >> .env.production.local
+echo 'VITE_API_HOST=http://192.168.1.81:8000' > .env.production.local
+echo 'VITE_TITILER_API=http://192.168.1.81:8002' >> .env.production.local
 ```
 
 ## 4. Build and Run
@@ -284,3 +294,113 @@ The map requests `roads.pmtiles` via `/api/v1/pmtiles-serve/roads.pmtiles`. If y
    rsync -avz --exclude 'node_modules' --exclude '.git' \
      "disaster-project-mis/" vbosadmin@10.252.0.158:/var/www/disaster-project-mis/
    ```
+
+### Two-factor authentication: "Invalid or expired code"
+
+TOTP (Microsoft Authenticator) is time-based. If the server clock is wrong, codes will fail even when correct.
+
+1. **Check container time:**
+   ```bash
+   docker compose -f deploy/vm/docker-compose.yml exec web date
+   ```
+
+2. **Sync the VM host clock** (containers use the host clock):
+   ```bash
+   sudo timedatectl set-ntp true
+   timedatectl status
+   ```
+
+3. **Set timezone** (optional, for display): add `TZ=Pacific/Fiji` to `deploy/vm/.env` or export before `docker compose up`.
+
+---
+
+## HTTPS Deployment (NDMO / Production Domain)
+
+When deploying to the NDMO server with a purchased domain (e.g. `mis.ndmo.gov.vu`) for MoCCA and stakeholders, **HTTPS is required** for several features:
+
+| Feature | Why HTTPS is required |
+|---------|------------------------|
+| **Geolocation** | `navigator.geolocation` is restricted to secure contexts |
+| **Screen/camera capture** | `getDisplayMedia` / `getUserMedia` require HTTPS |
+| **Service Worker (PWA)** | Offline support and caching require secure origin |
+| **Clipboard API** | `navigator.clipboard` requires HTTPS in most browsers |
+| **Cookies / sessions** | Secure cookies (`Secure` flag) are best practice over HTTPS |
+
+### 1. Prerequisites
+
+- Domain purchased and DNS A record pointing to the NDMO server IP
+- Port 80 and 443 open on the server firewall
+- Certbot (Let's Encrypt) installed on the host
+
+### 2. Obtain SSL certificate (Let's Encrypt)
+
+On the **host** (not inside Docker). For the first run, port 80 must be free:
+
+```bash
+# Stop nginx if running
+docker compose -f deploy/vm/docker-compose.yml stop nginx
+
+sudo apt-get install -y certbot
+sudo certbot certonly --standalone -d mis.ndmo.gov.vu
+# Certificates in /etc/letsencrypt/live/mis.ndmo.gov.vu/
+
+# Start nginx with HTTPS config
+docker compose -f deploy/vm/docker-compose.yml up -d
+```
+
+For renewal, use `certbot renew` (cron or systemd timer). With `--webroot` you can avoid stopping nginx; see [certbot docs](https://certbot.eff.org/instructions).
+
+### 3. Nginx HTTPS configuration
+
+Use the example config `deploy/vm/nginx-https.conf.example`:
+
+```bash
+cp deploy/vm/nginx-https.conf.example deploy/vm/nginx-https.conf
+# Edit nginx-https.conf: replace mis.ndmo.gov.vu with your domain
+```
+
+Update `deploy/vm/docker-compose.yml` nginx service to use HTTPS:
+
+```yaml
+nginx:
+  image: nginx:alpine
+  ports:
+    - "80:80"
+    - "443:443"
+  volumes:
+    - ./nginx-https.conf:/etc/nginx/conf.d/default.conf:ro
+    - ../../vbos-frontend/dist:/usr/share/nginx/html:ro
+    - static_volume:/static:ro
+    - /etc/letsencrypt:/etc/letsencrypt:ro   # Mount certs
+  # ... rest unchanged
+```
+
+Restart: `docker compose -f deploy/vm/docker-compose.yml up -d`.
+
+### 4. Django settings for HTTPS
+
+Django auto-detects HTTPS when `DJANGO_VM_HOST` starts with `https://`. Set in `vbos-backend/.env` or `deploy/vm/.env`:
+
+```bash
+DJANGO_VM_HOST=https://mis.ndmo.gov.vu
+```
+
+This enables secure cookies and `SECURE_PROXY_SSL_HEADER` automatically (see `vbos/config/vm.py`).
+
+### 5. Frontend build
+
+Ensure `VITE_API_HOST` and `VITE_TITILER_API` use `https://`:
+
+```bash
+echo 'VITE_API_HOST=https://mis.ndmo.gov.vu' > vbos-frontend/.env.production.local
+echo 'VITE_TITILER_API=https://mis.ndmo.gov.vu/titiler' >> vbos-frontend/.env.production.local
+pnpm build
+```
+
+### 6. Sharing the link
+
+After deployment, share the MIS link with MoCCA and stakeholders, e.g.:
+
+- **https://mis.ndmo.gov.vu**
+
+Users can log in and use the feedback form for feature requests and changes.

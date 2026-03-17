@@ -1,6 +1,6 @@
 /**
- * When entering Climate mode: clear all layers (Climate dashboard is placeholder).
- * When in Disaster mode: remove raster layers (Land cover was Climate-only).
+ * When entering Disaster mode: remove raster layers (Land cover is Climate-only).
+ * When entering Climate mode: keep layers; land cover auto-activates via useLandCoverRaster.
  */
 import { useEffect, useRef } from "react";
 import { useViewStore } from "@/store/view-store";
@@ -27,17 +27,6 @@ export function useClimateModeEffect() {
       return;
     }
 
-    if (scenarioId !== "climate") {
-      prevModeRef.current = scenarioId;
-      return;
-    }
-
-    const justEntered = prevModeRef.current !== "climate";
     prevModeRef.current = scenarioId;
-
-    // Climate dashboard is placeholder: clear all layers for blank map
-    if (justEntered && layers.split(",").filter(Boolean).length > 0) {
-      setLayers("");
-    }
   }, [scenarioId, setLayers, layers]);
 }

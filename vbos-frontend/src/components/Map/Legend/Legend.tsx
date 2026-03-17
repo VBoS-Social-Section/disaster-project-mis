@@ -61,16 +61,16 @@ export function Legend({ embedded = false }: LegendProps = {}) {
       className={
         embedded
           ? "w-full overflow-hidden rounded-lg border border-border bg-muted/20 shadow-sm"
-          : "absolute left-2 bottom-4 z-[1000] w-[280px] overflow-hidden rounded-lg border border-border shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface md:w-[320px]"
+          : "absolute left-2 bottom-4 z-[1000] w-[240px] max-h-[40vh] overflow-hidden rounded-lg border border-border shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface max-md:left-2 max-md:bottom-20 max-md:w-[220px] max-md:max-h-[35vh] md:w-[320px] md:max-h-none"
       }
       role="list"
     >
-      <div className="flex items-center justify-between gap-1 border-b border-border px-2 py-1.5">
-        <h2 className="text-xs font-semibold">Legend</h2>
+      <div className="flex items-center justify-between gap-1 border-b border-border px-2 py-1.5 max-md:py-2">
+        <h2 className="text-xs font-semibold max-md:text-[11px]">Legend</h2>
         <Button
           variant="ghost"
-          size="icon-xs"
-          className="shrink-0"
+          size="icon"
+          className="min-h-9 min-w-9 shrink-0 touch-manipulation max-md:min-h-10 max-md:min-w-10"
           onClick={() => setCollapsed((c) => !c)}
           aria-label={collapsed ? "Expand legend" : "Collapse legend"}
           aria-expanded={!collapsed}
@@ -138,7 +138,7 @@ export function Legend({ embedded = false }: LegendProps = {}) {
         </>
       )}
       {!collapsed && (
-      <ul className="m-0 flex w-full list-none flex-col gap-0 p-0 text-xs">
+      <ul className="m-0 flex w-full list-none flex-col gap-0 p-0 text-xs max-md:max-h-[25vh] max-md:overflow-y-auto max-md:overscroll-contain">
         {legendLayers.map((layer, index) => (
           <li
             key={`${layer.dataType}-${layer.id}`}

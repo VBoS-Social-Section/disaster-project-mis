@@ -47,9 +47,12 @@ function RasterMapLayer({ id }: RasterMapLayerProps) {
   const { getLayerMetadata } = useLayerStore();
   const landCover = useLandCoverRaster();
   const { hiddenClasses } = useLandCoverFilterStore();
-  const metadata = getLayerMetadata(layerId) as import("@/types/api").RasterDataset | undefined;
+  // Fallback: useLandCoverRaster when layer store hasn't populated yet (e.g. URL load)
+  const metadata = (getLayerMetadata(layerId) ||
+    (landCover?.layerId === layerId ? landCover.dataset : undefined)) as import("@/types/api").RasterDataset | undefined;
   const datasetUrlId = metadata?.filename_id || "";
-  const precomputedUrl = metadata?.precomputed_tile_url;
+  // Use precomputed only when explicitly set. Otherwise use TiTiler (when filename_id is set).
+  const precomputedUrl = metadata?.precomputed_tile_url || undefined;
   const isPrecomputed = Boolean(precomputedUrl);
   const isLandCover = landCover?.layerId === layerId;
 
@@ -88,11 +91,18 @@ function RasterMapLayer({ id }: RasterMapLayerProps) {
       url = `${import.meta.env.VITE_TITILER_API}/dataset/${datasetUrlId}/years/${year}/tiles/WebMercatorQuad/{z}/{x}/{y}.png${urlParams}`;
     }
 
+    // Use dedicated pane above PMTiles (450) so land cover is visible
+    const paneName = "raster-pane";
+    if (!map.getPane(paneName)) {
+      const pane = map.createPane(paneName);
+      if (pane) pane.style.zIndex = "500";
+    }
     const tileLayer = L.tileLayer(url, {
       opacity,
-      maxNativeZoom: 12,
+      maxNativeZoom: 14,
       maxZoom: 18,
-      pane: "overlayPane",
+      pane: paneName,
+      tms: true, // gdal2tiles outputs TMS (y from bottom); Leaflet defaults to XYZ
     });
     tileLayer.addTo(map);
 

@@ -25,12 +25,14 @@ export function Login() {
     setIsLoading(true);
 
     try {
-      const { token } = await login(username, password);
-      const { getCurrentUser: fetchUser } = await import("@/api/auth");
-      setAuth(token, null); // Set token first so HTTP helper can use it
-      const user = await fetchUser();
-      setAuth(token, user);
-      toast.success("Signed in successfully");
+      const result = await login(username, password);
+      if ("token" in result) {
+        const { getCurrentUser: fetchUser } = await import("@/api/auth");
+        setAuth(result.token, null);
+        const user = await fetchUser();
+        setAuth(result.token, user);
+        toast.success("Signed in successfully");
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Login failed";
       setError(message);
@@ -50,8 +52,8 @@ export function Login() {
         <form onSubmit={handleSubmit}>
           <CardHeader className="space-y-6 text-center">
             <img
-              src="/MISLogo.svg"
-              alt="Disaster Risk Management Information system Logo"
+              src="/DRMISLogo.svg"
+              alt="DRMIS Logo"
               className="mx-auto mb-4 size-16"
             />
             <h1 className="text-lg font-semibold text-foreground">

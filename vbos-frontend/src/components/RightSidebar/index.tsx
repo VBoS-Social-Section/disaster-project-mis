@@ -33,11 +33,13 @@ const RightSidebar = () => {
   const { context, hasActiveLayers, hasTabularInSelectedCluster } = usePanelContext();
   const scenarioId = useViewStore((s) => s.scenarioId);
   const selectedCluster = useUiStore((s) => s.selectedCluster);
+  const selectedClimateModule = useUiStore((s) => s.selectedClimateModule);
   const rightSidebarExpanded = useUiStore((s) => s.rightSidebarExpanded);
   const hasRelevantContent =
     context !== "empty" ||
     hasTabularInSelectedCluster ||
-    (!!selectedCluster && scenarioId !== "climate");
+    (!!selectedCluster && scenarioId !== "climate") ||
+    (scenarioId === "climate" && !!selectedClimateModule);
 
   return (
     <Sidebar
@@ -46,9 +48,10 @@ const RightSidebar = () => {
       collapseWhen={!hasRelevantContent}
     >
       <div
+        data-tour="area-filter"
         className={cn(
           "space-y-3 border-b border-border bg-card",
-          rightSidebarExpanded ? "px-6 py-4" : "px-5 py-4 md:px-6 md:py-4",
+          rightSidebarExpanded ? "px-6 py-4" : "px-5 py-4 max-md:space-y-4 max-md:py-4 md:px-6 md:py-4",
         )}
       >
         <AreaSelect />
@@ -59,7 +62,7 @@ const RightSidebar = () => {
           "scrollbar-thin flex-1 overflow-auto bg-card",
           rightSidebarExpanded
             ? "min-h-0 bg-gradient-to-b from-muted/20 to-background px-6 py-6"
-            : "px-5 py-4 md:px-6 md:py-5 space-y-4",
+            : "px-5 py-4 max-md:py-4 max-md:space-y-4 max-md:text-sm md:px-6 md:py-5 md:space-y-4",
         )}
       >
         {!hasTabularInSelectedCluster &&
@@ -74,7 +77,11 @@ const RightSidebar = () => {
           <div className="w-full space-y-6">
             <div className="flex flex-wrap items-end gap-6 rounded-xl border border-border/40 bg-card/95 p-5 shadow-sm">
               <TabularDatasetSelect />
-              {scenarioId === "climate" ? null : <YearSelect />}
+              {scenarioId === "climate" ? null : (
+                <div data-tour="year-filter">
+                  <YearSelect />
+                </div>
+              )}
             </div>
             <AttributeFilterSelect />
             <Suspense fallback={null}>
@@ -86,7 +93,11 @@ const RightSidebar = () => {
           <>
             <TabularDatasetSelect />
             <AttributeFilterSelect />
-            {scenarioId === "climate" ? null : <YearSelect />}
+            {scenarioId === "climate" ? null : (
+              <div data-tour="year-filter">
+                <YearSelect />
+              </div>
+            )}
             <Suspense fallback={null}>
               <FloatingKpiCards />
             </Suspense>
@@ -109,7 +120,8 @@ const RightSidebar = () => {
           positioning={{ placement: "top" }}
         >
           <Button
-            className="download-accent-pill hover-lift w-full rounded-full font-semibold"
+            data-tour="download"
+            className="download-accent-pill hover-lift w-full rounded-full font-semibold min-h-11 touch-manipulation max-md:min-h-11"
             onClick={() => setDownloadDialogIsOpen(true)}
             disabled={!hasActiveLayers}
           >

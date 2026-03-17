@@ -12,7 +12,7 @@ export function OfflineIndicator() {
   useEffect(() => {
     const handleOnline = () => {
       setOnline(true);
-      useOfflineStore.getState().clearQueued();
+      // Queued area drafts are synced by useOfflineAreaSync; it decrements queued as they sync
     };
     const handleOffline = () => setOnline(false);
     setOnline(navigator.onLine);

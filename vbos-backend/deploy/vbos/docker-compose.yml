@@ -1,6 +1,6 @@
 services:
   vbos-backend:
-    image: ghcr.io/developmentseed/vbos-backend:main
+    image: ghcr.io/vanuatu-national-statistics-office/vbos-backend:main
     deploy:
       mode: replicated
       replicas: 1

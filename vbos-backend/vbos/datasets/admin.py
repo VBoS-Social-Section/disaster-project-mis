@@ -55,13 +55,13 @@ class ClusterAdmin(SortableAdminMixin, admin.ModelAdmin):
     list_display = ["id", "name"]
 
 
-@admin.register(RasterFile)
 class RasterFileAdmin(admin.ModelAdmin):
+    """Base admin for RasterFile. Registered in climate app as ClimateRasterFileAdmin."""
     list_display = ["id", "name", "created", "file"]
 
 
-@admin.register(RasterDataset)
 class RasterDatasetAdmin(admin.ModelAdmin):
+    """Base admin for RasterDataset. Registered in climate app as ClimateRasterDatasetAdmin."""
     list_display = ["id", "name", "type", "is_land_cover", "updated", "filename_id"]
     list_filter = ["type", "is_land_cover"]
     list_editable = ["is_land_cover"]
@@ -93,8 +93,28 @@ class RasterDatasetAdmin(admin.ModelAdmin):
 
 @admin.register(PMTilesDataset)
 class PMTilesDatasetAdmin(admin.ModelAdmin):
-    list_display = ["id", "name", "cluster", "type", "updated"]
-    list_filter = ["cluster", "type"]
+    def get_queryset(self, request):
+        from django.db.models import Q
+        qs = super().get_queryset(request)
+        return qs.filter(Q(climate_module__isnull=True) | Q(climate_module=""))
+    list_display = ["id", "name", "cluster", "type", "climate_module", "updated"]
+    list_filter = ["cluster", "type", "climate_module"]
+    list_editable = ["climate_module"]
+
+    fieldsets = (
+        (None, {"fields": ("name", "type", "description", "source", "cluster")}),
+        (
+            "Section",
+            {
+                "fields": ("climate_module",),
+                "description": "Disaster only = show in Disaster section. Land Accounts / Coastal Changes = show in Climate under that module.",
+            },
+        ),
+        (
+            "PMTiles",
+            {"fields": ("url", "source_layer", "cyclone_name", "intensity_data")},
+        ),
+    )
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -108,10 +128,29 @@ class PMTilesDatasetAdmin(admin.ModelAdmin):
 
 @admin.register(VectorDataset)
 class VectorDatasetAdmin(admin.ModelAdmin):
-    list_display = ["id", "name", "cluster", "type", "icon", "color", "updated"]
-    list_filter = ["cluster", "type"]
-    list_editable = ["icon", "color"]
+    def get_queryset(self, request):
+        from django.db.models import Q
+        qs = super().get_queryset(request)
+        return qs.filter(Q(climate_module__isnull=True) | Q(climate_module=""))
+    list_display = ["id", "name", "cluster", "type", "climate_module", "icon", "color", "updated"]
+    list_filter = ["cluster", "type", "climate_module"]
+    list_editable = ["climate_module", "icon", "color"]
     change_form_template = "admin/datasets/vectordataset/change_form.html"
+
+    fieldsets = (
+        (None, {"fields": ("name", "type", "description", "source", "cluster")}),
+        (
+            "Section",
+            {
+                "fields": ("climate_module",),
+                "description": "Disaster only = show in Disaster section. Land Accounts / Coastal Changes = show in Climate under that module.",
+            },
+        ),
+        (
+            "Map display",
+            {"fields": ("icon", "color", "cyclone_name")},
+        ),
+    )
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "icon":
@@ -121,6 +160,17 @@ class VectorDatasetAdmin(admin.ModelAdmin):
 
 @admin.register(VectorItem)
 class VectorItemAdmin(admin.GISModelAdmin):
+    """Vector items for Disaster datasets only. Climate items are under Climate > Vector Items."""
+
+    def get_queryset(self, request):
+        from django.db.models import Q
+        qs = super().get_queryset(request)
+        # Exclude items from climate datasets (Land Accounts, Coastal Changes)
+        return qs.exclude(
+            Q(dataset__climate_module__in=["land_accounts", "coastal_changes"])
+            | ~Q(dataset__climate_modules=[])  # climate_modules has items
+        )
+
     list_display = [
         "id",
         "dataset",
@@ -286,7 +336,15 @@ class VectorItemAdmin(admin.GISModelAdmin):
 
                 return redirect("admin:datasets_vectoritem_import_file")
         else:
-            form = GeoJSONUploadForm()
+            dataset_id = request.GET.get("dataset")
+            initial = {}
+            if dataset_id:
+                try:
+                    ds = VectorDataset.objects.get(pk=int(dataset_id))
+                    initial["dataset"] = ds
+                except (ValueError, VectorDataset.DoesNotExist):
+                    pass
+            form = GeoJSONUploadForm(initial=initial)
 
         # Dataset icon/color for auto-load when user selects a dataset
         dataset_meta = {

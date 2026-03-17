@@ -78,9 +78,13 @@ export function RasterComparisonOverlay() {
   const rasterId = rasterIds[0];
   const landCover = useLandCoverRaster();
   const { hiddenClasses } = useLandCoverFilterStore();
-  const metadata = rasterId ? getLayerMetadata(rasterId) : undefined;
+  // Fallback: useLandCoverRaster when layer store hasn't populated yet
+  const metadata = rasterId
+    ? (getLayerMetadata(rasterId) || (landCover?.layerId === rasterId ? landCover.dataset : undefined))
+    : undefined;
   const datasetUrlId = metadata?.filename_id ?? "";
-  const precomputedUrl = metadata?.precomputed_tile_url;
+  // Use precomputed only when explicitly set. Otherwise use TiTiler.
+  const precomputedUrl = metadata?.precomputed_tile_url || undefined;
   const isPrecomputed = Boolean(precomputedUrl);
   let urlParams = metadata?.titiler_url_params ? `?${metadata.titiler_url_params}` : "";
   if (landCover?.layerId === rasterId && !isPrecomputed) {
@@ -115,7 +119,19 @@ export function RasterComparisonOverlay() {
       rightUrl = `${baseUrl}/${yearRight}/tiles/WebMercatorQuad/{z}/{x}/{y}.png${urlParams}`;
     }
 
-    const layerOpts = { opacity, maxNativeZoom: 12, maxZoom: 18, pane: "overlayPane" };
+    // Use dedicated pane above PMTiles (450) so land cover is visible
+    const paneName = "raster-pane";
+    if (!map.getPane(paneName)) {
+      const pane = map.createPane(paneName);
+      if (pane) pane.style.zIndex = "500";
+    }
+    const layerOpts = {
+      opacity,
+      maxNativeZoom: 14,
+      maxZoom: 18,
+      pane: paneName,
+      tms: true, // gdal2tiles outputs TMS (y from bottom); Leaflet defaults to XYZ
+    };
     const leftLayer = L.tileLayer(leftUrl, layerOpts);
     const rightLayer = L.tileLayer(rightUrl, layerOpts);
 

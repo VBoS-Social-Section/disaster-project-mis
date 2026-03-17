@@ -5,6 +5,8 @@ Stored as JSON to match the frontend structure from Land_Accounts 24.02.26.xlsx.
 """
 from django.db import models
 
+from vbos.datasets.models import PMTilesDataset, VectorDataset
+
 
 class LandAccountsData(models.Model):
     """
@@ -40,3 +42,33 @@ class LandAccountsData(models.Model):
         if self.title:
             return f"{self.title} (updated {self.updated_at.date()})"
         return f"Land Accounts (updated {self.updated_at.date()})"
+
+
+class LandAccountsVectorManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(climate_module="land_accounts")
+
+
+class LandAccountsPMTilesManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(climate_module="land_accounts")
+
+
+class LandAccountsVectorDataset(VectorDataset):
+    """Proxy for VectorDataset with climate_module=land_accounts. Shown under Climate > Land Accounts."""
+    objects = LandAccountsVectorManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = "Land Accounts Vector"
+        verbose_name_plural = "Land Accounts Vector"
+
+
+class LandAccountsPMTilesDataset(PMTilesDataset):
+    """Proxy for PMTilesDataset with climate_module=land_accounts. Shown under Climate > Land Accounts."""
+    objects = LandAccountsPMTilesManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = "Land Accounts PMTiles"
+        verbose_name_plural = "Land Accounts PMTiles"

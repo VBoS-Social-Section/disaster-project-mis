@@ -19,19 +19,15 @@ if ! command -v gdal2tiles.py &>/dev/null; then
   exit 1
 fi
 
-# Colormap: value r g b [a] - matches LAND_COVER_COLORMAP (values 1-9)
-# 0 = nodata/ocean -> transparent
+# Colormap: value r g b [a] - matches LAND_COVER_COLORMAP (QGIS 6-class scheme)
+# 0: Water Bodies, 1: Grassland, 2: Mangrove, 3: Bareland, 4: Built Up, 5: Forest
 cat > "$COLOR_FILE" << 'COLORMAP'
-0 0 0 0 0
-1 66 165 245 255
-2 255 179 0 255
-3 205 220 57 255
-4 56 142 60 255
-5 251 192 45 255
-6 161 136 127 255
-7 117 117 117 255
-8 46 125 50 255
-9 102 187 106 255
+0 52 152 219 255
+1 205 220 57 255
+2 46 125 50 255
+3 161 136 127 255
+4 117 117 117 255
+5 56 142 60 255
 COLORMAP
 
 for year in 2020 2023; do
@@ -50,15 +46,17 @@ for year in 2020 2023; do
     echo "Error: gdaldem did not create valid output: $temp_rgb"
     exit 1
   fi
-  gdal2tiles.py -z 0-12 -r near --processes=4 "$temp_rgb" "$out"
+  gdal2tiles.py -z 0-14 -r near --processes=4 "$temp_rgb" "$out"
   rm -f "$temp_rgb"
 done
 
 echo "Done. Tiles in $MEDIA_TILES"
 echo ""
+echo "Generate stats for chart: python manage.py generate_landcover_stats"
+echo ""
 echo "Tip: Place landcover_2020.tif and landcover_2023.tif in raster_data/ to use TIFFs directly."
 echo ""
-echo "In Admin → Raster datasets → Edit Land cover:"
+echo "In Admin → Climate → Raster datasets → Edit Land cover:"
 echo "  Set Precomputed tile url to (use relative URL so Vite proxy works):"
 echo "  /media/tiles/landcover/{year}/{z}/{x}/{y}.png"
 echo ""

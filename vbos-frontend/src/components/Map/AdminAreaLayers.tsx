@@ -96,15 +96,22 @@ export function AdminAreaMapLayers({
     ? getEffectiveOpacity(activeTabularLayerId, getOpacity(activeTabularLayerId) / 100)
     : 1;
 
-  const getProvinceStyle = (feature?: GeoJSON.Feature) => {
-    const name = feature?.properties?.name as string | undefined;
-    const show =
-      provinces.length === 0 ||
-      (name && provinces.some((p) => name.toUpperCase() === p.toUpperCase()));
+  const getProvinceStyle = (_feature?: GeoJSON.Feature) => {
+    // When a province is selected, hide province borders to avoid overlapping shoreline/coastal lines.
+    // Map still zooms to the selected province (handled in Map/index.tsx).
+    if (provinces.length > 0) {
+      return {
+        color: mapPalette.provinceBorder,
+        weight: 1,
+        opacity: 0,
+        fill: false,
+        fillOpacity: 0,
+      };
+    }
     return {
       color: mapPalette.provinceBorder,
       weight: acList.length > 0 ? 1 : 2,
-      opacity: acList.length > 0 ? 0.5 : show ? 1 : 0,
+      opacity: acList.length > 0 ? 0.5 : 1,
       fill: false,
       fillOpacity: 0,
     };

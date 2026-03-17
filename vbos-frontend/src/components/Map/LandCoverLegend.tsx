@@ -1,29 +1,25 @@
 /**
  * Dedicated legend for land cover raster in Climate mode.
- * Shows 9 classes with color swatch, name, and short description.
+ * Shows 6 classes (QGIS scheme 0–5) with color swatch, name, and short description.
  * Click a class to toggle its visibility on the map.
  * Includes opacity control when land cover raster is active.
  */
+import { useEffect } from "react";
 import { useScenario } from "@/hooks/useScenario";
 import { useLayerStore } from "@/store/layer-store";
 import { useOpacityStore } from "@/store/opacity-store";
 import { useLandCoverFilterStore } from "@/store/land-cover-filter-store";
-import { LAND_COVER_COLORS } from "../colors";
-import { useColorMode } from "../ui/color-mode";
-import { LAND_COVER_TYPES } from "@/data/landCoverData";
+import { LAND_COVER_CLASS_ORDER, LAND_COVER_PIXEL_COLORS } from "@/config/landCover";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 
 const LAND_COVER_DESCRIPTIONS: Record<string, string> = {
-  "Water bodies": "Rivers, lakes, lagoons",
-  "Coconut plantations": "Cultivated coconut groves",
+  "Water Bodies": "Rivers, lakes, lagoons",
   Grassland: "Open grassland, savanna",
   Mangrove: "Coastal mangrove forest",
-  Agriculture: "Cropland, subsistence farming",
-  Barelands: "Exposed soil, rock, sand",
-  "Builtup Infrastructure": "Settlements, roads",
-  "Dense Forest": "Closed canopy >70%, high carbon & cyclone protection",
-  "Open Forest": "Open canopy, mixed vegetation",
+  Bareland: "Exposed soil, rock, sand",
+  "Built Up": "Settlements, roads",
+  Forest: "Forest cover",
 };
 
 export function LandCoverLegend() {
@@ -31,26 +27,33 @@ export function LandCoverLegend() {
   const { layers } = useLayerStore();
   const { getOpacity, setOpacity } = useOpacityStore();
   const { isVisible, toggleClass } = useLandCoverFilterStore();
-  const { colorMode } = useColorMode();
 
   const rasterLayerId = layers.split(",").find((l) => l.startsWith("r"));
   const hasRasterLayer = !!rasterLayerId;
-  if (scenario.uiConfig.sidebarLayout !== "climate" || !hasRasterLayer) return null;
-
-  const palette = LAND_COVER_COLORS[colorMode === "dark" ? "dark" : "light"];
   const opacity = rasterLayerId ? (getOpacity(rasterLayerId) ?? 100) : 100;
+
+  // Reset opacity to 100 when accidentally set to 0 (layer invisible)
+  // Must run unconditionally (before any early return) to satisfy Rules of Hooks
+  useEffect(() => {
+    if (rasterLayerId && opacity === 0) {
+      setOpacity(rasterLayerId, 100);
+    }
+  }, [rasterLayerId, opacity, setOpacity]);
+
+  if (scenario.uiConfig.sidebarLayout !== "climate" || !hasRasterLayer) return null;
 
   return (
     <div
-      className="absolute left-2 top-14 z-[1000] w-[240px] overflow-hidden rounded-lg border border-border shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface"
+      className="absolute left-2 bottom-4 z-[1000] w-[240px] overflow-hidden rounded-lg border border-border shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface max-md:left-2 max-md:bottom-20 max-md:w-[200px] max-md:max-h-[30vh]"
       role="list"
     >
       <h3 className="border-b border-border bg-muted/50 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Classes — click to toggle
       </h3>
-      <ul className="m-0 max-h-[240px] list-none overflow-y-auto p-0 text-xs">
-        {LAND_COVER_TYPES.map((type) => {
+      <ul className="m-0 max-h-[240px] list-none overflow-y-auto p-0 text-xs max-md:max-h-[180px]">
+        {LAND_COVER_CLASS_ORDER.map((type, i) => {
           const visible = isVisible(type);
+          const color = LAND_COVER_PIXEL_COLORS[String(i)] ?? "#888";
           return (
             <li key={type}>
               <button
@@ -67,7 +70,7 @@ export function LandCoverLegend() {
                     !visible && "ring-2 ring-dashed",
                   )}
                   style={{
-                    backgroundColor: visible ? (palette[type] ?? "#888") : "transparent",
+                    backgroundColor: visible ? color : "transparent",
                   }}
                   aria-hidden
                 />

@@ -1,6 +1,7 @@
 """
 VM / self-hosted deployment configuration.
 Uses local file storage (no S3) and relaxed CORS for VM IP access.
+Supports both HTTP (LAN) and HTTPS (production domain) via DJANGO_VM_HOST.
 """
 import os
 
@@ -17,12 +18,15 @@ class Vm(Common):
     # Media files: Docker mounts vbos-backend/media to /app/media (see docker-compose volume)
     MEDIA_ROOT = "/app/media"
 
-    # Allow cookies over HTTP for VM (no HTTPS)
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
-
     # Allow VM host in CSRF (set DJANGO_VM_HOST or default to common IPs)
-    _vm_host = os.getenv("DJANGO_VM_HOST", "http://10.252.0.158")
+    # Use https://mis.ndmo.gov.vu for production; http://10.252.0.158 for LAN
+    _vm_host = os.getenv("DJANGO_VM_HOST", "http://10.252.0.158").rstrip("/")
+    _use_https = _vm_host.startswith("https://")
+
+    # Secure cookies required when using HTTPS (geolocation, screen capture, PWA)
+    SESSION_COOKIE_SECURE = _use_https
+    CSRF_COOKIE_SECURE = _use_https
+
     CSRF_TRUSTED_ORIGINS = list(Common.CSRF_TRUSTED_ORIGINS) + [
         _vm_host,
         f"{_vm_host}:8000",
@@ -33,10 +37,10 @@ class Vm(Common):
     # CORS – allow VM origin (CORS_ALLOW_ALL_ORIGINS=True for simplicity on VM)
     CORS_ALLOW_ALL_ORIGINS = True
     CORS_ALLOW_CREDENTIALS = True
-    
+
     # CSRF - disable for VM if needed, or allow all
     CSRF_ALLOW_ALL_ORIGINS = True
-    
+
     # Ensure we trust the proxy (Nginx)
     USE_X_FORWARDED_HOST = True
-    SECURE_PROXY_SSL_HEADER = None # Disable SSL check for VM (HTTP)
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https") if _use_https else None

@@ -17,6 +17,12 @@ export function useCheckRasterLayer(
       setIsloading(false);
       return;
     }
+    // Skip TiTiler check when datasetUrlId is empty (metadata not loaded or precomputed-only config)
+    if (!datasetUrlId) {
+      setError(true);
+      setIsloading(false);
+      return;
+    }
     setIsloading(true);
     fetch(url)
       .then((res) => {
@@ -32,7 +38,7 @@ export function useCheckRasterLayer(
         setError(true);
         setIsloading(false);
       });
-  }, [url, isPrecomputed]);
+  }, [url, isPrecomputed, datasetUrlId]);
 
   return { error: isPrecomputed ? false : error, isLoading: isPrecomputed ? false : isLoading };
 }

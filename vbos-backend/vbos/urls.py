@@ -15,8 +15,26 @@ from vbos.land_accounts.admin_views import (
     import_land_accounts,
     list_land_accounts,
 )
+from vbos.climate.views import climate_dashboard, climate_import_geojson, climate_module_detail
+from vbos.field_check.admin import field_check_dashboard
+from vbos.coastal_changes.admin_views import (
+    add_coastal_changes,
+    delete_coastal_changes,
+    download_coastal_changes_template,
+    edit_coastal_changes,
+    import_coastal_changes,
+    list_coastal_changes,
+)
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from rest_framework.authtoken import views
+from vbos.users.auth_2fa import (
+    obtain_auth_token,
+    verify_2fa,
+    resend_email_otp,
+    setup_totp_request,
+    setup_totp_verify,
+    setup_email_otp,
+    disable_2fa,
+)
 
 admin.site.site_header = "VBoS MIS"
 API_BASE_URL = "api/v1"
@@ -40,6 +58,22 @@ api_urls = [
         f"{API_BASE_URL}/",
         include(("vbos.land_accounts.urls", "vbos.land_accounts"), namespace="land_accounts"),
     ),
+    path(
+        f"{API_BASE_URL}/",
+        include(("vbos.coastal_changes.urls", "vbos.coastal_changes"), namespace="coastal_changes"),
+    ),
+    path(
+        f"{API_BASE_URL}/",
+        include(("vbos.feedback.urls", "vbos.feedback"), namespace="feedback"),
+    ),
+    path(
+        f"{API_BASE_URL}/",
+        include(("vbos.area_submissions.urls", "vbos.area_submissions"), namespace="area_submissions"),
+    ),
+    path(
+        f"{API_BASE_URL}/",
+        include(("vbos.field_check.urls", "vbos.field_check"), namespace="field_check"),
+    ),
 ]
 
 urlpatterns = [
@@ -50,15 +84,32 @@ urlpatterns = [
         admin_append_slash_redirect,
     ),
     path("admin/datasets/icon-picker/", admin.site.admin_view(icon_picker), name="admin_icon_picker"),
+    path("admin/climate/", admin.site.admin_view(climate_dashboard), name="admin_climate_dashboard"),
+    path("admin/climate/import-geojson/", admin.site.admin_view(climate_import_geojson), name="admin_climate_import_geojson"),
+    path("admin/climate/land_accounts/", admin.site.admin_view(climate_module_detail), {"module_id": "land_accounts"}, name="admin_climate_module_land_accounts"),
+    path("admin/climate/coastal_changes/", admin.site.admin_view(climate_module_detail), {"module_id": "coastal_changes"}, name="admin_climate_module_coastal_changes"),
     path("admin/land-accounts/", admin.site.admin_view(list_land_accounts), name="admin_land_accounts_list"),
     path("admin/land-accounts/add/", admin.site.admin_view(add_land_accounts), name="admin_land_accounts_add"),
     path("admin/land-accounts/import/", admin.site.admin_view(import_land_accounts), name="admin_land_accounts_import"),
     path("admin/land-accounts/template/", admin.site.admin_view(download_land_accounts_template), name="admin_land_accounts_template"),
     path("admin/land-accounts/<int:object_id>/edit/", admin.site.admin_view(edit_land_accounts), name="admin_land_accounts_edit"),
     path("admin/land-accounts/<int:object_id>/delete/", admin.site.admin_view(delete_land_accounts), name="admin_land_accounts_delete"),
+    path("admin/coastal-changes/", admin.site.admin_view(list_coastal_changes), name="admin_coastal_changes_list"),
+    path("admin/coastal-changes/add/", admin.site.admin_view(add_coastal_changes), name="admin_coastal_changes_add"),
+    path("admin/coastal-changes/import/", admin.site.admin_view(import_coastal_changes), name="admin_coastal_changes_import"),
+    path("admin/coastal-changes/template/", admin.site.admin_view(download_coastal_changes_template), name="admin_coastal_changes_template"),
+    path("admin/coastal-changes/<int:object_id>/edit/", admin.site.admin_view(edit_coastal_changes), name="admin_coastal_changes_edit"),
+    path("admin/coastal-changes/<int:object_id>/delete/", admin.site.admin_view(delete_coastal_changes), name="admin_coastal_changes_delete"),
+    path("admin/field-check/", admin.site.admin_view(field_check_dashboard), name="admin_field_check_dashboard"),
     path("admin/", admin.site.urls),
     path("", include(api_urls)),
-    path("api-token-auth/", views.obtain_auth_token),
+    path("api-token-auth/", obtain_auth_token),
+    path("api/v1/auth/verify-2fa/", verify_2fa),
+    path("api/v1/auth/resend-email-otp/", resend_email_otp),
+    path("api/v1/auth/setup-totp/", setup_totp_request),
+    path("api/v1/auth/setup-totp-verify/", setup_totp_verify),
+    path("api/v1/auth/setup-email-otp/", setup_email_otp),
+    path("api/v1/auth/disable-2fa/", disable_2fa),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     # API-Docs
     path(f"{API_BASE_URL}/schema/", SpectacularAPIView.as_view(), name="schema"),

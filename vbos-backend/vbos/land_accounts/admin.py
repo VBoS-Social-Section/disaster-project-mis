@@ -1,9 +1,12 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.gis import admin as gis_admin
 from django.shortcuts import redirect
 from django.urls import reverse
 
-from .models import LandAccountsData
+from vbos.datasets.admin import PMTilesDatasetAdmin, VectorDatasetAdmin
+
+from .models import LandAccountsData, LandAccountsPMTilesDataset, LandAccountsVectorDataset
 
 
 class LandAccountsDataForm(forms.ModelForm):
@@ -53,3 +56,64 @@ class LandAccountsDataAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return True
+
+
+@admin.register(LandAccountsVectorDataset)
+class LandAccountsVectorDatasetAdmin(VectorDatasetAdmin):
+    change_list_template = "admin/land_accounts/landaccountsvectordataset/change_list.html"
+    change_form_template = "admin/land_accounts/landaccountsvectordataset/change_form.html"
+    list_display = ["id", "name", "type", "icon", "color", "updated"]
+    list_editable = ["icon", "color"]
+
+    def get_queryset(self, request):
+        return LandAccountsVectorDataset.objects.all()
+
+    def save_model(self, request, obj, form, change):
+        obj.climate_module = "land_accounts"
+        if not obj.cluster_id:
+            from vbos.datasets.models import Cluster
+            obj.cluster = Cluster.objects.get_or_create(name="Land Accounts", defaults={"order": 100})[0]
+        super().save_model(request, obj, form, change)
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = list(super().get_fieldsets(request, obj))
+        result = []
+        for name, data in fieldsets:
+            if name == "Section":
+                continue
+            if name == "Map display":
+                result.append((name, {"fields": ("icon", "color"), **{k: v for k, v in data.items() if k != "fields"}}))
+                continue
+            if name is None:
+                result.append((name, {"fields": ("name", "type", "description", "source"), **{k: v for k, v in data.items() if k != "fields"}}))
+                continue
+            result.append((name, data))
+        return result
+
+
+@admin.register(LandAccountsPMTilesDataset)
+class LandAccountsPMTilesDatasetAdmin(PMTilesDatasetAdmin):
+    list_display = ["id", "name", "type", "updated"]
+    list_editable = []
+
+    def get_queryset(self, request):
+        return LandAccountsPMTilesDataset.objects.all()
+
+    def save_model(self, request, obj, form, change):
+        obj.climate_module = "land_accounts"
+        if not obj.cluster_id:
+            from vbos.datasets.models import Cluster
+            obj.cluster = Cluster.objects.get_or_create(name="Land Accounts", defaults={"order": 100})[0]
+        super().save_model(request, obj, form, change)
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = list(super().get_fieldsets(request, obj))
+        result = []
+        for name, data in fieldsets:
+            if name == "Section":
+                continue
+            if name is None:
+                result.append((name, {"fields": ("name", "type", "description", "source"), **{k: v for k, v in data.items() if k != "fields"}}))
+                continue
+            result.append((name, data))
+        return result

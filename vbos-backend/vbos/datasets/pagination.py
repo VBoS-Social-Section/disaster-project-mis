@@ -1,4 +1,12 @@
 from rest_framework.pagination import PageNumberPagination
+from rest_framework_gis.pagination import GeoJsonPagination as BaseGeoJsonPagination
+
+
+class GeoJsonPagination(BaseGeoJsonPagination):
+    """GeoJSON pagination with large page size for vector data (e.g. Rates of Change)."""
+    page_size = 5000
+    page_size_query_param = "page_size"
+    max_page_size = 10000
 
 
 class StandardResultsSetPagination(PageNumberPagination):

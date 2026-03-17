@@ -40,8 +40,8 @@ export function useLandCoverRaster() {
 
   const results = useQueries({
     queries: clusterNames.map((name) => ({
-      queryKey: ["datasets", name] as const,
-      queryFn: () => API.getDatasets(name),
+      queryKey: ["datasets", name, "climate"] as const,
+      queryFn: () => API.getDatasets(name, "climate"),
       staleTime: 60 * 1000,
       enabled: isAuthenticated,
     })),

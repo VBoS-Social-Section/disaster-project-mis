@@ -8,13 +8,16 @@ import viteCompression from "vite-plugin-compression";
 import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vite.dev/config/
+const apiPort = process.env.VITE_PROXY_PORT || "8000";
+const apiTarget = `http://localhost:${apiPort}`;
+
 export default defineConfig({
   server: {
     proxy: {
-      "/api": "http://localhost:8000",
-      "/api-token-auth": "http://localhost:8000",
-      "/admin": "http://localhost:8000",
-      "/media": "http://localhost:8000",
+      "/api": apiTarget,
+      "/api-token-auth": apiTarget,
+      "/admin": apiTarget,
+      "/media": apiTarget,
     },
   },
   plugins: [
@@ -23,7 +26,7 @@ export default defineConfig({
     tsconfigPaths(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["MISLogo.svg", "favicon.ico"],
+      includeAssets: ["DRMISLogo.svg", "favicon.ico"],
       manifest: {
         name: "Disaster Risk Management Information system",
         short_name: "DRMIS",
@@ -33,7 +36,7 @@ export default defineConfig({
         display: "standalone",
         icons: [
           {
-            src: "/MISLogo.svg",
+            src: "/DRMISLogo.svg",
             sizes: "any",
             type: "image/svg+xml",
             purpose: "any maskable",

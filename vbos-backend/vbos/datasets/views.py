@@ -9,7 +9,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_gis.filters import InBBoxFilter
-from rest_framework_gis.pagination import GeoJsonPagination
 
 from vbos.datasets.filters import (
     PMTilesDatasetFilter,
@@ -34,6 +33,7 @@ from .models import (
 from .pagination import (
     DataResultsSetPagination,
     DatasetListPagination,
+    GeoJsonPagination,
     StandardResultsSetPagination,
 )
 from .serializers import (
@@ -77,39 +77,79 @@ class ClusterDatasetsView(APIView):
 
     def get(self, request):
         cluster_name = request.query_params.get("cluster")
+        scenario = request.query_params.get("scenario", "").lower()  # "disaster" or "climate"
+
         if not cluster_name:
             return Response(
                 {"detail": "Missing required 'cluster' query parameter"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Filter vector/pmtiles by scenario: Disaster = no climate; Climate = by cluster
+        def filter_by_scenario(qs, cluster_param=None):
+            from django.db.models import Q
+            if scenario == "disaster":
+                # Exclude datasets that have any climate module
+                return qs.exclude(
+                    Q(climate_module__in=["land_accounts", "coastal_changes"])
+                    | ~Q(climate_modules=[])
+                )
+            if scenario == "climate":
+                cn = (cluster_param or cluster_name or "").lower().replace(" ", "_")
+                if cn in ("drivers", "disaster"):
+                    # Drivers: all climate datasets
+                    return qs.filter(
+                        Q(climate_module__in=["land_accounts", "coastal_changes"])
+                        | ~Q(climate_modules=[])
+                    )
+                # Land Accounts, Coastal Changes, etc.: filter by module
+                return qs.filter(
+                    Q(climate_modules__contains=[cn]) | Q(climate_module=cn)
+                )
+            return qs
+
         if cluster_name.lower() == "drivers":
-            # Drivers overlay: fetch by name across ALL clusters (Roads in Logistics, etc.)
+            # Drivers overlay: Climate mode — fetch by name across ALL clusters
             from django.db.models import Q
             name_q = Q()
             for n in DRIVER_DATASET_NAMES:
                 name_q |= Q(name__icontains=n)
             tabular_qs = TabularDataset.objects.filter(name_q)
             raster_qs = RasterDataset.objects.filter(name_q)
-            vector_qs = VectorDataset.objects.filter(name_q)
-            pmtiles_qs = PMTilesDataset.objects.filter(name_q)
+            vector_qs = filter_by_scenario(VectorDataset.objects.filter(name_q), cluster_param=cluster_name)
+            pmtiles_qs = filter_by_scenario(PMTilesDataset.objects.filter(name_q), cluster_param=cluster_name)
             tabular = TabularDatasetSerializer(tabular_qs, many=True).data
             raster = RasterDatasetSerializer(raster_qs, many=True).data
             vector = VectorDatasetSerializer(vector_qs, many=True).data
             pmtiles = PMTilesDatasetSerializer(pmtiles_qs, many=True).data
         elif cluster_name.lower() == "disaster":
-            # Disaster overlay: fetch by name across ALL clusters (Cyclone Intensity, Volcano, Flood)
+            # Disaster overlay: Disaster mode — fetch by name across ALL clusters
             from django.db.models import Q
             name_q = Q()
             for n in DISASTER_DATASET_NAMES:
                 name_q |= Q(name__icontains=n)
             raster_qs = RasterDataset.objects.filter(name_q)
-            vector_qs = VectorDataset.objects.filter(name_q)
-            pmtiles_qs = PMTilesDataset.objects.filter(name_q)
+            vector_qs = filter_by_scenario(VectorDataset.objects.filter(name_q), cluster_param=cluster_name)
+            pmtiles_qs = filter_by_scenario(PMTilesDataset.objects.filter(name_q), cluster_param=cluster_name)
             tabular = []
             raster = RasterDatasetSerializer(raster_qs, many=True).data
             vector = VectorDatasetSerializer(vector_qs, many=True).data
             pmtiles = PMTilesDatasetSerializer(pmtiles_qs, many=True).data
+        elif cluster_name.lower() in ("land accounts", "coastal changes"):
+            # Climate modules: filter by climate_modules or legacy climate_module
+            from django.db.models import Q
+            module = cluster_name.lower().replace(" ", "_")
+            mod_filter = Q(climate_modules__contains=[module]) | Q(climate_module=module)
+            base_vector = VectorDataset.objects.filter(mod_filter)
+            base_pmtiles = PMTilesDataset.objects.filter(mod_filter)
+            tabular = []
+            # Land cover raster only in Land Use/Land Cover (Land Accounts); exclude from Coastal changes
+            raster_qs = RasterDataset.objects.all()
+            if cluster_name.lower() == "coastal changes":
+                raster_qs = raster_qs.filter(is_land_cover=False)
+            raster = RasterDatasetSerializer(raster_qs, many=True).data
+            vector = VectorDatasetSerializer(base_vector, many=True).data
+            pmtiles = PMTilesDatasetSerializer(base_pmtiles, many=True).data
         else:
             tabular_ids = list(
                 TabularDataset.objects.filter(
@@ -124,12 +164,14 @@ class ClusterDatasetsView(APIView):
                 RasterDataset.objects.all(),
                 many=True,
             ).data
+            base_vector = VectorDataset.objects.filter(cluster__name__iexact=cluster_name)
+            base_pmtiles = PMTilesDataset.objects.filter(cluster__name__iexact=cluster_name)
             vector = VectorDatasetSerializer(
-                VectorDataset.objects.filter(cluster__name__iexact=cluster_name),
+                filter_by_scenario(base_vector, cluster_param=cluster_name),
                 many=True,
             ).data
             pmtiles = PMTilesDatasetSerializer(
-                PMTilesDataset.objects.filter(cluster__name__iexact=cluster_name),
+                filter_by_scenario(base_pmtiles, cluster_param=cluster_name),
                 many=True,
             ).data
 
@@ -283,7 +325,39 @@ class VectorDatasetDataView(ListAPIView):
     )
 
     def get_queryset(self):
-        return VectorItem.objects.filter(dataset=self.kwargs.get("pk"))
+        from vbos.datasets.models import VectorDataset
+
+        pk = self.kwargs.get("pk")
+        qs = VectorItem.objects.filter(dataset=pk).select_related(
+            "province", "area_council"
+        )
+        try:
+            ds = VectorDataset.objects.filter(pk=pk).values(
+                "climate_module", "climate_modules"
+            ).first()
+            if ds and (ds.get("climate_module") or (ds.get("climate_modules") or [])):
+                qs = qs.transform(4326)
+        except Exception:
+            pass
+        return qs
+
+    def get_filter_backends(self):
+        """Skip bbox filter for climate datasets; geometries may be in projected CRS."""
+        from vbos.datasets.models import VectorDataset
+
+        pk = self.kwargs.get("pk")
+        try:
+            ds = VectorDataset.objects.filter(pk=pk).values(
+                "climate_module", "climate_modules"
+            ).first()
+            if ds:
+                mod = ds.get("climate_module")
+                mods = ds.get("climate_modules") or []
+                if mod or mods:
+                    return (django_filters.rest_framework.DjangoFilterBackend,)
+        except Exception:
+            pass
+        return super().get_filter_backends()
 
 
 @method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache

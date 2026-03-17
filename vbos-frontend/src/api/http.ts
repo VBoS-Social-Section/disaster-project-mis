@@ -79,7 +79,7 @@ export function get(url: string): Promise<Response> {
   return request(url, HttpMethod.GET);
 }
 
-export function post(url: string, payload: RequestPayload): Promise<Response> {
+export function post(url: string, payload?: RequestPayload): Promise<Response> {
   return request(url, HttpMethod.POST, payload);
 }
 
@@ -89,6 +89,33 @@ export function patch(url: string, payload: RequestPayload): Promise<Response> {
 
 export function put(url: string, payload: RequestPayload): Promise<Response> {
   return request(url, HttpMethod.PUT, payload);
+}
+
+/** Upload multipart form data (e.g. file upload). Does not set Content-Type. */
+export function postFormData(url: string, formData: FormData): Promise<Response> {
+  const base = import.meta.env.VITE_API_HOST ?? "";
+  const token = useAuthStore.getState().token;
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers["Authorization"] = `Token ${token}`;
+  }
+  return fetch(`${base}${url}`, {
+    method: "POST",
+    headers,
+    body: formData,
+  }).then((response) => {
+    if (response.status === 401 || response.status === 403) {
+      const hadToken = !!useAuthStore.getState().token;
+      useAuthStore.getState().clearAuth();
+      if (hadToken) {
+        toast.warning(
+          response.status === 403 ? "Access denied" : "Session expired",
+          "Please sign in again.",
+        );
+      }
+    }
+    return response;
+  });
 }
 
 export function _delete(url: string): Promise<Response> {

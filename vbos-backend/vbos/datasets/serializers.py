@@ -75,6 +75,8 @@ class VectorDatasetSerializer(serializers.ModelSerializer):
             "icon",
             "color",
             "cyclone_name",
+            "climate_module",
+            "climate_modules",
         ]
 
 
@@ -95,6 +97,8 @@ class PMTilesDatasetSerializer(serializers.ModelSerializer):
             "url",
             "source_layer",
             "cyclone_name",
+            "climate_module",
+            "climate_modules",
         ]
 
 

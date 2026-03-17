@@ -8,7 +8,7 @@ import { matchesDisasterPattern } from "@/config/recommendedDefaults";
 export async function findRecommendedDisasterLayer(): Promise<string | null> {
   const clusters = await getClusters();
   for (const cluster of clusters) {
-    const groups = await getDatasets(cluster.name);
+    const groups = await getDatasets(cluster.name, "disaster");
     for (const group of groups) {
       for (const d of group.datasets) {
         if (d.dataType === "tabular" && matchesDisasterPattern(d.name)) {

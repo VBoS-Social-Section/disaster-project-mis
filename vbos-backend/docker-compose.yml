@@ -34,7 +34,7 @@ services:
     volumes:
       - ./:/code
     ports:
-      - "8000:8000"
+      - "8080:8000"  # 8080 to avoid conflict with VM deploy web (8000)
     depends_on:
       - postgres
   documentation:
@@ -51,7 +51,7 @@ services:
     environment:
       WEB_CONCURRENCY: 1
     ports:
-      - "8002:8000"
+      - "8003:8000"  # 8003 to avoid conflict with VM deploy titiler (8002)
     volumes:
       - ./raster_data:/data
     restart: unless-stopped

@@ -199,6 +199,22 @@ class VectorDataset(models.Model):
         null=True,
         help_text="Name of the cyclone/event (e.g. Cyclone Lola). Shown when layer is active.",
     )
+    climate_module = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True,
+        choices=[
+            ("", "Disaster only"),
+            ("land_accounts", "Land Accounts (Climate)"),
+            ("coastal_changes", "Coastal Changes (Climate)"),
+        ],
+        help_text="Deprecated: use climate_modules. Kept for backward compatibility.",
+    )
+    climate_modules = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Modules where this dataset is shown: Land cover, Coastal changes, Flood, etc. Empty = Disaster only.",
+    )
 
     def __str__(self):
         return f"{self.name} - {self.cluster} / {self.type}"
@@ -231,6 +247,22 @@ class PMTilesDataset(models.Model):
         blank=True,
         default=list,
         help_text="Optional. For cyclone datasets: list of {acname, Province, Intensity, intensity_color}. Enables right-panel intensity display for PMTiles.",
+    )
+    climate_module = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True,
+        choices=[
+            ("", "Disaster only"),
+            ("land_accounts", "Land Accounts (Climate)"),
+            ("coastal_changes", "Coastal Changes (Climate)"),
+        ],
+        help_text="Deprecated: use climate_modules. Kept for backward compatibility.",
+    )
+    climate_modules = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Modules where this dataset is shown: Land cover, Coastal changes, Flood, etc. Empty = Disaster only.",
     )
 
     def __str__(self):

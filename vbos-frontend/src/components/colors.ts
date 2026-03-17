@@ -1,4 +1,4 @@
-import { LAND_COVER_TYPES } from "@/data/landCoverData";
+import { LAND_COVER_CLASS_ORDER, LAND_COVER_PIXEL_COLORS } from "@/config/landCover";
 
 /** Distinct colors for vector point layers when multiple are active */
 export const VECTOR_LAYER_COLORS = [
@@ -17,6 +17,30 @@ export const VECTOR_CLUSTER_COLORS: Record<string, string> = {
   education: "#3d4aff",
   health: "#10b981",
 };
+
+/**
+ * Color ramp for coastal shorelines by year (QGIS-style).
+ * Older years → darker; newer years → lighter. Index by (year - 2000) % length.
+ */
+export const COASTAL_SHORELINE_COLORS = [
+  "#1e3a5f", /* 2000-2003: dark blue */
+  "#2563eb", /* 2004-2007: blue */
+  "#7c3aed", /* 2008-2011: violet */
+  "#dc2626", /* 2012-2015: red */
+  "#ea580c", /* 2016-2019: orange */
+  "#ca8a04", /* 2020-2023: amber */
+  "#16a34a", /* 2024+: green */
+  "#0d9488", /* fallback: teal */
+];
+
+/** Get color for coastal shoreline by year. Cycles through palette for temporal distinction. */
+export function getCoastalShorelineColor(year: number | string | null | undefined): string {
+  if (year == null || year === "") return COASTAL_SHORELINE_COLORS[0];
+  const y = typeof year === "string" ? parseInt(year, 10) : year;
+  if (Number.isNaN(y)) return COASTAL_SHORELINE_COLORS[0];
+  const idx = Math.abs(y - 2000) % COASTAL_SHORELINE_COLORS.length;
+  return COASTAL_SHORELINE_COLORS[idx] ?? COASTAL_SHORELINE_COLORS[0];
+}
 
 const mapColors = {
   blueLight: "#22d3ee",
@@ -118,20 +142,10 @@ export const lineChartColors = [
 /**
  * TiTiler colormap for categorical land cover raster (explicit value→color).
  * Use in titiler_url_params: colormap=JSON.stringify(LAND_COVER_COLORMAP)
- * Pixel values 1–9 map to the 9 classes (order matches LAND_COVER_TYPES).
+ * Pixel values 0–5 map to the 6 classes (order matches LAND_COVER_CLASS_ORDER).
  * Use getLandCoverColormap(hiddenClasses) to get a colormap with hidden classes as transparent.
  */
-export const LAND_COVER_COLORMAP: Record<string, string> = {
-  "1": "#42A5F5", // Water bodies
-  "2": "#FFB300", // Coconut plantations
-  "3": "#CDDC39", // Grassland
-  "4": "#388E3C", // Mangrove
-  "5": "#FBC02D", // Agriculture
-  "6": "#A1887F", // Barelands
-  "7": "#757575", // Builtup Infrastructure
-  "8": "#2E7D32", // Dense Forest
-  "9": "#66BB6A", // Open Forest
-};
+export const LAND_COVER_COLORMAP = LAND_COVER_PIXEL_COLORS;
 
 /** Transparent color for hidden land cover classes */
 const LAND_COVER_TRANSPARENT = "#00000000";
@@ -139,12 +153,12 @@ const LAND_COVER_TRANSPARENT = "#00000000";
 /** Build colormap with hidden classes (by type name) rendered transparent */
 export function getLandCoverColormap(hiddenClasses: Set<string>): Record<string, string> {
   const result: Record<string, string> = {};
-  for (let i = 0; i < LAND_COVER_TYPES.length; i++) {
-    const pixel = String(i + 1);
-    const typeName = LAND_COVER_TYPES[i];
+  for (let i = 0; i < LAND_COVER_CLASS_ORDER.length; i++) {
+    const pixel = String(i);
+    const typeName = LAND_COVER_CLASS_ORDER[i];
     result[pixel] = hiddenClasses.has(typeName)
       ? LAND_COVER_TRANSPARENT
-      : LAND_COVER_COLORMAP[pixel];
+      : (LAND_COVER_PIXEL_COLORS[pixel] ?? "#888");
   }
   return result;
 }

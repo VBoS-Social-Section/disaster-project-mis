@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import API from "@/api";
 import { useLayerStore } from "@/store/layer-store";
+import { useViewStore } from "@/store/view-store";
 import { useEffect } from "react";
 
 function useClusters() {
@@ -21,10 +22,12 @@ function useClusterDatasets(
   cluster: string,
   options?: { enabled?: boolean; replace?: boolean },
 ) {
+  const scenarioId = useViewStore((s) => s.scenarioId);
+  const scenario = scenarioId === "disaster" ? "disaster" : scenarioId === "climate" ? "climate" : undefined;
   const { setAllDatasets } = useLayerStore();
   const { isPending, error, data } = useQuery({
-    queryKey: ["datasets", cluster],
-    queryFn: () => API.getDatasets(cluster),
+    queryKey: ["datasets", cluster, scenario],
+    queryFn: () => API.getDatasets(cluster, scenario),
     enabled: options?.enabled ?? true,
   });
 
