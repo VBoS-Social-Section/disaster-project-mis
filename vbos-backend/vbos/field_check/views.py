@@ -160,6 +160,10 @@ class FieldCheckCoverageView(APIView):
         field_checked = verified_count + adjusted_count + rejected_count
         coverage_pct = (field_checked / total * 100) if total else 0
 
+        # Weighted confidence: verified=100, adjusted=75, rejected=0, model=0
+        weighted_score = verified_count * 100 + adjusted_count * 75
+        confidence_pct = (weighted_score / total * 100) if total else 0
+
         # Records per week (last 8 weeks, most recent last)
         from django.utils import timezone
         from datetime import timedelta
@@ -185,6 +189,7 @@ class FieldCheckCoverageView(APIView):
             "rejected": rejected_count,
             "field_checked": field_checked,
             "coverage_percent": round(coverage_pct, 1),
+            "confidence_percent": round(confidence_pct, 1),
             "records_per_week": weekly,
         })
 

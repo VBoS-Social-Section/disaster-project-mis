@@ -11,10 +11,17 @@ I am writing to request access to the NDMO server to prepare for hosting the Dis
 
 We particularly want MoCCA staff to test and provide feedback, as they are the experts and have the domain knowledge on what features a disaster/climate dashboard should include and how processes should work. Their input will be essential to ensure the MIS meets real-world needs.
 
-Request Summary
-- SSH and/or administrative access to the NDMO server
-- Purpose: Prepare environment for MIS deployment (Docker, domain, SSL)
-- Timeline: To start as soon as access is granted
+**I am requesting two things:**
+
+1. **Access to the NDMO server** – SSH access is the preferred way to deploy and manage the MIS (Docker, SSL, etc.). Please grant SSH and/or administrative access so we can prepare the environment for deployment.
+
+2. **Approval to work with DCDT** – Approval to liaise with DCDT to create the MIS subdomains. Our recommended architecture (per developer guidance) runs each service on its own subdomain for easier maintenance and independent updates:
+   - `drmis.ndmo.gov.vu` – frontend (web app)
+   - `api.drmis.ndmo.gov.vu` – backend (Django API)
+   - `titiler.drmis.ndmo.gov.vu` – map tiles service
+   A simple email reply or written approval is sufficient. I will then liaise with DCDT and forward your approval as supporting documentation when requesting these subdomains.
+
+Timeline: To start as soon as access and approval are granted.
 
 Why HTTPS and a domain are required
 Several MIS features only work over HTTPS: geolocation, screen capture, PWA/offline support (offline support is very crucial, for example for field checks), and secure sessions. Without a domain and SSL, these cannot be tested properly.
@@ -31,7 +38,9 @@ Features to test on the server (once deployed)
 
 I will of course document the server deployment for the NDMO server administrator.
 
-Once we are satisfied with all the testing and the MIS is running accordingly, Shefa training and VBoS training of MoCCA staff can begin.
+**Next step: Training readiness**
+
+Once we are satisfied with all the testing and the MIS is running accordingly, Shefa training (VBoS training of MoCCA staff) can begin. Feedback for changes or new features will be continuous, but we are at a point where we can begin training of NDMO/MoCCA staff.
 
 Thank you for your support.
 

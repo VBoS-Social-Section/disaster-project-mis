@@ -57,6 +57,10 @@ def field_check_dashboard(request):
     field_checked = verified_count + adjusted_count + rejected_count
     coverage_pct = (field_checked / total * 100) if total else 0
 
+    # Weighted confidence: verified=100, adjusted=75, rejected=0, model=0
+    weighted_score = verified_count * 100 + adjusted_count * 75
+    confidence_pct = (weighted_score / total * 100) if total else 0
+
     now = timezone.now()
     weekly = []
     for i in range(7, -1, -1):
@@ -79,6 +83,7 @@ def field_check_dashboard(request):
         "rejected_count": rejected_count,
         "field_checked": field_checked,
         "coverage_percent": round(coverage_pct, 1),
+        "confidence_percent": round(confidence_pct, 1),
         "weekly": weekly,
     }
     return render(request, "admin/field_check/dashboard.html", context)
