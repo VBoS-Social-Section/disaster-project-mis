@@ -125,3 +125,15 @@ flowchart LR
 | `drmis.ndmo.gov.vu`       | Frontend | Web app (React SPA)        |
 | `api.drmis.ndmo.gov.vu`   | Backend  | Django REST API, admin     |
 | `titiler.drmis.ndmo.gov.vu` | TiTiler | Map raster tiles         |
+
+## Departmental MIS Integration (Bidirectional)
+
+| Direction | Purpose |
+|-----------|---------|
+| **Read** | Other systems read tabular data: `GET api/v1/integrations/tabular/`, `.../data/`, `.../aggregate/` |
+| **Push** | Other systems push data: `POST api/v1/integrations/tabular/ingest/` |
+| **Pull** | Disaster MIS syncs from external APIs: `./manage.py sync_external_data` (Admin: External Data Sources) |
+
+**Auth**: `X-API-Key` or `Authorization: ApiKey <key>`
+
+See [INTEGRATION_DEPARTMENTAL_MIS.md](INTEGRATION_DEPARTMENTAL_MIS.md) for full documentation.

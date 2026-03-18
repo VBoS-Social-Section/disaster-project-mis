@@ -74,6 +74,10 @@ api_urls = [
         f"{API_BASE_URL}/",
         include(("vbos.field_check.urls", "vbos.field_check"), namespace="field_check"),
     ),
+    path(
+        f"{API_BASE_URL}/integrations/",
+        include(("vbos.integrations.urls", "vbos.integrations"), namespace="integrations"),
+    ),
 ]
 
 urlpatterns = [

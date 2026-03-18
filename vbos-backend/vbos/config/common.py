@@ -34,6 +34,7 @@ class Common(Configuration):
         "vbos.land_accounts",
         "vbos.coastal_changes",
         "vbos.datasets.apps.DatasetsConfig",
+        "vbos.integrations",
         "vbos.feedback",
         "vbos.area_submissions",
         "vbos.field_check",
