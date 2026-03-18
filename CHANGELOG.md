@@ -4,7 +4,22 @@ All notable changes to the VBoS Management Information System project.
 
 ---
 
-## [Unreleased] – 2026-02-24
+## [Unreleased] – 2026-03-18
+
+### API/SQL Integration with Departmental MIS
+
+- **Bidirectional integration**: Disaster MIS can read from, push to, and pull from other government systems.
+- **Read (other systems → Disaster MIS)**: External systems can query tabular data via API key auth:
+  - `GET api/v1/integrations/tabular/` – list datasets
+  - `GET api/v1/integrations/tabular/<id>/data/` – tabular records
+  - `GET api/v1/integrations/tabular/<id>/aggregate/` – aggregated stats
+- **Push (other systems → Disaster MIS)**: `POST api/v1/integrations/tabular/ingest/` – bulk ingest tabular data.
+- **Pull (Disaster MIS → other systems)**: `ExternalDataSource` model and `sync_external_data` management command – Disaster MIS fetches from external APIs and syncs into tabular datasets.
+- **API key auth**: `X-API-Key` or `Authorization: ApiKey <key>` for M2M authentication; keys managed in Admin → Integrations.
+- **Admin**: Integration Source, Integration API Key, External Data Source models; "Generate API Key" flow for sources.
+- **Documentation**: `docs/INTEGRATION_DEPARTMENTAL_MIS.md` with architecture, endpoints, and setup.
+
+---
 
 ### Charts (Highcharts)
 
