@@ -1,8 +1,8 @@
 /**
- * Full-page Profile and security: avatar, name, email, password, auto-lock, PIN.
+ * Full-page Profile and security: avatar, name, email, password, 2FA, auto-lock, PIN.
  */
 import { useState, useCallback, useEffect, useRef } from "react";
-import { LuArrowLeft, LuShield, LuLock, LuUser, LuMail, LuCamera } from "react-icons/lu";
+import { LuArrowLeft, LuShield, LuLock, LuUser, LuMail, LuCamera, LuKeyRound } from "react-icons/lu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useLockStore, AUTO_LOCK_OPTIONS, type AutoLockMinutes } from "@/store/lock-store";
 import { useUiStore } from "@/store/ui-store";
 import * as profileApi from "@/api/profile";
+import { setupEmailOtp, disable2fa, getCurrentUser } from "@/api/auth";
 import { toast } from "@/utils/toast";
 
 const API_HOST = import.meta.env.VITE_API_HOST ?? "";
@@ -52,6 +53,10 @@ export function ProfilePage() {
   const [confirmPin, setConfirmPin] = useState("");
   const [isSavingPin, setIsSavingPin] = useState(false);
 
+  const [disable2faPassword, setDisable2faPassword] = useState("");
+  const [isDisabling2fa, setIsDisabling2fa] = useState(false);
+  const [isEnabling2fa, setIsEnabling2fa] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -59,6 +64,11 @@ export function ProfilePage() {
     setLastName(user?.last_name ?? "");
     setEmail(user?.email ?? "");
   }, [user]);
+
+  // Refetch user when profile opens to get latest otp_required_for_all_logins and mfa_enabled
+  useEffect(() => {
+    getCurrentUser().then(setUser).catch(() => {});
+  }, [setUser]);
 
   const handleSaveProfile = useCallback(async () => {
     setIsSavingProfile(true);
@@ -137,6 +147,41 @@ export function ProfilePage() {
     },
     [setUser],
   );
+
+  const handleEnableEmailOtp = useCallback(async () => {
+    if (!user?.email) {
+      toast.error("Email required", "Add an email address above before enabling 2FA.");
+      return;
+    }
+    setIsEnabling2fa(true);
+    try {
+      const result = await setupEmailOtp();
+      setUser?.({ ...user!, mfa_enabled: result.mfa_enabled, mfa_method: result.mfa_method });
+      toast.success("2FA enabled", "A verification code will be sent to your email on each login.");
+    } catch (e) {
+      toast.error("Failed to enable 2FA", String(e instanceof Error ? e.message : e));
+    } finally {
+      setIsEnabling2fa(false);
+    }
+  }, [user, setUser]);
+
+  const handleDisable2fa = useCallback(async () => {
+    if (!disable2faPassword) {
+      toast.error("Password required", "Enter your password to disable 2FA.");
+      return;
+    }
+    setIsDisabling2fa(true);
+    try {
+      await disable2fa(disable2faPassword);
+      setUser?.({ ...user!, mfa_enabled: false, mfa_method: "" });
+      setDisable2faPassword("");
+      toast.success("2FA disabled", "You can now sign in with password only.");
+    } catch (e) {
+      toast.error("Failed to disable 2FA", String(e instanceof Error ? e.message : e));
+    } finally {
+      setIsDisabling2fa(false);
+    }
+  }, [user, setUser, disable2faPassword]);
 
   const handleTimeoutChange = useCallback(
     (value: string) => {
@@ -323,6 +368,67 @@ export function ProfilePage() {
           </Card>
 
           {/* Two-factor authentication */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <LuKeyRound className="size-4" />
+                Two-factor authentication
+              </CardTitle>
+              <CardDescription>
+                {user?.otp_required_for_all_logins
+                  ? "Login verification is required for all users. Configured by administrator."
+                  : "Add an extra layer of security by requiring a code sent to your email when signing in."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              {user?.otp_required_for_all_logins ? (
+                <p className="text-sm text-muted-foreground">
+                  OTP is enabled globally. Contact your administrator to change this setting.
+                </p>
+              ) : user?.mfa_enabled ? (
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    Two-factor authentication is enabled
+                    {user.mfa_method === "email" && " (email code)"}
+                    {user.mfa_method === "totp" && " (authenticator app)"}.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="disable-2fa-password">Enter your password to disable</Label>
+                    <Input
+                      id="disable-2fa-password"
+                      type="password"
+                      value={disable2faPassword}
+                      onChange={(e) => setDisable2faPassword(e.target.value)}
+                      placeholder="••••••••"
+                    />
+                    <Button
+                      variant="destructive"
+                      onClick={handleDisable2fa}
+                      disabled={!disable2faPassword || isDisabling2fa}
+                    >
+                      {isDisabling2fa ? "Disabling…" : "Disable 2FA"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <Button
+                    onClick={handleEnableEmailOtp}
+                    disabled={!user?.email || isEnabling2fa}
+                    variant="outline"
+                  >
+                    {isEnabling2fa ? "Enabling…" : "Enable email verification"}
+                  </Button>
+                  {!user?.email && (
+                    <p className="text-xs text-muted-foreground">
+                      Add an email address above before enabling 2FA.
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Auto-lock & PIN */}
           <Card>
             <CardHeader>

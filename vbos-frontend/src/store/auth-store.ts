@@ -14,6 +14,7 @@ export interface AuthUser {
   is_superuser: boolean;
   mfa_enabled?: boolean;
   mfa_method?: "email" | "totp" | "";
+  otp_required_for_all_logins?: boolean;
   groups: string[];
   permissions: string[];
 }

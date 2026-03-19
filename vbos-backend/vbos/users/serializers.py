@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import User
+from .models import User, SMTPSettings
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
@@ -22,6 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
     )
     permissions = serializers.SerializerMethodField()
     avatar = serializers.ImageField(read_only=True)
+    otp_required_for_all_logins = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -36,6 +37,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_superuser",
             "mfa_enabled",
             "mfa_method",
+            "otp_required_for_all_logins",
             "groups",
             "permissions",
         )
@@ -44,6 +46,10 @@ class UserSerializer(serializers.ModelSerializer):
     def get_permissions(self, obj):
         perms = obj.get_all_permissions()
         return list(perms)
+
+    def get_otp_required_for_all_logins(self, obj):
+        smtp = SMTPSettings.get_solo()
+        return getattr(smtp, "otp_required_for_all_logins", True)
 
 
 class CreateUserSerializer(serializers.ModelSerializer):

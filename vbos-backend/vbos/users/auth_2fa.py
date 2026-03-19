@@ -2,11 +2,12 @@
 Two-factor authentication: email OTP and TOTP (Microsoft Authenticator).
 """
 import base64
+import os
 import random
 import string
 from django.conf import settings
 from django.core.cache import cache
-from django.core.mail import send_mail
+from django.core.mail import get_connection, send_mail
 from django.core.signing import BadSignature, TimestampSigner
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -20,7 +21,7 @@ import qrcode
 import qrcode.image.svg
 import io
 
-from .models import User, MFA_EMAIL, MFA_TOTP
+from .models import User, MFA_EMAIL, MFA_TOTP, SMTPSettings
 
 TEMP_TOKEN_MAX_AGE = 300  # 5 minutes
 OTP_CACHE_PREFIX = "mfa_otp:"
@@ -48,16 +49,43 @@ def _generate_email_otp() -> str:
     return "".join(random.choices(string.digits, k=OTP_LENGTH))
 
 
+def _get_email_connection():
+    """Return an email connection from admin-configured SMTPSettings or Django defaults."""
+    smtp = SMTPSettings.get_solo()
+    if smtp.backend == "console":
+        return get_connection("django.core.mail.backends.console.EmailBackend")
+    if smtp.backend == "django_default":
+        return get_connection()
+    return get_connection(
+        backend="django.core.mail.backends.smtp.EmailBackend",
+        host=smtp.host,
+        port=smtp.port,
+        username=smtp.username or None,
+        password=smtp.password or None,
+        use_tls=smtp.use_tls,
+        use_ssl=smtp.use_ssl,
+        fail_silently=smtp.fail_silently,
+    )
+
+
 def _send_email_otp(user: User, code: str) -> None:
     subject = "Your DRMIS verification code"
     message = f"Your verification code is: {code}\n\nThis code expires in 5 minutes. Do not share it."
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@example.com")
+    smtp = SMTPSettings.get_solo()
+    from_email = (
+        getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@example.com")
+        if smtp.backend == "django_default"
+        else smtp.from_email
+    )
+    connection = _get_email_connection()
+    fail_silently = smtp.fail_silently if smtp.backend == "smtp" else False
     send_mail(
         subject,
         message,
         from_email,
         [user.email],
-        fail_silently=False,
+        connection=connection,
+        fail_silently=fail_silently,
     )
 
 
@@ -74,12 +102,23 @@ def _verify_email_otp(user_id: str, code: str) -> bool:
     return False
 
 
+def _otp_required_for_login(user: User) -> bool:
+    """True if this login must go through email OTP verification."""
+    # DISABLE_2FA_GLOBALLY env can force off (e.g. for recovery)
+    if os.getenv("DISABLE_2FA_GLOBALLY", "").lower() in ("true", "1", "yes"):
+        return False
+    smtp = SMTPSettings.get_solo()
+    if getattr(smtp, "otp_required_for_all_logins", True):
+        return bool(user.email)
+    return user.mfa_enabled and user.mfa_method == MFA_EMAIL
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def obtain_auth_token(request):
     """
-    Login: username + password. If user has 2FA enabled, returns requires_2fa + temp_token.
-    Otherwise returns token.
+    Login: username + password. If OTP required (global or per-user 2FA), sends code to email
+    and returns requires_2fa + temp_token. Otherwise returns token.
     """
     from rest_framework.authtoken.serializers import AuthTokenSerializer
 
@@ -87,7 +126,22 @@ def obtain_auth_token(request):
     serializer.is_valid(raise_exception=True)
     user = serializer.validated_data["user"]
 
-    # 2FA disabled for now – always return token
+    if _otp_required_for_login(user):
+        if not user.email:
+            return Response(
+                {"non_field_errors": ["No email on file. Contact your administrator."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        code = _generate_email_otp()
+        _store_email_otp(str(user.pk), code)
+        _send_email_otp(user, code)
+        temp_token = _generate_temp_token(str(user.pk))
+        return Response({
+            "requires_2fa": True,
+            "temp_token": temp_token,
+            "mfa_method": "email",
+        })
+
     token, _ = Token.objects.get_or_create(user=user)
     return Response({"token": token.key})
 
@@ -115,7 +169,8 @@ def verify_2fa(request):
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
-    if user.mfa_method == MFA_EMAIL:
+    # Email OTP: mandatory for all logins or per-user 2FA
+    if user.mfa_method == MFA_EMAIL or _otp_required_for_login(user):
         if not _verify_email_otp(str(user.pk), code):
             return Response(
                 {"non_field_errors": ["Invalid or expired code. Please try again or request a new code."]},
@@ -152,7 +207,7 @@ def resend_email_otp(request):
         )
 
     user = _verify_temp_token(temp_token)
-    if not user or user.mfa_method != MFA_EMAIL:
+    if not user or not _otp_required_for_login(user):
         return Response(
             {"non_field_errors": ["Invalid or expired. Please sign in again."]},
             status=status.HTTP_401_UNAUTHORIZED,

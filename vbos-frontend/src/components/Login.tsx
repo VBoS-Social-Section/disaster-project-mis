@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useAuthStore } from "@/store/auth-store";
-import { login } from "@/api/auth";
+import { login, verify2fa, resendEmailOtp } from "@/api/auth";
 import { toast } from "@/utils/toast";
 
 export function Login() {
@@ -12,14 +12,23 @@ export function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [step, setStep] = useState<"credentials" | "otp">("credentials");
+  const [tempToken, setTempToken] = useState<string | null>(null);
+  const [otp, setOtp] = useState("");
+  const [resending, setResending] = useState(false);
   const setAuth = useAuthStore((s) => s.setAuth);
   const usernameInputRef = useRef<HTMLInputElement>(null);
+  const otpInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     usernameInputRef.current?.focus();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (step === "otp") otpInputRef.current?.focus();
+  }, [step]);
+
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
@@ -32,6 +41,10 @@ export function Login() {
         const user = await fetchUser();
         setAuth(result.token, user);
         toast.success("Signed in successfully");
+      } else if (result.requires_2fa && result.mfa_method === "email") {
+        setTempToken(result.temp_token);
+        setStep("otp");
+        toast.success("Verification code sent to your email");
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Login failed";
@@ -42,6 +55,51 @@ export function Login() {
     }
   };
 
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tempToken || !otp.trim()) return;
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const { token } = await verify2fa(tempToken, otp.trim());
+      const { getCurrentUser: fetchUser } = await import("@/api/auth");
+      setAuth(token, null);
+      const user = await fetchUser();
+      setAuth(token, user);
+      toast.success("Signed in successfully");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Invalid or expired code";
+      setError(message);
+      toast.error("Verification failed", message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!tempToken) return;
+    setResending(true);
+    setError("");
+    try {
+      await resendEmailOtp(tempToken);
+      toast.success("Verification code sent to your email");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to resend code";
+      setError(message);
+      toast.error("Resend failed", message);
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const handleBackToCredentials = () => {
+    setStep("credentials");
+    setTempToken(null);
+    setOtp("");
+    setError("");
+  };
+
   return (
     <div
       className="flex min-h-screen items-center justify-center bg-background p-4"
@@ -49,67 +107,138 @@ export function Login() {
       aria-label="Sign in"
     >
       <Card className="w-full max-w-[400px] border border-border shadow-md">
-        <form onSubmit={handleSubmit}>
-          <CardHeader className="space-y-6 text-center">
-            <img
-              src="/DRMISLogo.svg"
-              alt="DRMIS Logo"
-              className="mx-auto mb-4 size-16"
-            />
-            <h1 className="text-lg font-semibold text-foreground">
-              Disaster Risk Management Information System
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Secure access to vital information for disaster
-              preparedness and response.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                ref={usernameInputRef}
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username"
-                required
-                autoComplete="username"
-                aria-invalid={!!error}
+        {step === "credentials" ? (
+          <form onSubmit={handleCredentialsSubmit}>
+            <CardHeader className="space-y-6 text-center">
+              <img
+                src="/DRMISLogo.svg"
+                alt="DRMIS Logo"
+                className="mx-auto mb-4 size-16"
               />
-            </div>
+              <h1 className="text-lg font-semibold text-foreground">
+                Disaster Risk Management Information System
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Secure access to vital information for disaster
+                preparedness and response.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  ref={usernameInputRef}
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter your username"
+                  required
+                  autoComplete="username"
+                  aria-invalid={!!error}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-                autoComplete="current-password"
-                aria-invalid={!!error}
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                  autoComplete="current-password"
+                  aria-invalid={!!error}
+                />
+                {error && (
+                  <p className="text-sm text-destructive">{error}</p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                disabled={isLoading}
+              >
+                {isLoading ? "Signing in…" : "Sign in"}
+              </Button>
+
+              <p className="text-center text-xs text-muted-foreground">
+                Contact your administrator if you need access.
+              </p>
+            </CardContent>
+          </form>
+        ) : (
+          <form onSubmit={handleOtpSubmit}>
+            <CardHeader className="space-y-6 text-center">
+              <img
+                src="/DRMISLogo.svg"
+                alt="DRMIS Logo"
+                className="mx-auto mb-4 size-16"
               />
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
-            </div>
+              <h1 className="text-lg font-semibold text-foreground">
+                Enter verification code
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                We sent a 6-digit code to your email. Enter it below.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="otp">Verification code</Label>
+                <Input
+                  id="otp"
+                  ref={otpInputRef}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                  placeholder="000000"
+                  required
+                  autoComplete="one-time-code"
+                  aria-invalid={!!error}
+                  className="text-center text-lg tracking-[0.5em] font-mono"
+                />
+                {error && (
+                  <p className="text-sm text-destructive">{error}</p>
+                )}
+              </div>
 
-            <Button
-              type="submit"
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-              disabled={isLoading}
-            >
-              {isLoading ? "Signing in…" : "Sign in"}
-            </Button>
+              <Button
+                type="submit"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                disabled={isLoading || otp.length < 6}
+              >
+                {isLoading ? "Verifying…" : "Verify"}
+              </Button>
 
-            <p className="text-center text-xs text-muted-foreground">
-              Contact your administrator if you need access.
-            </p>
-          </CardContent>
-        </form>
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="w-full"
+                  onClick={handleResendOtp}
+                  disabled={resending}
+                >
+                  {resending ? "Sending…" : "Resend code"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-muted-foreground"
+                  onClick={handleBackToCredentials}
+                >
+                  ← Back to sign in
+                </Button>
+              </div>
+            </CardContent>
+          </form>
+        )}
       </Card>
     </div>
   );

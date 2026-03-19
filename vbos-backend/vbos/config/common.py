@@ -74,6 +74,11 @@ class Common(Configuration):
 
     # Email
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    # Require 6-digit OTP sent to email on every login (set False to use password-only or per-user 2FA)
+    # DISABLE_2FA_GLOBALLY=true bypasses OTP entirely (e.g. for recovery)
+    _otp_env = os.getenv("OTP_REQUIRED_FOR_ALL_LOGINS", "true").lower() in ("true", "1", "yes")
+    _disable_globally = os.getenv("DISABLE_2FA_GLOBALLY", "").lower() in ("true", "1", "yes")
+    OTP_REQUIRED_FOR_ALL_LOGINS = _otp_env and not _disable_globally
 
     ADMINS = (("Author", "info@developmentseed.org"),)
 
@@ -249,7 +254,7 @@ class Common(Configuration):
         "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     }
 
-    # Unfold admin theme (TailwindCSS)
+    # Unfold admin theme (TailwindCSS) – professional blue palette (UN-style)
     UNFOLD = {
         "SITE_TITLE": "DRMIS Admin · Django",
         "SITE_HEADER": "DRMIS Admin",
@@ -260,6 +265,21 @@ class Common(Configuration):
         "STYLES": [
             lambda request: static("admin/css/gis_fix.css"),
         ],
+        "COLORS": {
+            "primary": {
+                "50": "oklch(97.5% .012 235)",
+                "100": "oklch(94% .028 235)",
+                "200": "oklch(88% .06 235)",
+                "300": "oklch(78% .12 235)",
+                "400": "oklch(65% .18 235)",
+                "500": "oklch(55% .2 235)",
+                "600": "oklch(48% .18 235)",
+                "700": "oklch(42% .14 235)",
+                "800": "oklch(35% .11 235)",
+                "900": "oklch(28% .08 235)",
+                "950": "oklch(20% .06 235)",
+            },
+        },
     }
 
     SPECTACULAR_SETTINGS = {

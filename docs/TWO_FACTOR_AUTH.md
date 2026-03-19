@@ -1,6 +1,16 @@
 # Two-Factor Authentication (2FA)
 
-Users can enable two-factor authentication with either:
+## Mandatory email OTP (default)
+
+By default, **every login** requires a 6-digit code sent to the user's email after entering username and password. Users must have an email address on file.
+
+**Admin:** Toggle "OTP required for all logins" in Admin → Users → SMTP settings. When disabled, users can optionally enable 2FA in their profile.
+
+**Recovery:** Set `DISABLE_2FA_GLOBALLY=true` in your environment to bypass OTP entirely (e.g. when locked out).
+
+## Per-user 2FA (optional)
+
+When mandatory OTP is disabled, users can optionally enable two-factor authentication with either:
 
 1. **Email code** – A 6-digit code sent to their email address
 2. **Authenticator app** – Microsoft Authenticator
@@ -27,17 +37,17 @@ Users can enable two-factor authentication with either:
 
 ### User flow
 
-1. **Enable 2FA** (Profile → Two-factor authentication):
+1. **Login** (mandatory OTP enabled by default):
+   - Enter username/password
+   - A 6-digit code is sent to your email
+   - Enter the code (or click "Resend code")
+   - Click Verify
+
+2. **Enable per-user 2FA** (when mandatory OTP is disabled) – Profile → Two-factor authentication:
    - **Email**: Requires email in profile. One-click enable.
    - **Authenticator**: Scan QR with app, enter 6-digit code to confirm.
 
-2. **Login with 2FA**:
-   - Enter username/password
-   - If email: Code sent automatically. Enter code (or click "Resend code").
-   - If authenticator: Enter 6-digit code from app.
-   - Click Verify.
-
-3. **Disable 2FA**: Profile → enter password → Disable 2FA.
+3. **Disable 2FA** (per-user): Profile → enter password → Disable 2FA.
 
 ## Locked out (admin recovery)
 
