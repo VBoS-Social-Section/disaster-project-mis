@@ -2,6 +2,12 @@
 
 **Context:** While waiting for Phase II funding approval, and with Johnie (Ministry of Climate Change) agreeing to provide data used in Resilience Explorer (flood risk, etc.), this document outlines the action plan for DRMIS development and data acquisition.
 
+**VBoS role:** In regard to this project, VBoS expertise is in displaying and communicating statistics. NDMO, MoCCA with expertise in disaster and climate context, and all other stakeholders with specific expertise in education (MOET), health, MIPU, etc. are needed to suggest and provide what to display. Domain experts drive the indicators and content; VBoS provides the platform.
+
+**Centralisation:** Let’s work together to centralise every system into DRMIS, in line with the Department of Communication and Digital Transformation (DCDT)—not only digital transformation but also centralisation of government information systems.[^1]
+
+[^1]: DCDT is Vanuatu’s central ICT authority (established 2021, COM Decision No. 146). The Vanuatu Digital Transformation Masterplan promotes a whole-of-government approach, moving away from siloed systems toward interoperable architecture across departments. See [digital.gov.vu](https://digital.gov.vu/) and [Vanuatu Digital Transformation Masterplan](https://www.gov.vu/index.php/resources/vanuatu-digital-transformation-masterplan).
+
 ---
 
 ## 1. Meeting with Johnie (Ministry of Climate Change)

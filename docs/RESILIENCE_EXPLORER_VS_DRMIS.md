@@ -2,6 +2,10 @@
 
 **DRMIS** (Disaster Risk Management Information System) is Vanuatu’s custom platform for NDMO and MoCCA. It is built with **Django** (backend) and **React** (frontend).
 
+**VBoS role:** In regard to this project, VBoS expertise is in displaying and communicating statistics. NDMO, MoCCA with expertise in disaster and climate context, and all other stakeholders with specific expertise in education (MOET), health, MIPU, etc. are needed to suggest and provide what to display. Domain experts drive the indicators and content; VBoS provides the platform.
+
+**Centralisation:** Let’s work together to centralise every system into DRMIS, in line with DCDT’s mandate as Vanuatu’s central ICT authority and the Vanuatu Digital Transformation Masterplan—which promotes a whole-of-government approach and moving away from siloed systems toward interoperable architecture ([digital.gov.vu](https://digital.gov.vu/), [Vanuatu Digital Transformation Masterplan](https://www.gov.vu/index.php/resources/vanuatu-digital-transformation-masterplan)).
+
 **Resilience Explorer** is a commercial platform (resilience-explorer.org) by Urban Intelligence for disaster and climate risk.
 
 ---
