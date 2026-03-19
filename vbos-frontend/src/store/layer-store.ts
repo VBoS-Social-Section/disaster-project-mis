@@ -71,8 +71,16 @@ export const useLayerStore = create<LayersState>((set, get) => ({
 
   setAllDatasets: (datasets: Dataset[], options?: { replace?: boolean }) => {
     if (options?.replace !== false) {
-      // Replace when switching clusters so TabularDatasetSelect shows correct tabular
-      set({ allDatasets: datasets });
+      // Replace when switching clusters, but preserve metadata for layers from other clusters
+      // so Roads (Logistics) still shows correctly when viewing Education
+      const { layers, allDatasets } = get();
+      const layerIds = layers ? layers.split(",").map((l) => l.trim()).filter(Boolean) : [];
+      const newIds = new Set(datasets.map((d) => `${d.dataType[0]}${d.id}`));
+      const toPreserve = layerIds.filter((id) => !newIds.has(id));
+      const preserved = toPreserve
+        .map((id) => allDatasets.find((d) => `${d.dataType[0]}${d.id}` === id))
+        .filter((d): d is Dataset => d != null);
+      set({ allDatasets: [...datasets, ...preserved] });
     } else {
       // Merge when prefetching (e.g. layers from URL on load)
       const { allDatasets } = get();

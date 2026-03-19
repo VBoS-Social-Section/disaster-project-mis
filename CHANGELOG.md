@@ -6,6 +6,28 @@ All notable changes to the VBoS Management Information System project.
 
 ## [Unreleased] – 2026-03-18
 
+### Unfold Admin Theme (Django)
+
+- **django-unfold**: Replaced default Django admin with Unfold theme (TailwindCSS). Custom widgets, filters, forms, inlines.
+- **Admin branding**: Site header and title set to "DRMIS Admin · Django"; index title "Site administration · Powered by Django".
+- **All admin classes**: Migrated to `unfold.admin.ModelAdmin` (datasets, climate, coastal_changes, integrations, field_check, area_submissions, feedback, land_accounts, users).
+- **User admin**: Unfold `UserChangeForm`, `UserCreationForm`, `AdminPasswordChangeForm` for styled auth forms.
+- **GIS map fix**: Custom CSS (`admin/css/gis_fix.css`) for GeoDjango OSM map widget layout in Unfold.
+- **WhiteNoise**: Added middleware for static file serving.
+- **Docker**: `collectstatic --noinput` added to web container startup so Unfold static files are served correctly.
+- **Dependencies**: Added `django-unfold>=0.40.0` to requirements.txt.
+
+### Action Plan & Documentation
+
+- **ACTION_PLAN_DRMIS_CLIMATE_MODULE.md**: Action plan while waiting for Phase II funding – meeting with Johnie (MoCCA), Phase II/III scope, migration to NDMO server, implemented features list.
+- **RESILIENCE_EXPLORER_VS_DRMIS.md**: Feature comparison, cost, customization (DRMIS vs Resilience Explorer).
+
+### Deployment: Path vs Subdomain, drmis.ndmo.gov.vu
+
+- **DEPLOYMENT_ROUTING.md**: Documents path-based vs subdomain-based routing. Subdomains recommended (per Sajjad/Development Seed) for separate projects, no path conflicts, independent updates. Domain: `drmis.ndmo.gov.vu`.
+- **nginx-https-subdomains.conf.example**: Nginx config for `drmis.ndmo.gov.vu`, `api.drmis.ndmo.gov.vu`, `titiler.drmis.ndmo.gov.vu` with SSL.
+- **DEPLOYMENT_VM.md**: Added NDMO subdomain migration steps (DNS, certbot, frontend build) and link to routing doc.
+
 ### API/SQL Integration with Departmental MIS
 
 - **Bidirectional integration**: Disaster MIS can read from, push to, and pull from other government systems.

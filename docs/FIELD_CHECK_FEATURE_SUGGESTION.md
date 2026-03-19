@@ -4,9 +4,17 @@ This document summarizes research on similar systems with field verification fea
 
 ---
 
-## Decision: Dedicated Mobile App
+## Update (March 2026): Mobile App Discontinued – Field Checks via MIS
 
-**Chosen approach**: A separate React Native or Flutter mobile app with full offline support, native camera, and GPS. See [Section 9](#9-dedicated-mobile-app--chosen-approach) for details.
+**Current approach**: The dedicated mobile app (React Native/Flutter) has been **discontinued**. Field checks are now performed **via the MIS** (web app with PWA and offline support). Area administrators use the web interface to verify, adjust, or reject damage estimates; offline submissions sync when back online. Confidence % is tracked in the admin dashboard. See `docs/FIELD_CHECK_CONFIDENCE.md` for details.
+
+The research and options below remain useful for context; the implementation follows the web/PWA path (Option B or D) rather than a separate mobile app.
+
+---
+
+## Decision (Historical): Dedicated Mobile App – Discontinued
+
+**Former chosen approach**: A separate React Native or Flutter mobile app with full offline support, native camera, and GPS. See [Section 9](#9-dedicated-mobile-app--former-approach-discontinued) for details. **This approach has been discontinued.** Field checks are now done via the MIS web app (PWA with offline support).
 
 ---
 
@@ -189,17 +197,17 @@ Integrated system for real-time tracking and coordination.
   - Optional photo upload
 - No offline support; requires connectivity.
 
-### Option B: PWA + Offline
+### Option B: PWA + Offline ✓ Current implementation
 
 - Add a PWA layer to the app.
 - Cache assigned tasks and allow submission when offline.
 - Sync when back online.
 
-### Option C: Dedicated Mobile App ✓ CHOSEN
+### Option C: Dedicated Mobile App – Discontinued
 
 - Separate React Native / Flutter app.
 - Full offline support, native camera, GPS.
-- Higher effort and maintenance.
+- Higher effort and maintenance. **Discontinued** – field checks now via MIS (Option B/D).
 
 ### Option D: Hybrid (Mobile Web + Offline)
 
@@ -227,17 +235,18 @@ Integrated system for real-time tracking and coordination.
 
 ---
 
-## 7. Recommended Starting Point (Pre-Mobile)
+## 7. Implementation Status (March 2026)
 
-Before building the mobile app, the backend and web admin need:
+Field checks are **implemented via MIS** (web/PWA):
 
-1. **Backend**: Add `field_officer` group, `FieldCheckTask` and `FieldCheckRecord` models, API endpoints for tasks and verification.
-2. **Web admin**: Task assignment UI, view verification status.
-3. **API**: Endpoints that the mobile app will consume (auth, tasks, submit records).
+1. **Backend**: `field_check` Django app with `FieldCheckRecord` model, API endpoints for records and coverage.
+2. **Web admin**: Coverage dashboard with confidence %, records list.
+3. **API**: `/api/v1/field-check/records/`, `/api/v1/field-check/coverage/`, item-level confidence.
+4. **Area administrators**: Perform field checks via MIS (verified/adjusted/rejected); offline support via PWA.
 
 ---
 
-## 9. Dedicated Mobile App – Chosen Approach
+## 9. Dedicated Mobile App – Former Approach (Discontinued)
 
 ### 9.1 Tech Choice: React Native vs Flutter
 

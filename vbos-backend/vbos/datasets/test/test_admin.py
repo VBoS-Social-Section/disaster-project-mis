@@ -104,9 +104,8 @@ class VectorItemAdminImportFileTests(TestCase):
     def test_get_import_file_view(self):
         response = self.client.get(self.upload_url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Import GeoJSON File")
-        self.assertContains(response, "Import File")
-        self.assertContains(response, "Dataset")
+        self.assertContains(response, "Import GeoJSON")
+        self.assertContains(response, "Vector Dataset")
         self.assertContains(response, "Test Dataset")
 
     def test_post_invalid_file_type(self):

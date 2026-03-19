@@ -32,6 +32,7 @@ boto3==1.40.26
 whitenoise
 
 # Admin
+django-unfold>=0.40.0
 django-admin-sortable2==2.2.6
 
 # Excel (land accounts import)

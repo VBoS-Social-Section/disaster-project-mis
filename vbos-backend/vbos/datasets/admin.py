@@ -5,11 +5,12 @@ from io import TextIOWrapper
 from adminsortable2.admin import SortableAdminMixin
 from django import forms
 from django.contrib.admin import SimpleListFilter
+from django.db.models import Q
 from django.contrib import messages
 from django.contrib.gis import admin
-from django.contrib.gis.geos.geometry import GEOSGeometry
 from django.shortcuts import redirect, render, reverse
 from django.urls import path
+from unfold.admin import ModelAdmin as UnfoldModelAdmin
 
 from .forms import GeoJSONUploadForm, IconPickerWidget
 from .models import (
@@ -26,10 +27,10 @@ from .models import (
 )
 from .utils import (
     CSVRow,
-    GeoJSONProperties,
     clean_redundant_tabular_items,
     create_tabular_item,
     import_wide_format_csv,
+    process_geojson_file_to_vector_items,
 )
 
 
@@ -51,16 +52,16 @@ class YearListFilter(SimpleListFilter):
 
 
 @admin.register(Cluster)
-class ClusterAdmin(SortableAdminMixin, admin.ModelAdmin):
+class ClusterAdmin(SortableAdminMixin, UnfoldModelAdmin):
     list_display = ["id", "name"]
 
 
-class RasterFileAdmin(admin.ModelAdmin):
+class RasterFileAdmin(UnfoldModelAdmin):
     """Base admin for RasterFile. Registered in climate app as ClimateRasterFileAdmin."""
     list_display = ["id", "name", "created", "file"]
 
 
-class RasterDatasetAdmin(admin.ModelAdmin):
+class RasterDatasetAdmin(UnfoldModelAdmin):
     """Base admin for RasterDataset. Registered in climate app as ClimateRasterDatasetAdmin."""
     list_display = ["id", "name", "type", "is_land_cover", "updated", "filename_id"]
     list_filter = ["type", "is_land_cover"]
@@ -92,7 +93,7 @@ class RasterDatasetAdmin(admin.ModelAdmin):
 
 
 @admin.register(PMTilesDataset)
-class PMTilesDatasetAdmin(admin.ModelAdmin):
+class PMTilesDatasetAdmin(UnfoldModelAdmin):
     def get_queryset(self, request):
         from django.db.models import Q
         qs = super().get_queryset(request)
@@ -127,7 +128,7 @@ class PMTilesDatasetAdmin(admin.ModelAdmin):
 
 
 @admin.register(VectorDataset)
-class VectorDatasetAdmin(admin.ModelAdmin):
+class VectorDatasetAdmin(UnfoldModelAdmin):
     def get_queryset(self, request):
         from django.db.models import Q
         qs = super().get_queryset(request)
@@ -159,7 +160,7 @@ class VectorDatasetAdmin(admin.ModelAdmin):
 
 
 @admin.register(VectorItem)
-class VectorItemAdmin(admin.GISModelAdmin):
+class VectorItemAdmin(admin.GISModelAdmin, UnfoldModelAdmin):
     """Vector items for Disaster datasets only. Climate items are under Climate > Vector Items."""
 
     def get_queryset(self, request):
@@ -233,136 +234,137 @@ class VectorItemAdmin(admin.GISModelAdmin):
         return super().changelist_view(request, extra_context=extra_context)
 
     def import_file(self, request):
+        upload_url = reverse("admin:datasets_vectoritem_import_file")
+
+        # Multi-file upload (like tabular CSV import)
         if request.method == "POST":
+            try:
+                file_count = int(request.POST.get("file_count", 0))
+            except ValueError:
+                file_count = 0
+
+            if file_count > 0:
+                pairs = []
+                for i in range(file_count):
+                    f_key = f"file_{i}"
+                    ds_key = f"dataset_{i}"
+                    uploaded_file = request.FILES.get(f_key)
+                    dataset_id = request.POST.get(ds_key)
+                    if uploaded_file and dataset_id:
+                        fname = (uploaded_file.name or "").lower()
+                        if fname.endswith(".geojson") or (
+                            fname.endswith(".json") and "package" not in fname
+                        ):
+                            try:
+                                dataset = VectorDataset.objects.get(pk=int(dataset_id))
+                                pairs.append((uploaded_file, dataset))
+                            except (VectorDataset.DoesNotExist, ValueError):
+                                pass
+
+                if not pairs:
+                    messages.error(
+                        request,
+                        "Please add at least one GeoJSON file and select a vector dataset for it.",
+                    )
+                else:
+                    total_created = 0
+                    total_errors = 0
+                    first_error = None
+                    for uploaded_file, dataset in pairs:
+                        try:
+                            created, errors, err = process_geojson_file_to_vector_items(
+                                uploaded_file, dataset
+                            )
+                            total_created += created
+                            total_errors += errors
+                            if err and first_error is None:
+                                first_error = err
+                        except Exception as e:
+                            messages.error(
+                                request,
+                                f"Error processing '{uploaded_file.name}': {str(e)}",
+                            )
+                    if total_created > 0:
+                        messages.success(
+                            request,
+                            f"Successfully created {total_created} new records",
+                        )
+                    if total_errors > 0:
+                        msg = f"Failed to create {total_errors} items."
+                        if first_error:
+                            msg += f" First error: {first_error}"
+                        messages.warning(request, msg)
+                return redirect(upload_url)
+
+            # Legacy single-file form (GeoJSONUploadForm)
             form = GeoJSONUploadForm(request.POST, request.FILES)
             if form.is_valid():
-                uploaded_file = request.FILES["file"]
-
-                # Check if the file is a CSV
-                if not uploaded_file.name.endswith(".geojson"):
+                uploaded_file = request.FILES.get("file")
+                if not uploaded_file or not (
+                    uploaded_file.name.lower().endswith(".geojson")
+                    or (
+                        uploaded_file.name.lower().endswith(".json")
+                        and "package" not in uploaded_file.name.lower()
+                    )
+                ):
                     messages.error(request, "Please upload a GeoJSON file")
-                    return redirect("admin:datasets_vectoritem_import_file")
+                    return redirect(upload_url)
+
+                dataset = form.cleaned_data["dataset"]
+                icon = (form.cleaned_data.get("icon") or "").strip()
+                color = (form.cleaned_data.get("color") or "").strip()
+                update_fields = []
+                if icon:
+                    dataset.icon = icon
+                    update_fields.append("icon")
+                if color:
+                    dataset.color = color
+                    update_fields.append("color")
+                if update_fields:
+                    dataset.save(update_fields=update_fields)
 
                 try:
-                    dataset = form.cleaned_data["dataset"]
-                    icon = (form.cleaned_data.get("icon") or "").strip()
-                    color = (form.cleaned_data.get("color") or "").strip()
-                    update_fields = []
-                    if icon:
-                        dataset.icon = icon
-                        update_fields.append("icon")
-                    if color:
-                        dataset.color = color
-                        update_fields.append("color")
-                    if update_fields:
-                        dataset.save(update_fields=update_fields)
-
-                    decoded_file = TextIOWrapper(uploaded_file.file, encoding="utf-8")
-                    geojson_content = json.loads(decoded_file.read())
-
-                    created_count = 0
-                    error_count = 0
-
-                    first_error = None
-                    for item in geojson_content["features"]:
-                        props = item.get("properties") or {}
-                        metadata = GeoJSONProperties(props.copy())
-                        try:
-                            province_name = str(metadata.province or "").strip()
-                            province = (
-                                Province.objects.filter(name__iexact=province_name).first()
-                                if province_name
-                                else None
-                            )
-                            ac_name = str(metadata.area_council or "").strip()
-                            area_council = (
-                                AreaCouncil.objects.filter(name__iexact=ac_name).first()
-                                if ac_name
-                                else None
-                            )
-                            attribute = (
-                                str(metadata.attribute or "").strip() or None
-                            )
-                            name = str(metadata.name or "").strip() or None
-                            ref = str(metadata.ref or "").strip() or None
-                            if ref and len(ref) > 50:
-                                ref = ref[:50]
-
-                            geom = item.get("geometry")
-                            if not geom:
-                                raise ValueError("Feature has no geometry")
-
-                            geos_geom = GEOSGeometry(json.dumps(geom))
-                            # Simplify polygon geometries to prevent browser crash (heavy coastlines)
-                            if geos_geom.geom_type in ("Polygon", "MultiPolygon"):
-                                try:
-                                    n = geos_geom.num_coords
-                                except (AttributeError, TypeError):
-                                    n = 0
-                                if n > 500:
-                                    geos_geom = geos_geom.simplify(
-                                        tolerance=0.01, preserve_topology=True
-                                    )
-
-                            VectorItem.objects.create(
-                                dataset=dataset,
-                                metadata=metadata.properties,
-                                name=name,
-                                ref=ref,
-                                attribute=attribute,
-                                province=province,
-                                area_council=area_council,
-                                geometry=geos_geom,
-                            )
-                            created_count += 1
-                        except Exception as e:
-                            error_count += 1
-                            if first_error is None:
-                                first_error = str(e)
-
+                    created_count, error_count, first_error = process_geojson_file_to_vector_items(
+                        uploaded_file, dataset
+                    )
                     if created_count > 0:
                         messages.success(
-                            request, f"Successfully created {created_count} new records"
+                            request,
+                            f"Successfully created {created_count} new records",
                         )
-
                     if error_count > 0:
                         msg = f"Failed to create {error_count} items."
                         if first_error:
                             msg += f" First error: {first_error}"
                         messages.warning(request, msg)
-
                 except Exception as e:
                     messages.error(request, f"Error processing GeoJSON: {str(e)}")
+                return redirect(upload_url)
 
-                return redirect("admin:datasets_vectoritem_import_file")
-        else:
-            dataset_id = request.GET.get("dataset")
-            initial = {}
-            if dataset_id:
-                try:
-                    ds = VectorDataset.objects.get(pk=int(dataset_id))
-                    initial["dataset"] = ds
-                except (ValueError, VectorDataset.DoesNotExist):
-                    pass
-            form = GeoJSONUploadForm(initial=initial)
-
-        # Dataset icon/color for auto-load when user selects a dataset
-        dataset_meta = {
-            str(d.id): {"icon": d.icon or "", "color": d.color or ""}
-            for d in VectorDataset.objects.all().only("id", "icon", "color")
-        }
+        # GET: show multi-file import UI
+        datasets = list(
+            VectorDataset.objects.select_related("cluster").values(
+                "id", "name", "type", "cluster__name"
+            )
+        )
+        for d in datasets:
+            cluster = d.get("cluster__name") or ""
+            ds_type = d.get("type") or ""
+            d["display"] = (
+                f"{d['name']} - {cluster} / {ds_type}" if cluster else d["name"]
+            )
 
         context = {
-            "form": form,
             "opts": self.model._meta,
-            "title": "Import GeoJSON File",
-            "dataset_meta_json": json.dumps(dataset_meta),
+            "title": "Import GeoJSON Files",
+            "datasets_json": json.dumps(datasets),
+            "upload_url": upload_url,
         }
-        return render(request, "admin/geojson_upload.html", context)
+        return render(request, "admin/geojson_import.html", context)
 
 
 @admin.register(TabularDataset)
-class TabularDatasetAdmin(admin.ModelAdmin):
+class TabularDatasetAdmin(UnfoldModelAdmin):
     list_display = ["id", "name", "cluster", "type", "updated"]
     list_filter = ["cluster", "type"]
     actions = ["clean_redundant_items"]
@@ -383,7 +385,7 @@ class TabularDatasetAdmin(admin.ModelAdmin):
 
 
 @admin.register(TabularItem)
-class TabularItemAdmin(admin.GISModelAdmin):
+class TabularItemAdmin(UnfoldModelAdmin):
     list_display = [
         "id",
         "dataset",

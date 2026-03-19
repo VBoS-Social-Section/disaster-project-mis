@@ -1,7 +1,9 @@
 import os
 from os.path import join
+
 import dj_database_url
 from configurations import Configuration
+from django.templatetags.static import static
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -11,6 +13,10 @@ class Common(Configuration):
     DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
     INSTALLED_APPS = (
+        "unfold",
+        "unfold.contrib.filters",
+        "unfold.contrib.forms",
+        "unfold.contrib.inlines",
         "django.contrib.admin",
         "django.contrib.gis",
         "vbos.auth_config.RolesAndPermissionsConfig",  # was django.contrib.auth
@@ -43,6 +49,7 @@ class Common(Configuration):
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
     MIDDLEWARE = (
         "django.middleware.security.SecurityMiddleware",
+        "whitenoise.middleware.WhiteNoiseMiddleware",
         "django.contrib.sessions.middleware.SessionMiddleware",
         "corsheaders.middleware.CorsMiddleware",
         "django.middleware.common.CommonMiddleware",
@@ -98,7 +105,7 @@ class Common(Configuration):
     # Static files (CSS, JavaScript, Images)
     # https://docs.djangoproject.com/en/2.0/howto/static-files/
     STATIC_ROOT = os.path.normpath(join(os.path.dirname(BASE_DIR), "static"))
-    STATICFILES_DIRS = []
+    STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
     STATIC_URL = "/static/"
     STATICFILES_FINDERS = (
         "django.contrib.staticfiles.finders.FileSystemFinder",
@@ -242,9 +249,22 @@ class Common(Configuration):
         "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     }
 
+    # Unfold admin theme (TailwindCSS)
+    UNFOLD = {
+        "SITE_TITLE": "DRMIS Admin · Django",
+        "SITE_HEADER": "DRMIS Admin",
+        "SITE_URL": "/",
+        "SITE_ICON": None,
+        "SHOW_HISTORY": True,
+        "SHOW_VIEW_ON_SITE": True,
+        "STYLES": [
+            lambda request: static("admin/css/gis_fix.css"),
+        ],
+    }
+
     SPECTACULAR_SETTINGS = {
-        "TITLE": "VBOS-API",
-        "DESCRIPTION": "VBoS Management Information System API",
+        "TITLE": "VBoS MIS API",
+        "DESCRIPTION": "VBoS Management Information System API. Built with Django.",
         "VERSION": "1.0.0",
         "SERVE_INCLUDE_SCHEMA": False,
         "APPEND_COMPONENTS": {

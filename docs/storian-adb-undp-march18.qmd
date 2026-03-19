@@ -1,0 +1,100 @@
+---
+title: "Climate & Disaster Risk Information in Vanuatu"
+subtitle: "VBoS perspective – ADB/UNDP Storian"
+author: "Herman Tevilili (VBoS)"
+date: "Wednesday 18 March 2026"
+format:
+  revealjs:
+    theme: simple
+    transition: slide
+    slide-number: true
+    incremental: true
+    width: 1280
+    height: 720
+    embed-resources: true
+---
+
+## Context
+
+**Storian:** ADB, UNDP, SPC and partners – risk information and development/investment planning
+
+**VBoS role:** Nominated to share our work on climate and disaster risk databases
+
+**Focus:** Strengthening use of risk information in planning, budgeting, preparedness, and recovery
+
+---
+
+## VBoS Mandate
+
+- Support provincial and area council planning and budgeting
+- Provide statistical and geospatial information for decision-making
+- Integrate climate and disaster risk data into planning processes
+
+---
+
+## Disaster Risk Management Information System (DRMIS)
+
+**What it is:** Web-based geospatial platform for climate and disaster risk information
+
+**Status:** Operational – deployed for testing; ready for NDMO/MoCCA training
+
+**Users:** Provincial administrators, area councils, NDMO, sector ministries
+
+---
+
+## DRMIS – Core Capabilities
+
+- **Interactive maps:** Disaster and climate modes; multiple layer types (raster, vector, PMTiles)
+- **Damage estimates:** Hazard damage, financial damage, response resources
+- **Climate modules:** Land cover, coastal shorelines, cyclone intensity
+- **Area data entry:** Provincial/area council input with offline support
+- **Field checks:** Damage verification by area administrators via MIS (web/PWA, offline support; confidence % tracked)
+- **Export:** XLSX, PDF for reporting and budgeting
+
+---
+
+## Risk Information → Planning & Investment
+
+| Use case | How DRMIS supports it |
+|---------|------------------------|
+| **Planning** | Baseline + damage estimates inform provincial and area council plans |
+| **Budgeting** | Financial damage estimates support resource allocation |
+| **Preparedness** | Response resources and hazard layers support preparedness planning |
+| **Recovery** | Post-event damage data informs recovery and reconstruction |
+
+---
+
+## Data Integration
+
+- **Baseline:** Land cover, coastal shorelines, infrastructure
+- **Damage estimates:** From past events (e.g. cyclones)
+- **Climate:** Land accounts, coastal changes, cyclone tracks
+- **Response:** Aid, shelters, health facilities
+
+*Single platform – multiple data sources*
+
+---
+
+## Deployment & Next Steps
+
+- **Domain:** drmis.ndmo.gov.vu (pending DCDT/Vodafone setup)
+- **Training:** Shefa training, VBoS training of MoCCA staff – ready to begin
+- **Feedback:** Continuous improvement; user feedback built in
+
+---
+
+## Opportunities for Collaboration
+
+- **Shared datasets:** Standardised baselines for joint use
+- **Common standards:** Align data formats and taxonomies
+- **Capacity building:** Joint training on risk information
+- **Field verification:** Collaborate on damage verification workflows
+
+---
+
+## Thank You
+
+**Herman Tevilili**  
+VBoS Disaster Project
+
+*Questions and discussion welcome*

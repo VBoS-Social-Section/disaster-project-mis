@@ -126,6 +126,8 @@ flowchart LR
 | `api.drmis.ndmo.gov.vu`   | Backend  | Django REST API, admin     |
 | `titiler.drmis.ndmo.gov.vu` | TiTiler | Map raster tiles         |
 
+Subdomains are preferred over path-based routing (`/api/`, `/titiler/`) for easier maintenance and independent updates. See [DEPLOYMENT_ROUTING.md](DEPLOYMENT_ROUTING.md).
+
 ## Departmental MIS Integration (Bidirectional)
 
 | Direction | Purpose |

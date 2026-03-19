@@ -1,11 +1,12 @@
 from django.contrib import admin
 from django.shortcuts import render
+from unfold.admin import ModelAdmin as UnfoldModelAdmin
 
 from .models import FieldCheckRecord
 
 
 @admin.register(FieldCheckRecord)
-class FieldCheckRecordAdmin(admin.ModelAdmin):
+class FieldCheckRecordAdmin(UnfoldModelAdmin):
     list_display = ["id", "content_type", "object_id", "status", "observed_value", "verified_by", "verified_at"]
     list_filter = ["status", "content_type"]
     search_fields = ["notes", "verified_by__username"]

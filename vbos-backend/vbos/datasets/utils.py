@@ -1,6 +1,10 @@
 import calendar
+import json
 from datetime import date
-from typing import Dict, List
+from io import TextIOWrapper
+from typing import Dict, List, Optional, Tuple
+
+from django.contrib.gis.geos.geometry import GEOSGeometry
 
 from .models import (
     TYPE_CHOICES,
@@ -9,6 +13,8 @@ from .models import (
     Province,
     TabularDataset,
     TabularItem,
+    VectorDataset,
+    VectorItem,
 )
 
 
@@ -276,6 +282,72 @@ def create_tabular_item(csv_row: CSVRow, dataset: TabularDataset):
         province=province,
         area_council=area_council,
     )
+
+
+def process_geojson_file_to_vector_items(uploaded_file, dataset: VectorDataset) -> Tuple[int, int, Optional[str]]:
+    """
+    Process a GeoJSON file into VectorItems. Returns (created_count, error_count, first_error).
+    Shared by Disaster and Climate vector item imports.
+    """
+    decoded_file = TextIOWrapper(uploaded_file.file, encoding="utf-8")
+    geojson_content = json.loads(decoded_file.read())
+    created_count = 0
+    error_count = 0
+    first_error = None
+
+    for item in geojson_content.get("features", []):
+        props = item.get("properties") or {}
+        metadata = GeoJSONProperties(props.copy())
+        try:
+            province_name = str(metadata.province or "").strip()
+            province = (
+                Province.objects.filter(name__iexact=province_name).first()
+                if province_name
+                else None
+            )
+            ac_name = str(metadata.area_council or "").strip()
+            area_council = (
+                AreaCouncil.objects.filter(name__iexact=ac_name).first()
+                if ac_name
+                else None
+            )
+            attribute = str(metadata.attribute or "").strip() or None
+            name = str(metadata.name or "").strip() or None
+            ref = str(metadata.ref or "").strip() or None
+            if ref and len(ref) > 50:
+                ref = ref[:50]
+
+            geom = item.get("geometry")
+            if not geom:
+                raise ValueError("Feature has no geometry")
+
+            geos_geom = GEOSGeometry(json.dumps(geom))
+            if geos_geom.geom_type in ("Polygon", "MultiPolygon"):
+                try:
+                    n = geos_geom.num_coords
+                except (AttributeError, TypeError):
+                    n = 0
+                if n > 500:
+                    geos_geom = geos_geom.simplify(
+                        tolerance=0.01, preserve_topology=True
+                    )
+
+            VectorItem.objects.create(
+                dataset=dataset,
+                metadata=metadata.properties,
+                name=name,
+                ref=ref,
+                attribute=attribute,
+                province=province,
+                area_council=area_council,
+                geometry=geos_geom,
+            )
+            created_count += 1
+        except Exception as e:
+            error_count += 1
+            if first_error is None:
+                first_error = str(e)
+    return created_count, error_count, first_error
 
 
 def clean_redundant_tabular_items(dataset: TabularDataset):

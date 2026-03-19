@@ -1,9 +1,11 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin as UnfoldModelAdmin
+
 from .models import Feedback
 
 
 @admin.register(Feedback)
-class FeedbackAdmin(admin.ModelAdmin):
+class FeedbackAdmin(UnfoldModelAdmin):
     list_display = ["category", "message_preview", "user", "created_at"]
     list_filter = ["category", "created_at"]
     search_fields = ["message", "user__username", "user_email"]

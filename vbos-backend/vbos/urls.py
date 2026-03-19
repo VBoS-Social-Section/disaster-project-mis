@@ -36,7 +36,9 @@ from vbos.users.auth_2fa import (
     disable_2fa,
 )
 
-admin.site.site_header = "VBoS MIS"
+admin.site.site_header = "DRMIS Admin"
+admin.site.site_title = "DRMIS Admin · Django"
+admin.site.index_title = "Site administration · Powered by Django"
 API_BASE_URL = "api/v1"
 
 

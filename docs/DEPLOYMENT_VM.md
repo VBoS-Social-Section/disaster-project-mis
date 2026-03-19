@@ -314,6 +314,12 @@ TOTP (Microsoft Authenticator) is time-based. If the server clock is wrong, code
 
 ---
 
+## Path vs Subdomain Routing
+
+The default nginx config uses **path-based** routing (`/api/`, `/titiler/`). Development Seed recommends **subdomains** (`api.drmis.ndmo.gov.vu`, `titiler.drmis.ndmo.gov.vu`) for easier maintenance and independent updates. See [DEPLOYMENT_ROUTING.md](DEPLOYMENT_ROUTING.md) for details and `deploy/vm/nginx-https-subdomains.conf.example` for subdomain config.
+
+---
+
 ## HTTPS Deployment (NDMO / Production Domain)
 
 When deploying to the NDMO server with a purchased domain (e.g. `mis.ndmo.gov.vu`) for MoCCA and stakeholders, **HTTPS is required** for several features:
@@ -404,3 +410,47 @@ After deployment, share the MIS link with MoCCA and stakeholders, e.g.:
 - **https://mis.ndmo.gov.vu**
 
 Users can log in and use the feedback form for feature requests and changes.
+
+---
+
+## NDMO Subdomain Migration (drmis.ndmo.gov.vu + SSL)
+
+To deploy with subdomains `drmis.ndmo.gov.vu`, `api.drmis.ndmo.gov.vu`, and `titiler.drmis.ndmo.gov.vu`:
+
+### 1. DNS
+
+Point all three (or use CNAME) to the server IP:
+
+- `drmis.ndmo.gov.vu` → server IP
+- `api.drmis.ndmo.gov.vu` → server IP
+- `titiler.drmis.ndmo.gov.vu` → server IP
+
+### 2. SSL certificate
+
+```bash
+# Stop nginx first
+docker compose -f deploy/vm/docker-compose.yml stop nginx
+
+sudo certbot certonly --standalone \
+  -d drmis.ndmo.gov.vu -d api.drmis.ndmo.gov.vu -d titiler.drmis.ndmo.gov.vu
+```
+
+### 3. Nginx subdomain config
+
+```bash
+cp deploy/vm/nginx-https-subdomains.conf.example deploy/vm/nginx-https.conf
+```
+
+Update `deploy/vm/docker-compose.yml` nginx to use HTTPS config and mount certs (see [HTTPS Deployment](#https-deployment-ndmo--production-domain) above).
+
+### 4. Frontend build (subdomain URLs)
+
+```bash
+echo 'VITE_API_HOST=https://api.drmis.ndmo.gov.vu' > vbos-frontend/.env.production.local
+echo 'VITE_TITILER_API=https://titiler.drmis.ndmo.gov.vu' >> vbos-frontend/.env.production.local
+cd vbos-frontend && pnpm build
+```
+
+### 5. Django
+
+Set `DJANGO_VM_HOST=https://drmis.ndmo.gov.vu` and add all domains to `CSRF_TRUSTED_ORIGINS` if needed.

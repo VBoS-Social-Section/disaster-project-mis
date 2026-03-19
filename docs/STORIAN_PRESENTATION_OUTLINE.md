@@ -33,6 +33,7 @@
   - Export of filtered data (XLSX)
   - Cyclone intensity visualisation
   - Climate modules (land cover, coastal shorelines, etc.)
+  - Field checks via MIS (web/PWA) – area administrators verify damage estimates; confidence % tracked
 
 ---
 
@@ -61,6 +62,7 @@
 - **Left sidebar:** Dataset selection, cluster views, disaster layers
 - **Right sidebar:** Filters, statistics, charts, download
 - **Cyclone intensity:** Visualisation of cyclone tracks and intensity
+- **Field checks:** Area administrators verify damage estimates via MIS (offline support); confidence % in admin
 - **Download:** Export filtered data to XLSX for reporting and budgeting
 
 ---
@@ -83,7 +85,7 @@
 
 ### Slide 9: Challenges
 - **Data quality & timeliness:** Need for regular updates and validation
-- **Field verification:** Gap between modelled estimates and ground truth (Field Check concept under consideration)
+- **Field verification:** Gap between modelled estimates and ground truth – Field checks now done via MIS (web/PWA)
 - **Capacity:** Training and support for provincial and area council users
 - **Integration:** Aligning with other government and partner systems
 
@@ -100,7 +102,7 @@
 
 ### Slide 11: Next Steps / Roadmap
 - User training and rollout
-- Field Check feature (mobile app for verification) – under research
+- Field checks via MIS (web/PWA with offline support) – implemented
 - Further integration with climate and disaster datasets
 - Feedback loop from users to improve the system
 
@@ -163,7 +165,7 @@ Open `storian-presentation.html` in a browser to present. Use arrow keys or spac
 ## 6. References
 
 - `docs/README-user-manual.md` – User manual
-- `docs/FIELD_CHECK_FEATURE_SUGGESTION.md` – Field verification concept
+- `docs/FIELD_CHECK_FEATURE_SUGGESTION.md` – Field check research (implementation via MIS)
 - `docs/DEPLOYMENT_VM.md` – Technical deployment (if asked)
 - Project repository and documentation in `docs/`
 
