@@ -1,4 +1,4 @@
-# DRMIS Enterprise Roadmap
+# DRMIS Development Roadmap
 
 > **Progress key:** `[ ]` not started · `[~]` in progress · `[x]` done · `%` = estimated completion
 
