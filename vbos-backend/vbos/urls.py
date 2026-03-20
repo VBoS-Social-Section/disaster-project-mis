@@ -38,7 +38,7 @@ from vbos.users.auth_2fa import (
 
 admin.site.site_header = "DRMIS Admin"
 admin.site.site_title = "DRMIS Admin · Django"
-admin.site.index_title = "Site administration · Powered by Django"
+admin.site.index_title = "Site administration"
 API_BASE_URL = "api/v1"
 
 

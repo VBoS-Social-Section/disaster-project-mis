@@ -265,6 +265,7 @@ class Common(Configuration):
         "STYLES": [
             lambda request: static("admin/css/gis_fix.css"),
         ],
+        "DASHBOARD_CALLBACK": "vbos.admin_dashboard.dashboard_callback",
         "COLORS": {
             "primary": {
                 "50": "oklch(97.5% .012 235)",
@@ -279,6 +280,76 @@ class Common(Configuration):
                 "900": "oklch(28% .08 235)",
                 "950": "oklch(20% .06 235)",
             },
+        },
+        "SIDEBAR": {
+            "show_search": True,
+            "show_all_applications": False,
+            "navigation": [
+                {
+                    "title": "Dashboard",
+                    "separator": True,
+                    "collapsible": False,
+                    "items": [
+                        {"title": "Dashboard", "icon": "dashboard", "link": "/admin/"},
+                    ],
+                },
+                {
+                    "title": "Disaster",
+                    "icon": "warning",
+                    "separator": True,
+                    "collapsible": True,
+                    "items": [
+                        {"title": "Clusters", "link": "/admin/datasets/cluster/", "icon": "category"},
+                        {"title": "PMTiles Datasets", "link": "/admin/datasets/pmtilesdataset/", "icon": "map"},
+                        {"title": "Vector Datasets", "link": "/admin/datasets/vectordataset/", "icon": "layers"},
+                        {"title": "Vector Items", "link": "/admin/datasets/vectoritem/", "icon": "place"},
+                        {"title": "Raster Datasets", "link": "/admin/datasets/rasterdataset/", "icon": "image"},
+                        {"title": "Tabular Datasets", "link": "/admin/datasets/tabulardataset/", "icon": "table_chart"},
+                        {"title": "Tabular Items", "link": "/admin/datasets/tabularitem/", "icon": "grid_on"},
+                    ],
+                },
+                {
+                    "title": "Climate",
+                    "icon": "thermostat",
+                    "separator": True,
+                    "collapsible": True,
+                    "items": [
+                        {"title": "Climate Dashboard", "link": "/admin/climate/", "icon": "dashboard"},
+                        {"title": "Raster Datasets", "link": "/admin/climate/climaterasterdataset/", "icon": "image"},
+                        {"title": "PMTiles Datasets", "link": "/admin/climate/climatepmtilesdataset/", "icon": "map"},
+                        {"title": "Vector Datasets", "link": "/admin/climate/climatevectordataset/", "icon": "layers"},
+                        {"title": "Vector Items", "link": "/admin/climate/climatevectoritem/", "icon": "place"},
+                    ],
+                },
+                {
+                    "title": "Modules",
+                    "icon": "folder",
+                    "separator": True,
+                    "collapsible": True,
+                    "items": [
+                        {"title": "Land Accounts", "link": "/admin/land-accounts/", "icon": "landscape"},
+                        {"title": "Coastal Changes", "link": "/admin/coastal-changes/", "icon": "water"},
+                        {"title": "Area Administrators", "link": "/admin/area_submissions/areaadministrator/", "icon": "manage_accounts"},
+                        {"title": "Area Submissions", "link": "/admin/area_submissions/areadatasubmission/", "icon": "upload_file"},
+                        {"title": "Field Check", "link": "/admin/field-check/", "icon": "fact_check"},
+                        {"title": "Feedback", "link": "/admin/feedback/feedback/", "icon": "feedback"},
+                    ],
+                },
+                {
+                    "title": "Settings",
+                    "icon": "settings",
+                    "separator": True,
+                    "collapsible": True,
+                    "items": [
+                        {"title": "Users", "link": "/admin/users/user/", "icon": "people"},
+                        {"title": "Roles", "link": "/admin/users/role/", "icon": "admin_panel_settings"},
+                        {"title": "SMTP Settings", "link": "/admin/users/smtpsettings/", "icon": "email"},
+                        {"title": "Integration Sources", "link": "/admin/integrations/integrationsource/", "icon": "hub"},
+                        {"title": "API Keys", "link": "/admin/integrations/integrationapikey/", "icon": "key"},
+                        {"title": "External Data Sources", "link": "/admin/integrations/externaldatasource/", "icon": "cloud_sync"},
+                    ],
+                },
+            ],
         },
     }
 
