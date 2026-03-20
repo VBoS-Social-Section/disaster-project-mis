@@ -17,6 +17,7 @@ from vbos.land_accounts.admin_views import (
 )
 from vbos.climate.views import climate_dashboard, climate_import_geojson, climate_module_detail
 from vbos.field_check.admin import field_check_dashboard
+from vbos.maintenance.views import backup_download, backup_restore_dashboard, restore_upload
 from vbos.coastal_changes.admin_views import (
     add_coastal_changes,
     delete_coastal_changes,
@@ -107,6 +108,9 @@ urlpatterns = [
     path("admin/coastal-changes/<int:object_id>/edit/", admin.site.admin_view(edit_coastal_changes), name="admin_coastal_changes_edit"),
     path("admin/coastal-changes/<int:object_id>/delete/", admin.site.admin_view(delete_coastal_changes), name="admin_coastal_changes_delete"),
     path("admin/field-check/", admin.site.admin_view(field_check_dashboard), name="admin_field_check_dashboard"),
+    path("admin/maintenance/", admin.site.admin_view(backup_restore_dashboard), name="admin_maintenance_backup_restore"),
+    path("admin/maintenance/backup/", admin.site.admin_view(backup_download), name="admin_maintenance_backup"),
+    path("admin/maintenance/restore/", admin.site.admin_view(restore_upload), name="admin_maintenance_restore"),
     path("admin/", admin.site.urls),
     path("", include(api_urls)),
     path("api-token-auth/", obtain_auth_token),
