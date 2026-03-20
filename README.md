@@ -2,7 +2,7 @@
 
 A geospatial Management Information System for climate change and natural disaster data in Vanuatu. The system provides a web-based interface for visualizing, querying, and exporting baseline, hazard damage, response resources, and financial damage datasets—including raster imagery, vector layers, PMTiles basemaps, and tabular statistics.
 
-**Contributing?** See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, conventions, and PR process.
+**Contributing?** See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, conventions, and PR process. **Tasks?** See [TASKS.md](TASKS.md) to track and tick off work.
 
 ---
 
