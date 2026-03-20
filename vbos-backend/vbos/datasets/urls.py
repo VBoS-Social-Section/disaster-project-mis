@@ -53,6 +53,11 @@ urlpatterns = [
         views.VectorDatasetDataView.as_view(),
         name="vector-data",
     ),
+    path(
+        "exposure/",
+        views.AssetExposureView.as_view(),
+        name="asset-exposure",
+    ),
     # tabular
     path("tabular/", views.TabularDatasetListView.as_view(), name="tabular-list"),
     path(

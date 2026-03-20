@@ -14,6 +14,7 @@ import { useAuth } from "./hooks/useAuth";
 import { useAutoLock } from "./hooks/useAutoLock";
 import { useOfflineAreaSync } from "./hooks/useOfflineAreaSync";
 import { useUiStore } from "@/store/ui-store";
+import { useMapStore } from "@/store/map-store";
 import { useViewStore } from "@/store/view-store";
 import { useLockStore } from "@/store/lock-store";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -35,7 +36,9 @@ import { FeedbackButton } from "./components/Feedback/FeedbackButton";
 
 // Lazy-load Map (Leaflet, layers) for faster initial paint
 const Map = lazy(() => import("./components/Map").then((m) => ({ default: m.default })));
-
+const Map3D = lazy(() =>
+  import("./components/Map/Map3D").then((m) => ({ default: m.Map3D })),
+);
 // Lazy-load overlay components – only fetched when their mode is active
 const FloatingTimeSeries = lazy(() =>
   import("./components/FloatingTimeSeries").then((m) => ({ default: m.default })),
@@ -100,6 +103,7 @@ function MapErrorFallback(error: Error, retry: () => void) {
 
 function App() {
   const mapRef = useRef<MapRef>(null);
+  const mapMode = useMapStore((s) => s.mapMode);
   const { isAuthenticated } = useAuth();
   const scenarioId = useViewStore((s) => s.scenarioId);
   const { isMobile, mobileOpenPanel, setMobileOpenPanel, rightSidebarExpanded, rightSidebarIconMode, leftSidebarIconMode, profilePageOpen, dataEntryPageOpen } = useUiStore();
@@ -175,7 +179,7 @@ function App() {
               <MapCursorRing />
               <TabularLayers />
               <Suspense fallback={<MapLoadingSkeleton />}>
-                <Map ref={mapRef} />
+                {mapMode === "3d" ? <Map3D /> : <Map ref={mapRef} />}
               </Suspense>
               <ClimateKeyIndicators />
               <MapEmptyState />

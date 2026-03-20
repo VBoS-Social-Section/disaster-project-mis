@@ -2,14 +2,27 @@
 {% extends "admin/base_site.html" %}
 {% load i18n admin_urls static %}
 
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:datasets_tabularitem_changelist' %}">{% trans 'Tabular items' %}</a>
+  &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
 {% block content %}
 <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 <div id="content-main">
     <div id="step-select" class="import-step">
         <h3>{% trans "Step 1: Select CSV files" %}</h3>
         <p class="help">{% trans "Select multiple CSV files at once." %}</p>
-        <label class="button" for="csv-file-input">{% trans "Select CSV files..." %}</label>
-        <input type="file" id="csv-file-input" accept=".csv" multiple style="display:none;">
+        <div id="drop-zone" class="drop-zone" style="border:2px dashed #cbd5e1; border-radius:8px; padding:2.5rem; text-align:center; background:#f8fafc; margin:1rem 0; cursor:pointer; transition:border-color .2s, background .2s;">
+            <p style="margin:0 0 0.75rem; font-size:1rem; color:#475569;">{% trans "Drag and drop CSV files here" %}</p>
+            <p style="margin:0 0 1rem; font-size:0.875rem; color:#94a3b8;">{% trans "or" %}</p>
+            <label for="csv-file-input" class="upload-btn" style="display:inline-block; padding:0.5rem 1.25rem; background:#417690; color:#fff; border-radius:6px; font-weight:500; cursor:pointer; font-size:0.875rem;">{% trans "Browse to upload" %}</label>
+            <input type="file" id="csv-file-input" accept=".csv" multiple style="display:none;">
+        </div>
     </div>
 
     <div id="step-mapping" class="import-step" style="display:none;">
@@ -95,6 +108,7 @@
     let selectedFiles = [];
 
     const fileInput = document.getElementById('csv-file-input');
+    const dropZone = document.getElementById('drop-zone');
     const stepSelect = document.getElementById('step-select');
     const stepMapping = document.getElementById('step-mapping');
     const stepOptions = document.getElementById('step-options');
@@ -107,13 +121,46 @@
     const progressText = document.getElementById('progress-text');
     const progressDetail = document.getElementById('progress-detail');
 
-    fileInput.addEventListener('change', function() {
-        const files = Array.from(this.files).filter(f => f.name.toLowerCase().endsWith('.csv'));
-        selectedFiles = files;
+    function handleFiles(files) {
+        const filtered = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.csv'));
+        if (filtered.length === 0 && files.length > 0) {
+            alert('{% trans "Please select CSV files only." %}');
+            return;
+        }
+        selectedFiles = filtered;
         renderMapping();
         stepMapping.style.display = 'block';
         stepOptions.style.display = 'block';
         stepSubmit.style.display = 'block';
+    }
+
+    fileInput.addEventListener('change', function() {
+        handleFiles(this.files);
+    });
+
+    dropZone.addEventListener('click', function(e) {
+        if (!e.target.closest('label[for="csv-file-input"]')) {
+            fileInput.click();
+        }
+    });
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.style.borderColor = '#417690';
+        dropZone.style.background = '#eff6ff';
+    });
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.style.borderColor = '#cbd5e1';
+        dropZone.style.background = '#f8fafc';
+    });
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.style.borderColor = '#cbd5e1';
+        dropZone.style.background = '#f8fafc';
+        handleFiles(e.dataTransfer.files);
     });
 
     function renderMapping() {
