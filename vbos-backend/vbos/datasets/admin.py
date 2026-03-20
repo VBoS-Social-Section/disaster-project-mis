@@ -360,6 +360,7 @@ class VectorItemAdmin(admin.GISModelAdmin, UnfoldModelAdmin):
             "datasets_json": json.dumps(datasets),
             "upload_url": upload_url,
         }
+        context.update(self.admin_site.each_context(request))
         return render(request, "admin/geojson_import.html", context)
 
 
@@ -523,4 +524,5 @@ class TabularItemAdmin(UnfoldModelAdmin):
             "datasets_json": json.dumps(datasets),
             "upload_url": upload_url,
         }
+        context.update(self.admin_site.each_context(request))
         return render(request, "admin/csv_import.html", context)

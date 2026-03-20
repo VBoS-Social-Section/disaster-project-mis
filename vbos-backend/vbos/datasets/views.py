@@ -3,6 +3,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_excel.mixins import XLSXFileMixin
 from drf_excel.renderers import XLSXRenderer
+from django.contrib.gis.geos import Point
 from rest_framework import status
 from rest_framework.generics import DestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -296,6 +297,50 @@ class PMTilesIntensityView(APIView):
             "type": "FeatureCollection",
             "features": filtered,
         })
+
+
+@method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
+class AssetExposureView(APIView):
+    """
+    Check which hazard (vector polygon) layers contain a given point.
+    Used for asset-level direct risk: overlay infrastructure points on hazard layers.
+    GET ?lat=<>&lng=<>&vector_layer_ids=1,2,3
+    Returns [{ layer_id, layer_name }] for layers whose polygon features contain the point.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            lat = float(request.query_params.get("lat", 0))
+            lng = float(request.query_params.get("lng", 0))
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "lat and lng are required and must be numbers"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        layer_ids_param = request.query_params.get("vector_layer_ids", "")
+        if not layer_ids_param:
+            return Response([])
+        try:
+            layer_ids = [int(x.strip()) for x in layer_ids_param.split(",") if x.strip()]
+        except ValueError:
+            return Response(
+                {"detail": "vector_layer_ids must be comma-separated integers"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not layer_ids:
+            return Response([])
+
+        point = Point(lng, lat, srid=4326)
+        exposed = []
+        for ds in VectorDataset.objects.filter(pk__in=layer_ids):
+            has_feature = VectorItem.objects.filter(
+                dataset=ds,
+                geometry__intersects=point,
+            ).exists()
+            if has_feature:
+                exposed.append({"layer_id": ds.pk, "layer_name": ds.name})
+        return Response(exposed)
 
 
 @method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache

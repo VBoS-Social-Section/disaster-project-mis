@@ -17,7 +17,7 @@ However, before uploading data, you should create the Clusters, and the Dataset 
 
 On the Administrative Interface, click on Clusters, then on `Add Cluster` button.
 
-You will see a form like this. Add a name and click on Save.
+You will see a form like this. Add a name and click on save.
 
 <img width="50%" alt="image" src="https://github.com/user-attachments/assets/c7f62081-3d2f-4fa7-8b24-0a8c032a018c" />
 

@@ -436,4 +436,5 @@ class ClimateVectorItemAdmin(gis_admin.GISModelAdmin, UnfoldModelAdmin):
             "datasets_json": json.dumps(datasets),
             "upload_url": upload_url,
         }
+        context.update(self.admin_site.each_context(request))
         return render(request, "admin/climate/geojson_import.html", context)
