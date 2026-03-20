@@ -5,7 +5,7 @@
 ## Phase A — Foundation *(3–6 months, low cost, do now)*
 
 ### Security & Access Control
-- [X] **MFA everywhere** — TOTP already exists; make it mandatory for all staff logins
+- [ ] **MFA everywhere** — TOTP already exists; make it mandatory for all staff logins
 - [ ] **RBAC per dataset/module** — e.g. MoCCA edits climate only, NDMO views all, field officers edit field-check only (Django Guardian or custom permissions)
 - [ ] **Audit logging** — field-level diff log (who changed what, from → to); exportable as CSV/PDF for compliance; separate from Django's `LogEntry`
 - [ ] **Security headers** — CSP, HSTS, Permissions-Policy (currently missing)
