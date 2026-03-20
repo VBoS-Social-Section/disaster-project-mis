@@ -4,7 +4,7 @@
 
 ---
 
-## Phase A — Foundation *(3–6 months, low cost, do now)*
+## Phase A — Foundation *(3–6 months)*
 
 ### Security & Access Control
 
@@ -236,7 +236,7 @@
 
 ---
 
-## Phase C — Advanced *(12+ months, seek funding/SPC/World Bank partners)*
+## Phase C — Advanced *(12+ months)*
 
 ### Multi-tenancy & Departmental Views
 
