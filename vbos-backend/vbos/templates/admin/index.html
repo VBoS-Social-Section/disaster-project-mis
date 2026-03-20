@@ -1,0 +1,206 @@
+{% extends 'admin/base.html' %}
+{% load i18n unfold %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+    <div class="flex flex-col lg:flex-row lg:gap-8">
+        <div class="grow">
+            {% if dashboard_summary %}
+                <div class="mb-6 flex flex-wrap gap-4">
+                    <div class="bg-primary-50 border border-primary-200 flex items-center gap-3 rounded-default px-4 py-3 dark:bg-primary-950/30 dark:border-primary-800">
+                        <span class="material-symbols-outlined text-2xl text-primary-600 dark:text-primary-500">folder</span>
+                        <div>
+                            <span class="font-semibold text-xl text-primary-900 dark:text-primary-100">{{ dashboard_summary.total_datasets }}</span>
+                            <span class="ml-1 text-sm text-primary-700 dark:text-primary-300">{% trans "datasets" %}</span>
+                        </div>
+                    </div>
+                    <div class="bg-primary-50 border border-primary-200 flex items-center gap-3 rounded-default px-4 py-3 dark:bg-primary-950/30 dark:border-primary-800">
+                        <span class="material-symbols-outlined text-2xl text-primary-600 dark:text-primary-500">inventory_2</span>
+                        <div>
+                            <span class="font-semibold text-xl text-primary-900 dark:text-primary-100">{{ dashboard_summary.total_items }}</span>
+                            <span class="ml-1 text-sm text-primary-700 dark:text-primary-300">{% trans "items" %}</span>
+                        </div>
+                    </div>
+                    <div class="bg-primary-50 border border-primary-200 flex items-center gap-3 rounded-default px-4 py-3 dark:bg-primary-950/30 dark:border-primary-800">
+                        <span class="material-symbols-outlined text-2xl text-primary-600 dark:text-primary-500">history</span>
+                        <div>
+                            <span class="font-semibold text-xl text-primary-900 dark:text-primary-100">{{ dashboard_summary.actions_this_week }}</span>
+                            <span class="ml-1 text-sm text-primary-700 dark:text-primary-300">{% trans "actions this week" %}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if dashboard_stats and dashboard_stats|length > 0 %}
+                <div class="mb-8">
+                    <h2 class="font-semibold mb-4 text-base-900 text-lg dark:text-base-100">{% trans "Overview" %}</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {% if dashboard_stats.users is not None %}
+                            <a href="/admin/users/user/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
+                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">people</span>
+                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.users }}</span>
+                                <span class="text-subtle text-sm">{% trans "Users" %}</span>
+                            </a>
+                        {% endif %}
+                        {% if dashboard_stats.clusters is not None %}
+                            <a href="/admin/datasets/cluster/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
+                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">category</span>
+                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.clusters }}</span>
+                                <span class="text-subtle text-sm">{% trans "Clusters" %}</span>
+                            </a>
+                        {% endif %}
+                        {% if dashboard_stats.vector_datasets is not None %}
+                            <a href="/admin/datasets/vectordataset/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
+                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">layers</span>
+                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.vector_datasets }}</span>
+                                <span class="text-subtle text-sm">{% trans "Vector datasets" %}</span>
+                            </a>
+                        {% endif %}
+                        {% if dashboard_stats.vector_items is not None %}
+                            <a href="/admin/datasets/vectoritem/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
+                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">place</span>
+                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.vector_items }}</span>
+                                <span class="text-subtle text-sm">{% trans "Vector items" %}</span>
+                            </a>
+                        {% endif %}
+                        {% if dashboard_stats.pmtiles_datasets is not None %}
+                            <a href="/admin/datasets/pmtilesdataset/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
+                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">map</span>
+                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.pmtiles_datasets }}</span>
+                                <span class="text-subtle text-sm">{% trans "PMTiles datasets" %}</span>
+                            </a>
+                        {% endif %}
+                        {% if dashboard_stats.raster_datasets is not None %}
+                            <a href="/admin/datasets/rasterdataset/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
+                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">image</span>
+                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.raster_datasets }}</span>
+                                <span class="text-subtle text-sm">{% trans "Raster datasets" %}</span>
+                            </a>
+                        {% endif %}
+                        {% if dashboard_stats.tabular_datasets is not None %}
+                            <a href="/admin/datasets/tabulardataset/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
+                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">table_chart</span>
+                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.tabular_datasets }}</span>
+                                <span class="text-subtle text-sm">{% trans "Tabular datasets" %}</span>
+                            </a>
+                        {% endif %}
+                        {% if dashboard_stats.tabular_items is not None %}
+                            <a href="/admin/datasets/tabularitem/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
+                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">grid_on</span>
+                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.tabular_items }}</span>
+                                <span class="text-subtle text-sm">{% trans "Tabular items" %}</span>
+                            </a>
+                        {% endif %}
+                        {% if dashboard_stats.area_submissions is not None %}
+                            <a href="/admin/area_submissions/areadatasubmission/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
+                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">upload_file</span>
+                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.area_submissions }}</span>
+                                <span class="text-subtle text-sm">{% trans "Area submissions" %}</span>
+                            </a>
+                        {% endif %}
+                        {% if dashboard_stats.field_checks is not None %}
+                            <a href="/admin/field-check/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
+                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">fact_check</span>
+                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.field_checks }}</span>
+                                <span class="text-subtle text-sm">{% trans "Field checks" %}</span>
+                            </a>
+                        {% endif %}
+                        {% if dashboard_stats.feedback is not None %}
+                            <a href="/admin/feedback/feedback/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
+                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">feedback</span>
+                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.feedback }}</span>
+                                <span class="text-subtle text-sm">{% trans "Feedback" %}</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if activity_chart_data or dataset_chart_data %}
+                    <div class="mb-8 grid gap-6 lg:grid-cols-2">
+                        {% if activity_chart_data %}
+                            <div class="bg-base-50 border border-base-200 rounded-default p-4 dark:bg-base-800 dark:border-base-700">
+                                <h3 class="font-semibold mb-3 text-base-900 dark:text-base-100">{% trans "Activity (last 14 days)" %}</h3>
+                                <div class="relative h-48 w-full">
+                                    <canvas class="chart" data-type="bar" data-value="{{ activity_chart_data|escape }}" {% if activity_chart_options %}data-options="{{ activity_chart_options|escape }}"{% endif %} height="192"></canvas>
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if dataset_chart_data %}
+                            <div class="bg-base-50 border border-base-200 rounded-default p-4 dark:bg-base-800 dark:border-base-700">
+                                <h3 class="font-semibold mb-3 text-base-900 dark:text-base-100">{% trans "Datasets by type" %}</h3>
+                                <div class="relative mx-auto h-48 w-full max-w-[240px]">
+                                    <canvas class="chart" data-type="doughnut" data-value="{{ dataset_chart_data|escape }}" height="192"></canvas>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="bg-base-50 border border-base-200 rounded-default p-8 text-center dark:bg-base-800 dark:border-base-700">
+                    <span class="material-symbols-outlined mb-4 block text-4xl text-base-400 dark:text-base-500">dashboard</span>
+                    <h2 class="font-semibold mb-2 text-base-900 dark:text-base-100">{% trans "Welcome to DRMIS Admin" %}</h2>
+                    <p class="text-subtle text-sm">{% trans "Use the sidebar to navigate and manage your data." %}</p>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if admin_log %}
+            <div id="content-related" class="lg:w-96 shrink-0">
+                <div id="recent-actions-module" class="module bg-base-50 rounded-default p-4 dark:bg-base-800">
+                    <h2 class="mb-4 font-semibold text-base-900 dark:text-base-100">
+                        {% trans "Recent actions" %}
+                    </h2>
+
+                    <ul class="flex flex-col gap-3">
+                        {% for item in admin_log %}
+                            <li class="border border-base-200 bg-white rounded-default p-3 shadow-xs dark:bg-base-900 dark:border-base-700">
+                                <div class="flex items-start gap-2">
+                                    <span class="material-symbols-outlined mt-0.5 shrink-0 text-base-500 {% if item.action_class == 'addlink' %}text-green-600 dark:text-green-500{% elif item.action_class == 'deletelink' %}text-red-600 dark:text-red-500{% else %}text-primary-600 dark:text-primary-500{% endif %}">
+                                        {% if item.action_class == 'addlink' %}add_circle{% elif item.action_class == 'deletelink' %}delete{% else %}edit{% endif %}
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="mb-1 truncate font-medium text-base-900 dark:text-base-100">
+                                            {% if item.entry.is_deletion or not item.entry.get_admin_url %}
+                                                {{ item.entry.object_repr }}
+                                            {% else %}
+                                                <a href="{{ item.entry.get_admin_url }}" class="hover:text-primary-600 dark:hover:text-primary-500">{{ item.entry.object_repr }}</a>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-base-500 dark:text-base-400">
+                                            <span class="font-medium {% if item.action_class == 'addlink' %}text-green-600 dark:text-green-500{% elif item.action_class == 'deletelink' %}text-red-600 dark:text-red-500{% else %}text-primary-600 dark:text-primary-500{% endif %}">
+                                                {{ item.action_label }}
+                                            </span>
+                                            <span>
+                                                {% if item.entry.content_type %}
+                                                    {% filter capfirst %}{{ item.entry.content_type.name }}{% endfilter %}
+                                                {% else %}
+                                                    {% trans "Unknown content" %}
+                                                {% endif %}
+                                            </span>
+                                            <span>{{ item.entry.action_time|timesince }} {% trans "ago" %}</span>
+                                        </div>
+                                        {% if item.change_detail %}
+                                            <p class="mt-2 text-xs text-base-500 dark:text-base-400 line-clamp-2">{{ item.change_detail }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% else %}
+            <div id="content-related" class="lg:w-96 shrink-0">
+                <div class="module bg-base-50 rounded-default p-4 dark:bg-base-800">
+                    <h2 class="mb-4 font-semibold text-base-900 dark:text-base-100">{% trans "Recent actions" %}</h2>
+                    <p class="text-subtle text-sm">{% trans "No recent actions." %}</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
