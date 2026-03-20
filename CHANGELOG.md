@@ -4,7 +4,21 @@ All notable changes to the VBoS Management Information System project.
 
 ---
 
-## [Unreleased] – 2026-03-18
+## [Unreleased] – 2026-03-20
+
+### Admin: Maintenance (Backup & Restore, Changelog)
+
+- **Changelog**: Django `LogEntry` (admin action log) registered in admin with read-only view. Accessible via Settings → Changelog in sidebar.
+- **Backup & Restore**: New maintenance module at Settings → Backup & Restore.
+  - **Full or custom backup**: Select all data or choose categories (Application Data, Rasters, Vectors, PMTiles, Media, Database Schema).
+  - **ZIP format**: Backup as ZIP with folders `data/`, `rasters/`, `vectors/`, `pmtiles/`, `tiles/`, `media/`, `schema/`.
+  - **Compression**: High, Medium, or None.
+  - **Restore**: Upload `.zip` or `.json` backup; optional dry-run, overwrite, merge.
+  - **Backup History**: `BackupLog` model tracks backups; last 10 shown on dashboard; full list at Settings → Backup History.
+- **Management commands**: `backup_data` and `restore_data` for CLI usage.
+- **App**: `vbos.maintenance` with models, views, forms, and templates.
+
+---
 
 ### Unfold Admin Theme (Django)
 

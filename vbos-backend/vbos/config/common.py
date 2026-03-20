@@ -44,6 +44,7 @@ class Common(Configuration):
         "vbos.feedback",
         "vbos.area_submissions",
         "vbos.field_check",
+        "vbos.maintenance",
     )
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
@@ -347,6 +348,9 @@ class Common(Configuration):
                         {"title": "Integration Sources", "link": "/admin/integrations/integrationsource/", "icon": "hub"},
                         {"title": "API Keys", "link": "/admin/integrations/integrationapikey/", "icon": "key"},
                         {"title": "External Data Sources", "link": "/admin/integrations/externaldatasource/", "icon": "cloud_sync"},
+                        {"title": "Changelog", "link": "/admin/admin/logentry/", "icon": "history"},
+                        {"title": "Backup & Restore", "link": "/admin/maintenance/", "icon": "backup"},
+                        {"title": "Backup History", "link": "/admin/maintenance/backuplog/", "icon": "folder"},
                     ],
                 },
             ],
