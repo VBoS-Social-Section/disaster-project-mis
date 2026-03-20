@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  LuBox,
   LuMinus,
   LuMoon,
   LuPlus,
@@ -23,7 +24,7 @@ type MapControlsClusterProps = {
 };
 
 export function MapControlsCluster({ map }: MapControlsClusterProps) {
-  const { mapStyle, setMapStyle } = useMapStore();
+  const { mapStyle, mapMode, setMapStyle, setMapMode } = useMapStore();
 
   const currentId = BASEMAP_STYLES.find((s) => s.url === mapStyle)?.id ?? "positron";
 
@@ -67,6 +68,21 @@ export function MapControlsCluster({ map }: MapControlsClusterProps) {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
+      <div className="mx-1 h-px bg-border" />
+      <Tooltip
+        content={mapMode === "3d" ? "Switch to 2D" : "Switch to 3D view"}
+        positioning={{ placement: "left" }}
+      >
+        <Button
+          variant={mapMode === "3d" ? "secondary" : "ghost"}
+          size="icon"
+          className="h-11 min-h-11 min-w-11 w-11 touch-manipulation md:h-9 md:w-full md:min-h-0 md:min-w-0"
+          aria-label={mapMode === "3d" ? "Switch to 2D" : "Switch to 3D view"}
+          onClick={() => setMapMode(mapMode === "3d" ? "2d" : "3d")}
+        >
+          <LuBox className="size-4" />
+        </Button>
+      </Tooltip>
       <div className="mx-1 h-px bg-border" />
       <div className="flex flex-col gap-0">
         <Tooltip content="Zoom in" positioning={{ placement: "left" }}>

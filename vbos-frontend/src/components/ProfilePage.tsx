@@ -156,7 +156,11 @@ export function ProfilePage() {
     setIsEnabling2fa(true);
     try {
       const result = await setupEmailOtp();
-      setUser?.({ ...user!, mfa_enabled: result.mfa_enabled, mfa_method: result.mfa_method });
+      setUser?.({
+        ...user!,
+        mfa_enabled: result.mfa_enabled,
+        mfa_method: (result.mfa_method as "" | "email" | "totp") || undefined,
+      });
       toast.success("2FA enabled", "A verification code will be sent to your email on each login.");
     } catch (e) {
       toast.error("Failed to enable 2FA", String(e instanceof Error ? e.message : e));

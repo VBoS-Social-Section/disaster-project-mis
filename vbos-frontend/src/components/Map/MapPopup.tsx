@@ -1,7 +1,11 @@
+import { useEffect, useState } from "react";
 import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
+import { LuTriangleAlert } from "react-icons/lu";
 import "@/Theme/popup.css";
 import { toSentenceCase } from "@/utils/format";
+import { getAssetExposure } from "@/api/getDatasets";
+import { useLayerStore } from "@/store/layer-store";
 import type { PopupInfo } from "./index";
 
 const transparentIcon = L.divIcon({
@@ -11,8 +15,29 @@ const transparentIcon = L.divIcon({
 });
 
 export function MapPopup(popupInfo: PopupInfo) {
-  const { latitude, longitude, datasetName, properties, featureId } = popupInfo;
+  const { latitude, longitude, datasetName, properties, featureId, datasetId } = popupInfo;
+  const { layers } = useLayerStore();
+  const [exposure, setExposure] = useState<{ layer_id: number; layer_name: string }[] | null>(null);
+
+  const vectorLayerIds = layers
+    .split(",")
+    .filter((l) => l.startsWith("v"))
+    .map((l) => Number(l.slice(1)))
+    .filter((id) => !Number.isNaN(id));
+
+  useEffect(() => {
+    if (datasetId?.startsWith("v") && vectorLayerIds.length > 0) {
+      getAssetExposure(latitude, longitude, vectorLayerIds)
+        .then(setExposure)
+        .catch(() => setExposure([]));
+    } else {
+      setExposure(null);
+    }
+  }, [latitude, longitude, datasetId, layers]);
+
   const coords = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+  const hasExposure = exposure && exposure.length > 0;
+
   return (
     <Marker
       position={[latitude, longitude]}
@@ -23,6 +48,13 @@ export function MapPopup(popupInfo: PopupInfo) {
         <div className="min-w-[12rem] font-sans">
           {datasetName && (
             <h4 className="mb-2 text-sm font-semibold">{datasetName}</h4>
+          )}
+          {hasExposure && (
+            <div className="mb-2 flex flex-wrap items-center gap-1 rounded-md bg-destructive/15 px-2 py-1.5 text-xs text-destructive">
+              <LuTriangleAlert className="size-3.5 shrink-0" aria-hidden />
+              <span className="font-medium">In hazard zone:</span>
+              <span>{exposure!.map((e) => e.layer_name).join(", ")}</span>
+            </div>
           )}
           {(featureId != null || coords) && (
             <p className="mb-2 text-xs text-muted-foreground">

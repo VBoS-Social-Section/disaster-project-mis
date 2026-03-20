@@ -98,18 +98,25 @@ export const BASEMAP_STYLES = [
   },
 ] as const;
 
+export type MapMode = "2d" | "3d";
+
 interface MapState {
   viewState: ViewState;
   mapStyle: string;
+  mapMode: MapMode;
   setViewState: (viewState: Partial<ViewState>) => void;
   setMapStyle: (style: string) => void;
+  setMapMode: (mode: MapMode) => void;
   syncFromUrl: () => void;
   syncToUrl: () => void;
 }
 
 export const useMapStore = create<MapState>((set, get) => ({
   mapStyle: BASEMAP_STYLES[0].url,
+  mapMode: "2d",
   viewState: getInitialViewState(),
+
+  setMapMode: (mode) => set({ mapMode: mode }),
 
   setViewState: (updates) => {
     set((state) => ({

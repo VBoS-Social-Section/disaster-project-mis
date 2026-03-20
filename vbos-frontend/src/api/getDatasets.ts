@@ -9,6 +9,28 @@ import {
 
 const API_BASE = "/api/v1";
 
+export interface ExposureResult {
+  layer_id: number;
+  layer_name: string;
+}
+
+/** Check which hazard (vector polygon) layers contain a point. For asset-level direct risk. */
+export async function getAssetExposure(
+  lat: number,
+  lng: number,
+  vectorLayerIds: number[],
+): Promise<ExposureResult[]> {
+  if (vectorLayerIds.length === 0) return [];
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lng: String(lng),
+    vector_layer_ids: vectorLayerIds.join(","),
+  });
+  const response = await HTTP.get(`${API_BASE}/exposure/?${params}`);
+  if (!response.ok) return [];
+  return response.json();
+}
+
 /** Fetch a single dataset's metadata (icon, color, etc.) by type and id. */
 export async function getDatasetDetail(
   dataType: "vector" | "tabular" | "raster" | "pmtiles",
