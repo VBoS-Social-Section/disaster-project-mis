@@ -56,11 +56,23 @@ class LogEntryAdmin(UnfoldModelAdmin):
         from django.contrib.admin.models import ADDITION, CHANGE, DELETION
 
         if obj.action_flag == ADDITION:
-            return format_html('<span style="color:green">Added</span>')
+            return format_html(
+                '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;'
+                'color:#27500A;background:#EAF6EE;padding:2px 6px;border-radius:3px;'
+                'border:1px solid #9FE1CB;">Added</span>'
+            )
         if obj.action_flag == CHANGE:
-            return format_html('<span style="color:blue">Changed</span>')
+            return format_html(
+                '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;'
+                'color:#0C447C;background:#EBF3FE;padding:2px 6px;border-radius:3px;'
+                'border:1px solid #B5D4F4;">Changed</span>'
+            )
         if obj.action_flag == DELETION:
-            return format_html('<span style="color:red">Deleted</span>')
+            return format_html(
+                '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;'
+                'color:#A32D2D;background:#FEECEA;padding:2px 6px;border-radius:3px;'
+                'border:1px solid #F7C1C1;">Deleted</span>'
+            )
         return str(obj.get_action_flag_display())
 
     action_flag_display.short_description = "Action"

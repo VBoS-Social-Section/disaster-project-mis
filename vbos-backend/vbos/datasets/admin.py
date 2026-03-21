@@ -8,7 +8,9 @@ from django.contrib.admin import SimpleListFilter
 from django.db.models import Q
 from django.contrib import messages
 from django.contrib.gis import admin
-from django.shortcuts import redirect, render, reverse
+from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.utils.html import format_html
 from django.urls import path
 from unfold.admin import ModelAdmin as UnfoldModelAdmin
 
@@ -32,6 +34,29 @@ from .utils import (
     import_wide_format_csv,
     process_geojson_file_to_vector_items,
 )
+
+# RAP sector_family → (inline CSS, short label) for changelist badges — light surfaces
+RAP_SECTOR_COLORS = {
+    "education": ("background:#EBF3FE;color:#0C447C;border:1px solid #B5D4F4", "Education"),
+    "energy": ("background:#FDF3E0;color:#633806;border:1px solid #F5C875", "Energy"),
+    "food_security": ("background:#EAF6EE;color:#27500A;border:1px solid #9FE1CB", "Food Security"),
+    "gender_protection": ("background:#FBF0F5;color:#72243E;border:1px solid #F4C0D1", "Gender & Prot."),
+    "health": ("background:#FEECEA;color:#A32D2D;border:1px solid #F7C1C1", "Health"),
+    "logistics": ("background:#EEEDFE;color:#3C3489;border:1px solid #CECBF6", "Logistics"),
+    "shelter": ("background:#E1F5EE;color:#085041;border:1px solid #9FE1CB", "Shelter"),
+    "telecom": ("background:#E6F1FB;color:#0C447C;border:1px solid #85B7EB", "Telecom"),
+    "wash": ("background:#E1F5EE;color:#04342C;border:1px solid #5DCAA5", "WASH"),
+    "qc": ("background:#F1EFE8;color:#444441;border:1px solid #D3D1C7", "QC"),
+    "hazard": ("background:#FDF3E0;color:#712B13;border:1px solid #F0997B", "Hazard"),
+}
+
+# Cat intensity → (text color, background, border) for light badges
+INTENSITY_BADGE_STYLES = {
+    2: ("#185FA5", "#E6F1FB", "#85B7EB"),
+    3: ("#633806", "#FDF3E0", "#F5C875"),
+    4: ("#A32D2D", "#FEECEA", "#F7C1C1"),
+    5: ("#791F1F", "#FEECEA", "#F7C1C1"),
+}
 
 
 class YearListFilter(SimpleListFilter):
@@ -366,9 +391,50 @@ class VectorItemAdmin(admin.GISModelAdmin, UnfoldModelAdmin):
 
 @admin.register(TabularDataset)
 class TabularDatasetAdmin(UnfoldModelAdmin):
-    list_display = ["id", "name", "cluster", "type", "updated"]
-    list_filter = ["cluster", "type"]
+    list_display = [
+        "id",
+        "name",
+        "cluster",
+        "type",
+        "rap_sector_badge",
+        "rap_batch_link",
+        "updated",
+    ]
+    list_filter = ["cluster", "type", "rap_sector_family", "rap_batch"]
+    search_fields = ["name", "description", "rap_sector_family"]
     actions = ["clean_redundant_items"]
+
+    @admin.display(description="RAP Batch")
+    def rap_batch_link(self, obj):
+        batch = getattr(obj, "rap_batch", None)
+        if batch:
+            url = reverse("admin:rap_import_rapimportbatch_change", args=[batch.pk])
+            return format_html(
+                '<a href="{}" style="font-family:\'IBM Plex Mono\',monospace;'
+                'font-size:10px;color:#378ADD;">{}</a>',
+                url,
+                batch.batch_ref,
+            )
+        return format_html(
+            '<span style="color:#9AA5B8;font-size:10px;">Manual upload</span>'
+        )
+
+    @admin.display(description="RAP sector")
+    def rap_sector_badge(self, obj):
+        fam = getattr(obj, "rap_sector_family", None) or ""
+        if not fam.strip():
+            return format_html('<span style="color:#9AA5B8;font-size:10px;">—</span>')
+        style_label = RAP_SECTOR_COLORS.get(
+            fam, ("background:#F8F9FB;color:#4A5568;border:1px solid #E2E6EE", fam)
+        )
+        css, label = style_label
+        return format_html(
+            '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;'
+            "padding:2px 6px;border-radius:3px;text-transform:uppercase;"
+            'letter-spacing:.04em;{}">{}</span>',
+            css,
+            label,
+        )
 
     @admin.action(description="Clean redundant TabularItems for dataset")
     def clean_redundant_items(self, request, queryset):
@@ -392,6 +458,7 @@ class TabularItemAdmin(UnfoldModelAdmin):
         "dataset",
         "province",
         "area_council",
+        "intensity_badge",
         "attribute",
         "value",
         "year_column",
@@ -404,6 +471,31 @@ class TabularItemAdmin(UnfoldModelAdmin):
         "area_council",
         "attribute",
     ]
+
+    @admin.display(description="Cat.")
+    def intensity_badge(self, obj):
+        intensity = getattr(obj, "intensity", None)
+        if intensity is None and isinstance(obj.metadata, dict):
+            raw = obj.metadata.get("intensity")
+            if raw is not None and raw != "":
+                try:
+                    intensity = int(raw)
+                except (TypeError, ValueError):
+                    intensity = None
+        if intensity is None:
+            return "—"
+        color, bg, border = INTENSITY_BADGE_STYLES.get(
+            int(intensity), ("#4A5568", "#F8F9FB", "#E2E6EE")
+        )
+        return format_html(
+            '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;'
+            'font-weight:500;color:{};background:{};padding:2px 8px;border-radius:3px;'
+            'border:1px solid {};">Cat {}</span>',
+            color,
+            bg,
+            border,
+            intensity,
+        )
 
     @admin.display(description="Year")
     def year_column(self, obj):
