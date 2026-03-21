@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { IncidentsTable } from "@/components/dashboard/IncidentsTable";
 import { LiveAlertsPanel } from "@/components/dashboard/LiveAlertsPanel";
 import { RiskExposurePanel } from "@/components/dashboard/RiskExposurePanel";
+import { useCommandCentreSyncClock } from "@/hooks/useCommandCentreSyncClock";
 import { colors } from "@/tokens";
 import { toast } from "@/utils/toast";
 import { LuDownload } from "react-icons/lu";
@@ -13,16 +13,7 @@ import { LuDownload } from "react-icons/lu";
  * Layout: title row → metric cards → incidents + alerts / risk column.
  */
 export function CommandCentre() {
-  const [lastSync] = useState(() => new Date());
-  const syncLabel = useMemo(
-    () =>
-      new Intl.DateTimeFormat("en-GB", {
-        dateStyle: "medium",
-        timeStyle: "short",
-        timeZone: "Pacific/Efate",
-      }).format(lastSync),
-    [lastSync],
-  );
+  const { relativeLabel } = useCommandCentreSyncClock(30_000);
 
   return (
     <div
@@ -51,7 +42,7 @@ export function CommandCentre() {
               fontFamily: "'IBM Plex Mono', monospace",
             }}
           >
-            Last sync: {syncLabel}
+            {relativeLabel}
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -65,8 +56,7 @@ export function CommandCentre() {
               toast.info(
                 "Export",
                 "Report export will be available when connected to reporting API.",
-              )
-            }
+              )}
           >
             <LuDownload className="size-3.5" />
             Export Report

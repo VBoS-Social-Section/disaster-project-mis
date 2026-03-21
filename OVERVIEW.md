@@ -254,6 +254,7 @@ pnpm test
 |----------|-------------|
 | `VITE_API_HOST` | Backend base URL (e.g. `http://localhost:8000`) |
 | `VITE_TITILER_API` | TiTiler base URL (e.g. `http://localhost:8002`) |
+| `VITE_ROADMAP_URL` | *(Optional)* Override roadmap link for nav toasts; defaults to GitHub `TASKS.md` for `VBoS-Social-Section/disaster-project-mis` |
 
 ---
 

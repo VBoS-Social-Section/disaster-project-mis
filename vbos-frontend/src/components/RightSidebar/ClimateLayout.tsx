@@ -56,8 +56,8 @@ export function ClimateLayout() {
       provinces.length > 0
         ? provinces
         : LAND_ACCOUNT_PROVINCES.filter((p: string) =>
-            landAccountsData.provinces[p] != null,
-          );
+          landAccountsData.provinces[p] != null,
+        );
     return list;
   }, [provinces, landAccountsData]);
 
@@ -195,127 +195,129 @@ export function ClimateLayout() {
     <div className="space-y-5">
       <LandCoverStorytelling />
 
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h2 className="text-base font-semibold tracking-tight">Land Accounts</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {provincesList.length > 0 ? `${provincesList.join(", ")} · ` : ""}2020 → 2023
-          </p>
-        </div>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-7 shrink-0 rounded-full">
-              <LuInfo className="size-3.5 text-muted-foreground" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="max-w-[280px] text-sm" align="end">
-            {WHY_THIS_MATTERS}
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      <Card className="overflow-hidden border-border/60 bg-card/50">
-        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Land cover by province</CardTitle>
-          <div className="flex gap-1">
-            <Button
-              variant={viewMode === "percent" ? "secondary" : "ghost"}
-              size="sm"
-              className="h-6 px-2 text-[11px]"
-              onClick={() => setViewMode("percent")}
-            >
-              %
-            </Button>
-            <Button
-              variant={viewMode === "km2" ? "secondary" : "ghost"}
-              size="sm"
-              className="h-6 px-2 text-[11px]"
-              onClick={() => setViewMode("km2")}
-            >
-              km²
-            </Button>
+      <div className="space-y-5 border-t border-border pt-6">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Land Accounts</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {provincesList.length > 0 ? `${provincesList.join(", ")} · ` : ""}2020 → 2023
+            </p>
           </div>
-        </CardHeader>
-        <CardContent className="px-4 pb-4 pt-0">
-          <HighchartsReact
-            highcharts={Highcharts}
-            options={chartOptions}
-            containerProps={{ style: { width: "100%", height: 260 } }}
-          />
-        </CardContent>
-      </Card>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="size-7 shrink-0 rounded-full">
+                <LuInfo className="size-3.5 text-muted-foreground" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="max-w-[280px] text-sm" align="end">
+              {WHY_THIS_MATTERS}
+            </PopoverContent>
+          </Popover>
+        </div>
 
-      <Tabs defaultValue="physical" className="w-full">
-        <TabsList className="mb-3 h-9 w-full justify-start gap-0 bg-muted/50 p-0.5">
-          <TabsTrigger value="physical" className="flex-1 text-xs">
+        <Card className="overflow-hidden border-border/60 bg-card/50">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Land cover by province</CardTitle>
+            <div className="flex gap-1">
+              <Button
+                variant={viewMode === "percent" ? "secondary" : "ghost"}
+                size="sm"
+                className="h-6 px-2 text-[11px]"
+                onClick={() => setViewMode("percent")}
+              >
+              %
+              </Button>
+              <Button
+                variant={viewMode === "km2" ? "secondary" : "ghost"}
+                size="sm"
+                className="h-6 px-2 text-[11px]"
+                onClick={() => setViewMode("km2")}
+              >
+              km²
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0">
+            <HighchartsReact
+              highcharts={Highcharts}
+              options={chartOptions}
+              containerProps={{ style: { width: "100%", height: 260 } }}
+            />
+          </CardContent>
+        </Card>
+
+        <Tabs defaultValue="physical" className="w-full">
+          <TabsList className="mb-3 h-9 w-full justify-start gap-0 bg-muted/50 p-0.5">
+            <TabsTrigger value="physical" className="flex-1 text-xs">
             Physical Account
-          </TabsTrigger>
-          <TabsTrigger value="matrix" className="flex-1 text-xs">
+            </TabsTrigger>
+            <TabsTrigger value="matrix" className="flex-1 text-xs">
             Change Matrix
-          </TabsTrigger>
-        </TabsList>
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="physical" className="mt-0">
-          <div className="overflow-hidden rounded-lg border border-border/60 bg-card/50">
-            <div className="max-h-[280px] overflow-auto">
-              <Table className="table-zebra">
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="sticky top-0 z-10 min-w-[100px] bg-muted">
+          <TabsContent value="physical" className="mt-0">
+            <div className="overflow-hidden rounded-lg border border-border/60 bg-card/50">
+              <div className="max-h-[280px] overflow-auto">
+                <Table className="table-zebra">
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="sticky top-0 z-10 min-w-[100px] bg-muted">
                       Land cover
-                    </TableHead>
-                    <TableHead className="min-w-[72px] text-right">2020</TableHead>
-                    <TableHead className="min-w-[72px] text-right">2023</TableHead>
-                    <TableHead className="min-w-[72px] text-right">Change</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {physicalRows.map((row) => (
-                    <TableRow key={row.category}>
-                      <TableCell className="sticky left-0 z-10 bg-card font-medium">
-                        {row.category}
+                      </TableHead>
+                      <TableHead className="min-w-[72px] text-right">2020</TableHead>
+                      <TableHead className="min-w-[72px] text-right">2023</TableHead>
+                      <TableHead className="min-w-[72px] text-right">Change</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {physicalRows.map((row) => (
+                      <TableRow key={row.category}>
+                        <TableCell className="sticky left-0 z-10 bg-card font-medium">
+                          {row.category}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-sm">
+                          {row.opening.toFixed(1)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-sm">
+                          {row.closing.toFixed(1)}
+                        </TableCell>
+                        <TableCell
+                          className={cn(
+                            "text-right tabular-nums text-sm font-medium",
+                            row.netChange > 0 ? "text-emerald-600 dark:text-emerald-400" : row.netChange < 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground",
+                          )}
+                        >
+                          {row.netChange > 0 ? "+" : ""}
+                          {row.netChange.toFixed(1)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="border-t-2 border-border bg-muted/40 font-semibold hover:bg-muted/40">
+                      <TableCell className="sticky left-0 z-10 bg-muted font-semibold">
+                      Total
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-sm">
-                        {row.opening.toFixed(1)}
+                      <TableCell className="text-right tabular-nums">
+                        {totalOpening.toFixed(1)}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-sm">
-                        {row.closing.toFixed(1)}
+                      <TableCell className="text-right tabular-nums">
+                        {totalClosing.toFixed(1)}
                       </TableCell>
-                      <TableCell
-                        className={cn(
-                          "text-right tabular-nums text-sm font-medium",
-                          row.netChange > 0 ? "text-emerald-600 dark:text-emerald-400" : row.netChange < 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground",
-                        )}
-                      >
-                        {row.netChange > 0 ? "+" : ""}
-                        {row.netChange.toFixed(1)}
+                      <TableCell className="text-right tabular-nums">
+                        {(totalClosing - totalOpening).toFixed(1)}
                       </TableCell>
                     </TableRow>
-                  ))}
-                  <TableRow className="border-t-2 border-border bg-muted/40 font-semibold hover:bg-muted/40">
-                    <TableCell className="sticky left-0 z-10 bg-muted font-semibold">
-                      Total
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {totalOpening.toFixed(1)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {totalClosing.toFixed(1)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {(totalClosing - totalOpening).toFixed(1)}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+                  </TableBody>
+                </Table>
+              </div>
             </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="matrix" className="mt-0">
-          <ChangeMatrixSankey />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="matrix" className="mt-0">
+            <ChangeMatrixSankey />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
