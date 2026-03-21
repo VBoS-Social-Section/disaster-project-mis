@@ -4,6 +4,13 @@
 
 ---
 
+## Recent completions
+
+- [x] **RAP CSV import pipeline (MVP)** — Django app `vbos.rap_import`: `RAPImportBatch` / `RAPImportFile` models, filename→sector detection, `validate_rap_csv` against RAP schemas, Unfold admin (batch list, inline files, validate/import actions), staff multi-file upload at `/admin/rap-import/upload/`, Celery task stub; `import_rap_batch_to_tabular` mapping to TabularDataset **TBD**
+- [x] **DRMIS app shell — light/dark theme** — `--drmis-*` CSS variables in `index.css` (main content toggles; **sidebar stays dark** in both modes), `tokens/colors.ts` uses `var(--drmis-…)` for surfaces/text/borders, Command Centre (KPI cards, incidents table, live alerts, risk exposure), topbar, and map workspace respond to `next-themes` (`class` on `<html>`); fixed hardcoded `html`/`body` backgrounds that blocked light mode
+
+---
+
 ## Phase A — Foundation *(3–6 months, low cost, do now)*
 
 ### Security & Access Control
