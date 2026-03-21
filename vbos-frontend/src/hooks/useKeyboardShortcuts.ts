@@ -1,39 +1,33 @@
 import { useEffect, useCallback } from "react";
 import { useUiStore } from "@/store/ui-store";
-import { useViewStore } from "@/store/view-store";
-import { useComparisonStore } from "@/store/comparison-store";
-import { toast } from "@/utils/toast";
+import { useModeTransition } from "@/hooks/useModeTransition";
 
 /**
  * Global keyboard shortcuts:
  * - Escape: Close panels (time series drawer, etc.)
- * - Alt+C: Switch to Climate mode
- * - Alt+D: Switch to Disaster mode
+ * - Alt+D: Disaster mode
+ * - Alt+C: Climate mode
+ * - Alt+X: Compare mode
  */
 export function useKeyboardShortcuts() {
   const { isTimeSeriesOpen, setTimeSeriesOpen } = useUiStore();
-  const { scenarioId, setScenario } = useViewStore();
-  const setComparisonMode = useComparisonStore((s) => s.setComparisonMode);
+  const { switchToMode } = useModeTransition();
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      // Alt+C: Climate mode
       if (e.altKey && e.key.toLowerCase() === "c") {
         e.preventDefault();
-        setScenario("climate");
-        if (scenarioId !== "climate") {
-          toast.success("Switched to Climate mode");
-        }
+        switchToMode("climate");
         return;
       }
-      // Alt+D: Disaster mode
       if (e.altKey && e.key.toLowerCase() === "d") {
         e.preventDefault();
-        setScenario("disaster");
-        setComparisonMode(false);
-        if (scenarioId !== "disaster") {
-          toast.success("Switched to Disaster mode");
-        }
+        switchToMode("disaster");
+        return;
+      }
+      if (e.altKey && e.key.toLowerCase() === "x") {
+        e.preventDefault();
+        switchToMode("compare");
         return;
       }
       // Escape: close open panels/drawers
@@ -44,7 +38,7 @@ export function useKeyboardShortcuts() {
         }
       }
     },
-    [isTimeSeriesOpen, setTimeSeriesOpen, scenarioId, setScenario, setComparisonMode],
+    [isTimeSeriesOpen, setTimeSeriesOpen, switchToMode],
   );
 
   useEffect(() => {

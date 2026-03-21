@@ -68,7 +68,7 @@ const RightSidebar = () => {
         {!hasTabularInSelectedCluster &&
           selectedCluster &&
           scenarioId !== "climate" && (
-            <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+            <p className="mb-4 rounded-lg border border-amber-200/80 bg-[rgba(245,166,35,0.08)] px-4 py-3 text-sm text-[var(--drmis-warning-text)] dark:border-amber-800 dark:bg-amber-950/50">
               This cluster has no tabular dataset. Select province and area
               council to filter map layers.
             </p>

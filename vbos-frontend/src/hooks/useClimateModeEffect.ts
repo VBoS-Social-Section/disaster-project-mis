@@ -15,8 +15,8 @@ export function useClimateModeEffect() {
   useEffect(() => {
     if (!useAuthStore.getState().token) return;
 
-    // In Disaster mode: remove raster layers (Land cover is Climate-only)
-    if (scenarioId === "disaster") {
+    // Disaster & Compare: remove raster layers (land cover is Climate-only)
+    if (scenarioId === "disaster" || scenarioId === "compare") {
       const current = layers.split(",").filter(Boolean);
       const hasRaster = current.some((l) => l.startsWith("r"));
       if (hasRaster) {

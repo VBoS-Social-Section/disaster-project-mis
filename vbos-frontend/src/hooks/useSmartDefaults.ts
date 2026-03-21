@@ -46,8 +46,15 @@ export function useSmartDefaults() {
     if (sessionLayers && sessionLayers.split(",").filter(Boolean).length > 0) {
       appliedRef.current = true;
       setLayers(sessionLayers);
-      if (sessionScenario === "disaster" || sessionScenario === "climate") {
-        setScenario(sessionScenario);
+      if (
+        sessionScenario === "disaster" ||
+        sessionScenario === "climate" ||
+        sessionScenario === "compare"
+      ) {
+        setScenario(sessionScenario as "disaster" | "climate" | "compare");
+        if (sessionScenario === "compare") {
+          setComparisonMode(true);
+        }
       }
       if (sessionYear) setYear(sessionYear);
       if (sessionProvince) setProvinces([sessionProvince]);

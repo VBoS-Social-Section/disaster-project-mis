@@ -6,6 +6,16 @@ All notable changes to the VBoS Management Information System project.
 
 ## [Unreleased] – 2026-03-20
 
+### Frontend: View mode (Disaster | Climate | Compare)
+
+- **Segmented control** in the header with icons, per-mode colour (red / emerald / violet), subtitles, and `aria-*` + arrow-key navigation.
+- **Compare tab**: new `compare` scenario; enables year comparison (`compare=1` in URL) and uses disaster-style cluster/layer UI; layer choices remembered per mode (persisted in `localStorage` as `vbos-view-modes`).
+- **`useModeTransition`**: coordinates layer save/restore, URL `view` param, comparison store, Sonner toast, and a short layer-panel skeleton.
+- **Shortcuts**: Alt+D (Disaster), Alt+C (Climate), Alt+X (Compare).
+- **Help**: “?” next to the control opens a short modal describing each mode.
+- **Map stage**: very light mode-tinted background; floating layer panel `aria-label` and `aria-busy` during switches.
+- **URL**: `?view=compare` deep-link syncs comparison UI even if `compare=1` was missing; comparison store history updates preserve `pathname`.
+
 ### Admin: Maintenance (Backup & Restore, Changelog)
 
 - **Changelog**: Django `LogEntry` (admin action log) registered in admin with read-only view. Accessible via Settings → Changelog in sidebar.
