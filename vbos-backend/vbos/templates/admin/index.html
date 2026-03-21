@@ -11,160 +11,216 @@
     <div class="flex flex-col lg:flex-row lg:gap-8">
         <div class="grow">
 
-            {# ── Summary bar ── #}
+            {# ── Mode banner (Disaster / Climate / Compare) — ?mode=disaster|climate|compare #}
+            {% if admin_mode == "climate" %}
+            <div style="padding:8px 14px;border-left:3px solid #1D9E75;background:#EAF6EE;border-radius:0 6px 6px 0;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#085041;">{% trans "Climate Mode" %}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#9AA5B8;margin-top:2px;">
+                        {% trans "Raster · PMTiles · Vector · Climate dashboard" %}
+                    </div>
+                </div>
+                <a href="{% url 'admin_climate_dashboard' %}" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#378ADD;">{% trans "Climate dashboard" %} →</a>
+            </div>
+            {% elif admin_mode == "compare" %}
+            <div style="padding:8px 14px;border-left:3px solid #7F77DD;background:#EEEDFE;border-radius:0 6px 6px 0;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#3C3489;">{% trans "Compare Mode" %}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#9AA5B8;margin-top:2px;">
+                        {% trans "RAP batch diffs · Provinces · Sectors · Intensity" %}
+                    </div>
+                </div>
+                <a href="{% url 'admin_compare_event' %}" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#378ADD;">{% trans "Open compare" %} →</a>
+            </div>
+            {% else %}
+            <div style="padding:8px 14px;border-left:3px solid #FF4B2B;background:#FFF8F7;border-radius:0 6px 6px 0;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#C03010;">{% trans "Disaster Mode" %}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#9AA5B8;margin-top:2px;">
+                        {% trans "Incidents · Field Checks · Area Submissions · RAP Pipeline" %}
+                    </div>
+                </div>
+                <a href="{% url 'admin_rap_import_upload' %}" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#378ADD;">{% trans "Upload RAP CSVs" %} →</a>
+            </div>
+            {% endif %}
+
+            <p style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#B0BAD0;margin:-8px 0 16px 0;">
+                {% trans "Switch view:" %}
+                <a href="?mode=disaster" style="color:#378ADD;">{% trans "Disaster" %}</a>
+                · <a href="?mode=climate" style="color:#378ADD;">{% trans "Climate" %}</a>
+                · <a href="?mode=compare" style="color:#378ADD;">{% trans "Compare" %}</a>
+            </p>
+
+            {# ── KPI row (light) ── #}
             {% if dashboard_summary %}
-                <div class="mb-7 flex flex-wrap gap-3">
-                    <div class="flex items-center gap-3 rounded-lg border border-primary-200 bg-gradient-to-br from-primary-50 to-white px-5 py-3.5 shadow-sm dark:from-primary-950/40 dark:to-base-900 dark:border-primary-800/60">
-                        <span class="material-symbols-outlined text-2xl text-primary-500">folder_open</span>
-                        <div>
-                            <span class="font-bold text-2xl text-primary-900 dark:text-primary-100 tabular-nums">{{ dashboard_summary.total_datasets }}</span>
-                            <p class="text-xs font-medium text-primary-600 dark:text-primary-400 mt-0.5 uppercase tracking-wide">{% trans "datasets" %}</p>
+                <div class="mb-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
+                        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#FF4B2B;"></div>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Total datasets" %}</div>
+                        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:#0D1018;line-height:1;">{{ dashboard_summary.total_datasets }}</div>
+                    </div>
+                    <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
+                        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#F5A623;"></div>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Total items" %}</div>
+                        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:#0D1018;line-height:1;">{{ dashboard_summary.total_items }}</div>
+                    </div>
+                    <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
+                        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#378ADD;"></div>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Actions (7 days)" %}</div>
+                        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:#0D1018;line-height:1;">{{ dashboard_summary.actions_this_week }}</div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if rap_latest_batch or rap_pending_count %}
+                <div class="mb-7 flex flex-col gap-3">
+                    {% if rap_latest_batch %}
+                    <div style="border-left:3px solid #378ADD;padding:10px 14px;background:#FFFFFF;border:1px solid #E2E6EE;border-radius:0 8px 8px 0;">
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9AA5B8;">{% trans "Latest RAP Import" %}</div>
+                        <div style="font-size:13px;font-weight:500;margin-top:4px;color:#0D1018;">{{ rap_cyclone_name }}</div>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA5B8;margin-top:3px;">
+                            {% trans "Max Cat" %} {{ rap_max_intensity|default:"—" }} · {{ rap_affected_provinces|join:", " }}
                         </div>
                     </div>
-                    <div class="flex items-center gap-3 rounded-lg border border-primary-200 bg-gradient-to-br from-primary-50 to-white px-5 py-3.5 shadow-sm dark:from-primary-950/40 dark:to-base-900 dark:border-primary-800/60">
-                        <span class="material-symbols-outlined text-2xl text-primary-500">inventory_2</span>
-                        <div>
-                            <span class="font-bold text-2xl text-primary-900 dark:text-primary-100 tabular-nums">{{ dashboard_summary.total_items }}</span>
-                            <p class="text-xs font-medium text-primary-600 dark:text-primary-400 mt-0.5 uppercase tracking-wide">{% trans "items" %}</p>
-                        </div>
+                    {% endif %}
+                    {% if rap_pending_count %}
+                    <div style="border-left:3px solid #F5A623;padding:8px 14px;background:#FDF3E0;border-radius:0 6px 6px 0;">
+                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#633806;">
+                            {{ rap_pending_count }} {% trans "RAP batch" %}{{ rap_pending_count|pluralize }} {% trans "pending import" %} →
+                            <a href="{% url 'admin_rap_import_upload' %}" style="color:#378ADD;">{% trans "Upload now" %}</a>
+                        </span>
                     </div>
-                    <div class="flex items-center gap-3 rounded-lg border border-primary-200 bg-gradient-to-br from-primary-50 to-white px-5 py-3.5 shadow-sm dark:from-primary-950/40 dark:to-base-900 dark:border-primary-800/60">
-                        <span class="material-symbols-outlined text-2xl text-primary-500">history</span>
-                        <div>
-                            <span class="font-bold text-2xl text-primary-900 dark:text-primary-100 tabular-nums">{{ dashboard_summary.actions_this_week }}</span>
-                            <p class="text-xs font-medium text-primary-600 dark:text-primary-400 mt-0.5 uppercase tracking-wide">{% trans "actions this week" %}</p>
-                        </div>
-                    </div>
+                    {% endif %}
                 </div>
             {% endif %}
 
             {# ── Overview grid ── #}
             {% if dashboard_stats and dashboard_stats|length > 0 %}
                 <div class="mb-8">
-                    <h2 class="flex items-center gap-2 font-bold mb-4 text-base-800 text-sm uppercase tracking-widest dark:text-base-300">
+                    <h2 class="flex items-center gap-2 font-bold mb-4 text-base-800 text-sm uppercase tracking-widest">
                         <span class="material-symbols-outlined text-base text-base-400">grid_view</span>
                         {% trans "Overview" %}
                     </h2>
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
 
                         {% if dashboard_stats.users is not None %}
-                            <a href="/admin/users/user/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                            <a href="/admin/users/user/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">people</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                                 </div>
-                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.users }}</span>
-                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Users" %}</span>
+                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.users }}</span>
+                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Users" %}</span>
                             </a>
                         {% endif %}
 
                         {% if dashboard_stats.clusters is not None %}
-                            <a href="/admin/datasets/cluster/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                            <a href="/admin/datasets/cluster/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">category</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                                 </div>
-                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.clusters }}</span>
-                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Clusters" %}</span>
+                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.clusters }}</span>
+                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Clusters" %}</span>
                             </a>
                         {% endif %}
 
                         {% if dashboard_stats.vector_datasets is not None %}
-                            <a href="/admin/datasets/vectordataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                            <a href="/admin/datasets/vectordataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">layers</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                                 </div>
-                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.vector_datasets }}</span>
-                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Vector datasets" %}</span>
+                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.vector_datasets }}</span>
+                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Vector datasets" %}</span>
                             </a>
                         {% endif %}
 
                         {% if dashboard_stats.vector_items is not None %}
-                            <a href="/admin/datasets/vectoritem/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                            <a href="/admin/datasets/vectoritem/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">place</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                                 </div>
-                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.vector_items }}</span>
-                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Vector items" %}</span>
+                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.vector_items }}</span>
+                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Vector items" %}</span>
                             </a>
                         {% endif %}
 
                         {% if dashboard_stats.pmtiles_datasets is not None %}
-                            <a href="/admin/datasets/pmtilesdataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                            <a href="/admin/datasets/pmtilesdataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">map</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                                 </div>
-                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.pmtiles_datasets }}</span>
-                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "PMTiles datasets" %}</span>
+                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.pmtiles_datasets }}</span>
+                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "PMTiles datasets" %}</span>
                             </a>
                         {% endif %}
 
                         {% if dashboard_stats.raster_datasets is not None %}
-                            <a href="/admin/datasets/rasterdataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                            <a href="/admin/datasets/rasterdataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">image</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                                 </div>
-                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.raster_datasets }}</span>
-                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Raster datasets" %}</span>
+                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.raster_datasets }}</span>
+                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Raster datasets" %}</span>
                             </a>
                         {% endif %}
 
                         {% if dashboard_stats.tabular_datasets is not None %}
-                            <a href="/admin/datasets/tabulardataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                            <a href="/admin/datasets/tabulardataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">table_chart</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                                 </div>
-                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.tabular_datasets }}</span>
-                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Tabular datasets" %}</span>
+                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.tabular_datasets }}</span>
+                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Tabular datasets" %}</span>
                             </a>
                         {% endif %}
 
                         {% if dashboard_stats.tabular_items is not None %}
-                            <a href="/admin/datasets/tabularitem/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                            <a href="/admin/datasets/tabularitem/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">grid_on</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                                 </div>
-                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.tabular_items }}</span>
-                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Tabular items" %}</span>
+                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.tabular_items }}</span>
+                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Tabular items" %}</span>
                             </a>
                         {% endif %}
 
                         {% if dashboard_stats.area_submissions is not None %}
-                            <a href="/admin/area_submissions/areadatasubmission/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                            <a href="/admin/area_submissions/areadatasubmission/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">upload_file</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                                 </div>
-                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.area_submissions }}</span>
-                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Area submissions" %}</span>
+                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.area_submissions }}</span>
+                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Area submissions" %}</span>
                             </a>
                         {% endif %}
 
                         {% if dashboard_stats.field_checks is not None %}
-                            <a href="/admin/field-check/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                            <a href="/admin/field-check/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">fact_check</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                                 </div>
-                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.field_checks }}</span>
-                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Field checks" %}</span>
+                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.field_checks }}</span>
+                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Field checks" %}</span>
                             </a>
                         {% endif %}
 
                         {% if dashboard_stats.feedback is not None %}
-                            <a href="/admin/feedback/feedback/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                            <a href="/admin/feedback/feedback/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">feedback</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                                 </div>
-                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.feedback }}</span>
-                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Feedback" %}</span>
+                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.feedback }}</span>
+                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Feedback" %}</span>
                             </a>
                         {% endif %}
 
@@ -175,8 +231,8 @@
                 {% if activity_chart_data or dataset_chart_data %}
                     <div class="mb-8 grid gap-6 lg:grid-cols-2">
                         {% if activity_chart_data %}
-                            <div class="rounded-lg border border-base-200 bg-white p-5 shadow-sm dark:bg-base-800 dark:border-base-700">
-                                <h3 class="flex items-center gap-1.5 font-semibold mb-4 text-sm text-base-700 dark:text-base-200 uppercase tracking-wide">
+                            <div class="rounded-lg border border-base-200 bg-white p-5 shadow-sm">
+                                <h3 class="flex items-center gap-1.5 font-semibold mb-4 text-sm text-base-700 uppercase tracking-wide">
                                     <span class="material-symbols-outlined text-base text-primary-500">bar_chart</span>
                                     {% trans "Activity (last 14 days)" %}
                                 </h3>
@@ -186,8 +242,8 @@
                             </div>
                         {% endif %}
                         {% if dataset_chart_data %}
-                            <div class="rounded-lg border border-base-200 bg-white p-5 shadow-sm dark:bg-base-800 dark:border-base-700">
-                                <h3 class="flex items-center gap-1.5 font-semibold mb-4 text-sm text-base-700 dark:text-base-200 uppercase tracking-wide">
+                            <div class="rounded-lg border border-base-200 bg-white p-5 shadow-sm">
+                                <h3 class="flex items-center gap-1.5 font-semibold mb-4 text-sm text-base-700 uppercase tracking-wide">
                                     <span class="material-symbols-outlined text-base text-primary-500">donut_large</span>
                                     {% trans "Datasets by type" %}
                                 </h3>
@@ -200,9 +256,9 @@
                 {% endif %}
 
             {% else %}
-                <div class="rounded-lg border border-base-200 bg-white p-10 text-center shadow-sm dark:bg-base-800 dark:border-base-700">
-                    <span class="material-symbols-outlined mb-4 block text-5xl text-base-300 dark:text-base-600">dashboard</span>
-                    <h2 class="font-bold mb-2 text-base-900 dark:text-base-100">{% trans "Welcome to DRMIS Admin" %}</h2>
+                <div class="rounded-lg border border-base-200 bg-white p-10 text-center shadow-sm">
+                    <span class="material-symbols-outlined mb-4 block text-5xl text-base-300">dashboard</span>
+                    <h2 class="font-bold mb-2 text-base-900">{% trans "Welcome to DRMIS Admin" %}</h2>
                     <p class="text-subtle text-sm">{% trans "Use the sidebar to navigate and manage your data." %}</p>
                 </div>
             {% endif %}
@@ -210,29 +266,29 @@
 
         {# ── Recent actions panel ── #}
         <div id="content-related" class="lg:w-80 xl:w-96 shrink-0">
-            <div id="recent-actions-module" class="rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700 overflow-hidden">
-                <div class="flex items-center gap-2 px-4 py-3 border-b border-base-200 dark:border-base-700 bg-base-50 dark:bg-base-900">
+            <div id="recent-actions-module" class="rounded-lg border border-base-200 bg-white shadow-sm overflow-hidden">
+                <div class="flex items-center gap-2 px-4 py-3 border-b border-base-200 bg-base-50">
                     <span class="material-symbols-outlined text-base text-primary-500">update</span>
-                    <h2 class="font-semibold text-sm text-base-800 dark:text-base-100 uppercase tracking-wide">{% trans "Recent actions" %}</h2>
+                    <h2 class="font-semibold text-sm text-base-800 uppercase tracking-wide">{% trans "Recent actions" %}</h2>
                 </div>
                 {% if admin_log %}
-                    <ul class="flex flex-col divide-y divide-base-100 dark:divide-base-700">
+                    <ul class="flex flex-col divide-y divide-base-100">
                         {% for item in admin_log %}
-                            <li class="px-4 py-3 hover:bg-base-50 dark:hover:bg-base-750 transition-colors">
+                            <li class="px-4 py-3 hover:bg-base-50 transition-colors">
                                 <div class="flex items-start gap-2.5">
-                                    <span class="mt-0.5 shrink-0 material-symbols-outlined text-base {% if item.action_class == 'addlink' %}text-emerald-500{% elif item.action_class == 'deletelink' %}text-red-500{% else %}text-primary-500{% endif %}">
+                                    <span class="mt-0.5 shrink-0 material-symbols-outlined text-base {% if item.action_class == 'addlink' %}text-emerald-600{% elif item.action_class == 'deletelink' %}text-red-600{% else %}text-primary-500{% endif %}">
                                         {% if item.action_class == 'addlink' %}add_circle{% elif item.action_class == 'deletelink' %}delete{% else %}edit{% endif %}
                                     </span>
                                     <div class="min-w-0 flex-1">
-                                        <div class="mb-0.5 truncate text-sm font-medium text-base-900 dark:text-base-100">
+                                        <div class="mb-0.5 truncate text-sm font-medium text-base-900">
                                             {% if item.entry.is_deletion or not item.entry.get_admin_url %}
                                                 {{ item.entry.object_repr }}
                                             {% else %}
-                                                <a href="{{ item.entry.get_admin_url }}" class="hover:text-primary-600 dark:hover:text-primary-400">{{ item.entry.object_repr }}</a>
+                                                <a href="{{ item.entry.get_admin_url }}" class="hover:text-primary-600">{{ item.entry.object_repr }}</a>
                                             {% endif %}
                                         </div>
-                                        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-base-400 dark:text-base-500">
-                                            <span class="font-semibold {% if item.action_class == 'addlink' %}text-emerald-500{% elif item.action_class == 'deletelink' %}text-red-500{% else %}text-primary-500{% endif %}">
+                                        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-base-400">
+                                            <span class="font-semibold {% if item.action_class == 'addlink' %}text-emerald-600{% elif item.action_class == 'deletelink' %}text-red-600{% else %}text-primary-500{% endif %}">
                                                 {{ item.action_label }}
                                             </span>
                                             <span>·</span>
@@ -247,7 +303,7 @@
                                             <span class="tabular-nums">{{ item.entry.action_time|timesince }} {% trans "ago" %}</span>
                                         </div>
                                         {% if item.change_detail %}
-                                            <p class="mt-1 text-xs text-base-400 dark:text-base-500 line-clamp-2">{{ item.change_detail }}</p>
+                                            <p class="mt-1 text-xs text-base-400 line-clamp-2">{{ item.change_detail }}</p>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -256,7 +312,7 @@
                     </ul>
                 {% else %}
                     <div class="px-4 py-8 text-center">
-                        <span class="material-symbols-outlined block text-3xl text-base-300 dark:text-base-600 mb-2">history</span>
+                        <span class="material-symbols-outlined block text-3xl text-base-300 mb-2">history</span>
                         <p class="text-subtle text-sm">{% trans "No recent actions." %}</p>
                     </div>
                 {% endif %}

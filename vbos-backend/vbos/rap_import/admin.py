@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import csv
+import io
+
 from django.contrib import admin, messages
-from django.utils.html import format_html
+from django.utils.html import escape, format_html
+from django.utils.safestring import mark_safe
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.contrib.filters.admin import RangeDateFilter
 
@@ -37,9 +41,9 @@ class RAPImportFileInline(TabularInline):
     @admin.display(description="Status")
     def status_badge(self, obj: RAPImportFile):
         styles = {
-            "ok": "background:#30E87A0D;color:#27500A;border:1px solid #30E87A30",
-            "error": "background:#FF4B2B0D;color:#A32D2D;border:1px solid #FF4B2B30",
-            "pending": "background:#F5A6230D;color:#633806;border:1px solid #F5A62330",
+            "ok": "background:#EAF6EE;color:#27500A;border:1px solid #9FE1CB",
+            "error": "background:#FEECEA;color:#A32D2D;border:1px solid #F7C1C1",
+            "pending": "background:#FDF3E0;color:#633806;border:1px solid #F5C875",
         }
         s = styles.get(obj.status, styles["pending"])
         return format_html(
@@ -54,9 +58,9 @@ class RAPImportFileInline(TabularInline):
     def parse_errors_summary(self, obj: RAPImportFile):
         errs = obj.parse_errors or []
         if not errs:
-            return format_html('<span style="color:#30E87A;font-size:11px;">None</span>')
+            return format_html('<span style="color:#27500A;font-size:11px;">None</span>')
         return format_html(
-            '<span style="color:#FF4B2B;font-size:11px;">{}</span>',
+            '<span style="color:#A32D2D;font-size:11px;">{}</span>',
             "; ".join(str(e) for e in errs[:3]),
         )
 
@@ -96,6 +100,7 @@ class RAPImportBatchAdmin(ModelAdmin):
         "max_intensity",
         "provinces_affected",
         "councils_affected",
+        "province_intensity_panel",
     ]
     inlines = [RAPImportFileInline]
 
@@ -114,7 +119,12 @@ class RAPImportBatchAdmin(ModelAdmin):
         (
             "Impact Summary",
             {
-                "fields": ("max_intensity", "provinces_affected", "councils_affected"),
+                "fields": (
+                    "max_intensity",
+                    "provinces_affected",
+                    "councils_affected",
+                    "province_intensity_panel",
+                ),
                 "classes": ["tab"],
                 "description": "Auto-populated after hazard CSV is parsed.",
             },
@@ -133,10 +143,10 @@ class RAPImportBatchAdmin(ModelAdmin):
     @admin.display(description="Status")
     def status_badge(self, obj: RAPImportBatch):
         styles = {
-            "complete": "background:#30E87A0D;color:#27500A;border:1px solid #30E87A30",
-            "failed": "background:#FF4B2B0D;color:#A32D2D;border:1px solid #FF4B2B30",
-            "importing": "background:#4D90FF0D;color:#0C447C;border:1px solid #4D90FF30",
-            "pending": "background:#F5A6230D;color:#633806;border:1px solid #F5A62330",
+            "complete": "background:#EAF6EE;color:#27500A;border:1px solid #9FE1CB",
+            "failed": "background:#FEECEA;color:#A32D2D;border:1px solid #F7C1C1",
+            "importing": "background:#EBF3FE;color:#0C447C;border:1px solid #B5D4F4",
+            "pending": "background:#FDF3E0;color:#633806;border:1px solid #F5C875",
         }
         s = styles.get(obj.status, styles["pending"])
         return format_html(
@@ -151,12 +161,20 @@ class RAPImportBatchAdmin(ModelAdmin):
     def max_intensity_badge(self, obj: RAPImportBatch):
         if not obj.max_intensity:
             return "—"
-        colors = {2: "#4D90FF", 3: "#F5A623", 4: "#FF7A5C", 5: "#FF4B2B"}
-        c = colors.get(obj.max_intensity, "#8896B0")
+        badge = {
+            2: ("#185FA5", "#E6F1FB", "#85B7EB"),
+            3: ("#633806", "#FDF3E0", "#F5C875"),
+            4: ("#A32D2D", "#FEECEA", "#F7C1C1"),
+            5: ("#791F1F", "#FEECEA", "#F7C1C1"),
+        }
+        color, bg, border = badge.get(obj.max_intensity, ("#9AA5B8", "#F8F9FB", "#E2E6EE"))
         return format_html(
             '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;'
-            'font-weight:500;color:{}">Cat {}</span>',
-            c,
+            'font-weight:500;color:{};background:{};padding:2px 8px;border-radius:3px;'
+            'border:1px solid {};">Cat {}</span>',
+            color,
+            bg,
+            border,
             obj.max_intensity,
         )
 
@@ -164,11 +182,11 @@ class RAPImportBatchAdmin(ModelAdmin):
     def provinces_summary(self, obj: RAPImportBatch):
         provinces = obj.provinces_affected or []
         if not provinces:
-            return format_html('<span style="color:#3A4255;">—</span>')
+            return format_html('<span style="color:#9AA5B8;">—</span>')
         shown = ", ".join(provinces[:3])
         suffix = f" +{len(provinces) - 3} more" if len(provinces) > 3 else ""
         return format_html(
-            '<span style="font-size:11px;color:#8896B0;">{}{}</span>',
+            '<span style="font-size:11px;color:#9AA5B8;">{}{}</span>',
             shown,
             suffix,
         )
@@ -181,7 +199,7 @@ class RAPImportBatchAdmin(ModelAdmin):
         if err:
             return format_html(
                 '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;">'
-                '<span style="color:#30E87A">{}</span>/<span style="color:#FF4B2B">{} err</span>/{}</span>',
+                '<span style="color:#27500A">{}</span>/<span style="color:#A32D2D">{} err</span>/{}</span>',
                 ok,
                 err,
                 total,
@@ -193,12 +211,77 @@ class RAPImportBatchAdmin(ModelAdmin):
             total,
         )
 
+    @admin.display(description="Province intensity (hazard CSV)")
+    def province_intensity_panel(self, obj: RAPImportBatch):
+        if not obj.pk:
+            return "—"
+        hazard_file = obj.files.filter(sector_family="hazard", status="ok").first()
+        if not hazard_file:
+            return format_html(
+                '<span style="color:#9AA5B8;font-size:11px;">'
+                "No hazard CSV imported for this batch.</span>"
+            )
+        try:
+            hazard_file.file.seek(0)
+            raw = hazard_file.file.read()
+            content = raw.decode("utf-8-sig") if isinstance(raw, bytes) else raw
+            reader = csv.DictReader(io.StringIO(content))
+        except Exception as exc:
+            return format_html(
+                '<span style="color:#A32D2D;font-size:11px;">Could not read hazard file: {}</span>',
+                escape(str(exc)),
+            )
+
+        intensity_colors = {"2": "#185FA5", "3": "#633806", "4": "#A32D2D", "5": "#791F1F"}
+        parts = []
+        for row in reader:
+            province = escape((row.get("Province") or "—").strip() or "—")
+            council = escape((row.get("Area Council") or "—").strip() or "—")
+            intensity = (row.get("Intensity") or "").strip()
+            if intensity == "0" or intensity == "":
+                continue
+            color = intensity_colors.get(intensity, "#9AA5B8")
+            parts.append(
+                "<tr>"
+                f'<td style="padding:4px 8px;font-size:11px;color:#4A5568;">{province}</td>'
+                f'<td style="padding:4px 8px;font-size:11px;color:#9AA5B8;">{council}</td>'
+                '<td style="padding:4px 8px;font-family:\'IBM Plex Mono\',monospace;'
+                f'font-size:11px;font-weight:500;color:{color}">Cat {escape(intensity)}</td>'
+                "</tr>"
+            )
+        if not parts:
+            return format_html(
+                '<span style="color:#9AA5B8;font-size:11px;">'
+                "No councils with Intensity &gt; 0.</span>"
+            )
+
+        thead = (
+            "<thead><tr>"
+            '<th style="padding:4px 8px;font-family:\'IBM Plex Mono\',monospace;font-size:9px;'
+            'letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;text-align:left;">'
+            "Province</th>"
+            '<th style="padding:4px 8px;font-family:\'IBM Plex Mono\',monospace;font-size:9px;'
+            'letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;text-align:left;">'
+            "Area Council</th>"
+            '<th style="padding:4px 8px;font-family:\'IBM Plex Mono\',monospace;font-size:9px;'
+            'letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;text-align:left;">'
+            "Intensity</th>"
+            "</tr></thead>"
+        )
+        return mark_safe(
+            '<table style="border-collapse:collapse;width:100%;max-width:720px;">'
+            + thead
+            + "<tbody>"
+            + "".join(parts)
+            + "</tbody></table>"
+        )
+
     @admin.display(description="Imported")
     def imported_at_fmt(self, obj: RAPImportBatch):
         if not obj.imported_at:
             return "—"
         return format_html(
-            '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:#6B7A99">{}</span>',
+            '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:#9AA5B8">{}</span>',
             obj.imported_at.strftime("%d %b %Y %H:%M"),
         )
 

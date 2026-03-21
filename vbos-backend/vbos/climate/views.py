@@ -80,11 +80,30 @@ def climate_dashboard(request):
             "has_models": has_models,
             "url": reverse(f"admin_climate_module_{module_id}") if has_models and module_id in ("land_accounts", "coastal_changes") else None,
         })
+    rap_qc_available = False
+    rap_qc_batch = None
+    try:
+        from vbos.rap_import.models import RAPImportFile
+
+        latest_qc = (
+            RAPImportFile.objects.filter(sector_family="qc", status="ok")
+            .select_related("batch")
+            .order_by("-uploaded_at")
+            .first()
+        )
+        if latest_qc is not None:
+            rap_qc_available = True
+            rap_qc_batch = latest_qc.batch
+    except Exception:
+        pass
+
     context = {
         "title": "Climate",
         "modules": modules,
         "site_header": "VBoS MIS",
         "site_title": "Climate",
+        "rap_qc_available": rap_qc_available,
+        "rap_qc_batch": rap_qc_batch,
     }
     return render(request, "admin/climate/dashboard.html", context)
 

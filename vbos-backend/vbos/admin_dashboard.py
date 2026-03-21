@@ -56,6 +56,12 @@ def dashboard_callback(request, context):
 
     context["dashboard_stats"] = stats
 
+    # Admin UI mode banner (Disaster / Climate / Compare) — visual only, from query string
+    mode = (request.GET.get("mode") or "disaster").lower()
+    if mode not in ("disaster", "climate", "compare"):
+        mode = "disaster"
+    context["admin_mode"] = mode
+
     # Summary indicators
     total_datasets = (
         stats.get("vector_datasets", 0)
@@ -196,5 +202,30 @@ def dashboard_callback(request, context):
         )
 
     context["admin_log"] = enriched_log
+
+    # RAP import summary (disaster-project-rap → MIS)
+    try:
+        from vbos.rap_import.models import RAPImportBatch
+
+        latest_batch = (
+            RAPImportBatch.objects.filter(status="complete").order_by("-imported_at").first()
+        )
+        pending_batches = RAPImportBatch.objects.filter(status="pending").count()
+        context["rap_latest_batch"] = latest_batch
+        context["rap_pending_count"] = pending_batches
+        if latest_batch:
+            context["rap_affected_provinces"] = latest_batch.provinces_affected or []
+            context["rap_max_intensity"] = latest_batch.max_intensity
+            context["rap_cyclone_name"] = latest_batch.cyclone_name
+        else:
+            context["rap_affected_provinces"] = []
+            context["rap_max_intensity"] = None
+            context["rap_cyclone_name"] = None
+    except Exception:
+        context["rap_latest_batch"] = None
+        context["rap_pending_count"] = 0
+        context["rap_affected_provinces"] = []
+        context["rap_max_intensity"] = None
+        context["rap_cyclone_name"] = None
 
     return context
