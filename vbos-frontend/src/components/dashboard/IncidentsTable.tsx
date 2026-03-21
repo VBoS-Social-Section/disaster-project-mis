@@ -178,7 +178,7 @@ export function IncidentsTable({
         <table className="w-full border-collapse text-left">
           <thead>
             <tr style={{ borderBottom: `1px solid ${colors.border.default}` }}>
-              {(["Severity", "Incident", "Date", "Status"] as const).map((label) => (
+              {(["Severity", "Incident", "Date", "Status", "Edit"] as const).map((label) => (
                 <th
                   key={label}
                   className="px-4 py-2.5 text-[9px] font-semibold uppercase tracking-[0.1em]"
@@ -230,6 +230,21 @@ export function IncidentsTable({
                   style={{ color: colors.text.secondary }}
                 >
                   {row.status}
+                </td>
+                <td className="px-4 py-3 align-middle text-right">
+                  <a
+                    href={`/admin/area_submissions/areadatasubmission/${row.id}/change/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: "10px",
+                      color: colors.text.muted,
+                      textDecoration: "none",
+                    }}
+                  >
+                    Edit ↗
+                  </a>
                 </td>
               </tr>
             ))}

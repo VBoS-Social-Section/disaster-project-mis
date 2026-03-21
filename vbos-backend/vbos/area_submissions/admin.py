@@ -70,12 +70,24 @@ class AreaDataSubmissionAdmin(UnfoldModelAdmin):
     ]
     list_filter = ["status", "dataset", "province", "year"]
     search_fields = ["submitted_by__username", "dataset__name", "province__name"]
-    readonly_fields = ["submitted_at", "reviewed_by", "reviewed_at", "created", "updated"]
+    readonly_fields = [
+        "submitted_at",
+        "reviewed_by",
+        "reviewed_at",
+        "created",
+        "updated",
+        "view_on_map_link",
+    ]
     actions = [_approve_submission, _reject_submission]
     date_hierarchy = "submitted_at"
 
     fieldsets = (
-        (None, {"fields": ("dataset", "province", "area_council", "year", "items")}),
+        (
+            None,
+            {
+                "fields": ("dataset", "province", "area_council", "year", "items", "view_on_map_link"),
+            },
+        ),
         (
             "Status",
             {
@@ -89,7 +101,6 @@ class AreaDataSubmissionAdmin(UnfoldModelAdmin):
                 )
             },
         ),
-        ("Meta", {"fields": ("created", "updated")}),
     )
 
     def status_badge(self, obj):
@@ -108,6 +119,19 @@ class AreaDataSubmissionAdmin(UnfoldModelAdmin):
         )
 
     status_badge.short_description = "Status"
+
+    @admin.display(description="View on map")
+    def view_on_map_link(self, obj):
+        province = getattr(obj, "province", None)
+        # Incidents are represented by AreaDataSubmission (tabular dataset + province)
+        layers = f"t{obj.dataset_id}"
+        url = f"/app/live-map?layers={layers}"
+        if province is not None:
+            url += f"&province={province.pk}"
+        return format_html(
+            '<a href="{}" target="_blank" style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:#185FA5;text-decoration:none;">Open in Live Map →</a>',
+            url,
+        )
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(

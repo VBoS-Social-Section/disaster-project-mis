@@ -2,7 +2,7 @@ import { Header } from "./components/Header";
 import { AppShell } from "@/components/shell";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import type { MapRef } from "./components/Map";
-import { useRef, lazy, Suspense } from "react";
+import { useEffect, useRef, lazy, Suspense } from "react";
 import { LuRefreshCw } from "react-icons/lu";
 import { cn } from "@/lib/utils";
 import { useUrlSync } from "./hooks/useUrlSync";
@@ -118,6 +118,8 @@ function App() {
     dataEntryPageOpen,
     setProfilePageOpen,
     primaryWorkspace,
+    setShellNavId,
+    setPrimaryWorkspace,
   } = useUiStore();
   const { isLocked } = useLockStore();
   const isTimeSeriesOpen = useUiStore((s) => s.isTimeSeriesOpen);
@@ -130,6 +132,17 @@ function App() {
   useKeyboardShortcuts();
   useAutoLock();
   useOfflineAreaSync();
+
+  // Deep-link support for admin “View on Live Map” actions.
+  // If the server forwards `/live-map` to the SPA, we still need to switch
+  // the primary workspace so the map view is rendered (not Command Centre).
+  useEffect(() => {
+    const path = typeof window !== "undefined" ? window.location.pathname : "";
+    if (path.includes("live-map")) {
+      setShellNavId("live-map");
+      setPrimaryWorkspace("operations");
+    }
+  }, [setShellNavId, setPrimaryWorkspace]);
 
   if (!isAuthenticated) {
     return <Login />;
@@ -164,55 +177,55 @@ function App() {
                   : "md:grid-cols-[1fr_28rem]",
               )}
             >
-        <div
-          id="drmis-map-stage"
-          className={cn(
-            "relative map-area min-w-0 min-h-0 overflow-hidden transition-colors duration-500",
-            scenarioId === "climate" && "bg-emerald-500/[0.04]",
-            (scenarioId === "disaster" || scenarioId === "compare") &&
+              <div
+                id="drmis-map-stage"
+                className={cn(
+                  "relative map-area min-w-0 min-h-0 overflow-hidden transition-colors duration-500",
+                  scenarioId === "climate" && "bg-emerald-500/[0.04]",
+                  (scenarioId === "disaster" || scenarioId === "compare") &&
               "bg-red-500/[0.03]",
-          )}
-          onClick={() => {
-            if (isMobile && mobileOpenPanel) setMobileOpenPanel(null);
-          }}
-        >
-          <ErrorBoundary fallbackRender={MapErrorFallback}>
-            <div className="relative flex h-full min-h-0 flex-col">
-              <MapCursorRing />
-              <TabularLayers />
-              <Suspense fallback={<MapLoadingSkeleton />}>
-                {mapMode === "3d" ? <Map3D /> : <Map ref={mapRef} />}
-              </Suspense>
-              <ClimateKeyIndicators />
-              <MapEmptyState />
-              <FloatingLayerControl />
-              <SimulationPanel />
-              <MobilePanelFAB />
-              <MapModeBadge />
-              {!isLocked && <FeedbackButton />}
-              {isTimeSeriesOpen && (
-                <Suspense fallback={null}>
-                  <FloatingTimeSeries />
-                </Suspense>
-              )}
+                )}
+                onClick={() => {
+                  if (isMobile && mobileOpenPanel) setMobileOpenPanel(null);
+                }}
+              >
+                <ErrorBoundary fallbackRender={MapErrorFallback}>
+                  <div className="relative flex h-full min-h-0 flex-col">
+                    <MapCursorRing />
+                    <TabularLayers />
+                    <Suspense fallback={<MapLoadingSkeleton />}>
+                      {mapMode === "3d" ? <Map3D /> : <Map ref={mapRef} />}
+                    </Suspense>
+                    <ClimateKeyIndicators />
+                    <MapEmptyState />
+                    <FloatingLayerControl />
+                    <SimulationPanel />
+                    <MobilePanelFAB />
+                    <MapModeBadge />
+                    {!isLocked && <FeedbackButton />}
+                    {isTimeSeriesOpen && (
+                      <Suspense fallback={null}>
+                        <FloatingTimeSeries />
+                      </Suspense>
+                    )}
+                  </div>
+                </ErrorBoundary>
+              </div>
+              <div className="min-h-0 min-w-0 overflow-hidden">
+                <ErrorBoundary
+                  fallbackRender={(error, retry) => (
+                    <SidebarErrorFallback
+                      error={error}
+                      retry={retry}
+                      title="Context panel failed"
+                      side="right"
+                    />
+                  )}
+                >
+                  <RightSidebar />
+                </ErrorBoundary>
+              </div>
             </div>
-          </ErrorBoundary>
-        </div>
-        <div className="min-h-0 min-w-0 overflow-hidden">
-          <ErrorBoundary
-            fallbackRender={(error, retry) => (
-              <SidebarErrorFallback
-                error={error}
-                retry={retry}
-                title="Context panel failed"
-                side="right"
-              />
-            )}
-          >
-            <RightSidebar />
-          </ErrorBoundary>
-        </div>
-          </div>
           </div>
         )}
       </AppShell>

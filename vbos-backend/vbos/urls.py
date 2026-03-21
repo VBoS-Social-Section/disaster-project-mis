@@ -18,6 +18,7 @@ from vbos.land_accounts.admin_views import (
 from vbos.climate.views import climate_dashboard, climate_import_geojson, climate_module_detail
 from vbos.field_check.admin import field_check_dashboard
 from vbos.compare.views import EventCompareView
+from vbos.admin_pipeline_status_api import AdminPipelineStatusView
 from vbos.rap_import.views import RAPUploadView
 from vbos.maintenance.task_status_views import celery_task_status
 from vbos.maintenance.views import backup_download, backup_restore_dashboard, restore_upload
@@ -91,6 +92,11 @@ urlpatterns = [
         f"{API_BASE_URL}/tasks/<str:task_id>/status/",
         celery_task_status,
         name="api_celery_task_status",
+    ),
+    path(
+        f"{API_BASE_URL}/admin/pipeline-status/",
+        AdminPipelineStatusView.as_view(),
+        name="api_admin_pipeline_status",
     ),
     path("admin", RedirectView.as_view(url="/admin/", permanent=True)),
     # Redirect admin paths without trailing slash (APPEND_SLASH=False)
