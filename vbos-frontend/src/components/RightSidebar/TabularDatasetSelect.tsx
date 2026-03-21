@@ -5,6 +5,7 @@
  */
 import { startTransition, useEffect, useMemo, useRef } from "react";
 import { Label } from "@/components/ui/label";
+import { colors } from "@/tokens";
 import {
   Select,
   SelectContent,
@@ -51,9 +52,9 @@ export function TabularDatasetSelect() {
     .find((l) => l.startsWith("t"));
   const activeTabularMeta = currentTabularId
     ? allDatasets.find(
-        (d) =>
-          d.dataType === "tabular" && `t${d.id}` === currentTabularId,
-      )
+      (d) =>
+        d.dataType === "tabular" && `t${d.id}` === currentTabularId,
+    )
     : null;
   const tabularDatasets = useMemo(() => {
     const fromCluster = allDatasets.filter(
@@ -182,6 +183,22 @@ export function TabularDatasetSelect() {
               </SelectContent>
             </Select>
           </div>
+        )}
+
+        {currentDataset && datasetsInType.length <= 1 && (
+          <a
+            href={`/admin/datasets/tabulardataset/${currentDataset.id}/change/`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: "10px",
+              color: colors.text.muted,
+              textDecoration: "none",
+            }}
+          >
+            Manage dataset ↗
+          </a>
         )}
       </Tabs>
     </div>

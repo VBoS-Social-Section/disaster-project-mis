@@ -8,6 +8,9 @@
 
 - [x] **RAP CSV import pipeline (MVP)** — Django app `vbos.rap_import`: `RAPImportBatch` / `RAPImportFile` models, filename→sector detection, `validate_rap_csv` against RAP schemas, Unfold admin (batch list, inline files, validate/import actions), staff multi-file upload at `/admin/rap-import/upload/`, Celery task stub; `import_rap_batch_to_tabular` mapping to TabularDataset **TBD**
 - [x] **DRMIS app shell — light/dark theme** — `--drmis-*` CSS variables in `index.css` (main content toggles; **sidebar stays dark** in both modes), `tokens/colors.ts` uses `var(--drmis-…)` for surfaces/text/borders, Command Centre (KPI cards, incidents table, live alerts, risk exposure), topbar, and map workspace respond to `next-themes` (`class` on `<html>`); fixed hardcoded `html`/`body` backgrounds that blocked light mode
+- [x] **Admin/operator boundary refresh** — `/admin/` redesigned for operator pipeline ownership (RAP queue, pending approvals, MFA gap, backup age, system status, recent audit activity) and incident-focused widgets removed from backend dashboard
+- [x] **Cross-linking between `/admin/` and `/app/`** — admin change forms now include `Open in Live Map →` deep links; frontend now exposes `Edit ↗` and `Manage dataset ↗` links to admin plus a staff-only `Admin Panel ↗` entry in sidebar
+- [x] **Staff-only pipeline status API** — added `GET /api/v1/admin/pipeline-status/` returning RAP pending, approvals pending, users missing MFA, backup age/status, celery status, and recent audit payload for operator dashboards
 
 ---
 
@@ -23,7 +26,7 @@
   - [ ] Make MFA mandatory on first login (redirect to setup if not enrolled)
   - [ ] Enforce MFA for all staff roles; block login if not set up
   - [ ] Grace period warning banner: "Set up MFA by [date] or access will be restricted"
-  - [ ] Admin report: users without MFA enrolled
+  - [x] Admin report: users without MFA enrolled (dashboard/API pipeline status)
 
 - [ ] **RBAC per dataset/module** `0%` — e.g. MoCCA edits climate only, NDMO views all, field officers edit field-check only
   - [ ] Audit current Role model and permission scope

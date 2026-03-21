@@ -1,231 +1,192 @@
 """
-Admin dashboard callback: provides stats, charts, and context for the custom index page.
+Backend admin dashboard callback: operator pipeline status (no incident feed).
 """
 
-import json
-from datetime import timedelta
+from __future__ import annotations
 
-from django.contrib.admin.models import ADDITION, CHANGE, DELETION, LogEntry
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models.functions import TruncDate
+from django.db.models import Count
 from django.utils import timezone
+from django.utils.html import format_html
 
-from vbos.datasets.models import (
-    Cluster,
-    PMTilesDataset,
-    RasterDataset,
-    TabularDataset,
-    TabularItem,
-    VectorDataset,
-    VectorItem,
-)
-from vbos.feedback.models import Feedback
 from vbos.area_submissions.models import AreaDataSubmission
-from vbos.field_check.models import FieldCheckRecord
+from vbos.rap_import.models import RAPImportBatch
+from vbos.admin_pipeline_status_api import compute_admin_pipeline_status_internal
 
 User = get_user_model()
 
 
+INTENSITY_BADGE_STYLES = {
+    2: ("#185FA5", "#E6F1FB", "#85B7EB"),
+    3: ("#633806", "#FDF3E0", "#F5C875"),
+    4: ("#A32D2D", "#FEECEA", "#F7C1C1"),
+    5: ("#791F1F", "#FEECEA", "#F7C1C1"),
+}
+
+RAP_STATUS_STYLES = {
+    "pending": ("#FDF3E0", "#633806", "#F5C875"),
+    "importing": ("#EBF3FE", "#0C447C", "#B5D4F4"),
+    "complete": ("#EAF6EE", "#27500A", "#9FE1CB"),
+    "failed": ("#FEECEA", "#A32D2D", "#F7C1C1"),
+}
+
+OK_BADGE = ("#EAF6EE", "#27500A", "#9FE1CB")
+WARN_BADGE = ("#FDF3E0", "#633806", "#F5C875")
+BAD_BADGE = ("#FEECEA", "#A32D2D", "#F7C1C1")
+
+
+def _format_age_label(dt) -> tuple[str, bool]:
+    if dt is None:
+        return "—", False
+    delta = timezone.now() - dt
+    seconds = max(0, delta.total_seconds())
+    stale = seconds > 24 * 3600
+    if seconds < 24 * 3600:
+        hours = int(seconds // 3600)
+        # Ensure we don't show "0h ago" for something that's a few minutes old.
+        hours = max(1, hours)
+        return f"{hours}h ago", stale
+    days = int(seconds // (24 * 3600))
+    days = max(1, days)
+    return f"{days}d ago", stale
+
+
+def _badge_html(text: str, bg: str, color: str, border: str, font_size: int = 10):
+    return format_html(
+        '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:{}px;'
+        'padding:2px 8px;border-radius:4px;background:{};color:{};border:1px solid {};">{}</span>',
+        font_size,
+        bg,
+        color,
+        border,
+        text,
+    )
+
+
+def _rap_intensity_badge(max_intensity: int | None):
+    if max_intensity is None:
+        return _badge_html("—", "#F8F9FB", "#4A5568", "#E2E6EE")
+    c = INTENSITY_BADGE_STYLES.get(int(max_intensity), ("#4A5568", "#F8F9FB", "#E2E6EE"))
+    color, bg, border = c
+    return _badge_html(f"Cat {int(max_intensity)}", bg, color, border)
+
+
+def _rap_status_badge(status: str):
+    bg, color, border = RAP_STATUS_STYLES.get(status, ("#F8F9FB", "#4A5568", "#E2E6EE"))
+    return _badge_html(status.upper(), bg, color, border)
+
+
+def _celery_online() -> bool:
+    try:
+        from vbos.celery import app as celery_app
+
+        insp = celery_app.control.inspect()
+        if not insp:
+            return False
+        ping = insp.ping() or {}
+        return isinstance(ping, dict) and any(bool(v) for v in ping.values())
+    except Exception:
+        return False
+
+
+def _redis_connected() -> bool:
+    try:
+        import redis
+
+        r = redis.Redis.from_url(
+            getattr(settings, "CELERY_BROKER_URL", None) or "redis://localhost:6379/0",
+            socket_connect_timeout=1,
+            socket_timeout=1,
+        )
+        return bool(r.ping())
+    except Exception:
+        return False
+
+
+def _user_missing_mfa_count() -> int:
+    try:
+        from django_otp import user_has_device
+
+        missing = 0
+        for u in User.objects.filter(is_active=True).only("id"):
+            if not user_has_device(u):
+                missing += 1
+        return missing
+    except Exception:
+        return 0
+
+
 def dashboard_callback(request, context):
-    """Add dashboard stats and enriched recent actions to admin index context."""
-    # Stats (only count what user has permission to view)
-    stats = {}
-
-    if request.user.has_perm("datasets.view_cluster"):
-        stats["clusters"] = Cluster.objects.count()
-    if request.user.has_perm("datasets.view_pmtilesdataset"):
-        stats["pmtiles_datasets"] = PMTilesDataset.objects.count()
-    if request.user.has_perm("datasets.view_rasterdataset"):
-        stats["raster_datasets"] = RasterDataset.objects.count()
-    if request.user.has_perm("datasets.view_vectordataset"):
-        stats["vector_datasets"] = VectorDataset.objects.count()
-    if request.user.has_perm("datasets.view_vectoritem"):
-        stats["vector_items"] = VectorItem.objects.count()
-    if request.user.has_perm("datasets.view_tabulardataset"):
-        stats["tabular_datasets"] = TabularDataset.objects.count()
-    if request.user.has_perm("datasets.view_tabularitem"):
-        stats["tabular_items"] = TabularItem.objects.count()
-    if request.user.has_perm("users.view_user"):
-        stats["users"] = User.objects.count()
-    if request.user.has_perm("feedback.view_feedback"):
-        stats["feedback"] = Feedback.objects.count()
-    if request.user.has_perm("area_submissions.view_areadatasubmission"):
-        stats["area_submissions"] = AreaDataSubmission.objects.count()
-    if request.user.has_perm("field_check.view_fieldcheckrecord"):
-        stats["field_checks"] = FieldCheckRecord.objects.count()
-
-    context["dashboard_stats"] = stats
-
-    # Admin UI mode banner (Disaster / Climate / Compare) — visual only, from query string
+    """
+    Inject operator pipeline status into the backend admin dashboard.
+    """
+    # UI mode banner (visual only, from query string)
     mode = (request.GET.get("mode") or "disaster").lower()
     if mode not in ("disaster", "climate", "compare"):
         mode = "disaster"
     context["admin_mode"] = mode
 
-    # Summary indicators
-    total_datasets = (
-        stats.get("vector_datasets", 0)
-        + stats.get("pmtiles_datasets", 0)
-        + stats.get("raster_datasets", 0)
-        + stats.get("tabular_datasets", 0)
+    # KPI cards
+    internal = compute_admin_pipeline_status_internal()
+
+    rap_pending_count = internal.get("rap_pending") or 0
+    approvals_pending_count = internal.get("approvals_pending") or 0
+    mfa_missing_count = internal.get("mfa_missing") or 0
+
+    last_backup_created_at = internal.get("last_backup_created_at")
+    last_backup_age_label, last_backup_stale = _format_age_label(last_backup_created_at)
+
+    context["kpi_rap_pending"] = rap_pending_count
+    context["kpi_approvals_pending"] = approvals_pending_count
+    context["kpi_mfa_missing"] = mfa_missing_count
+    context["kpi_last_backup_age_label"] = last_backup_age_label
+    context["kpi_last_backup_stale"] = last_backup_stale
+    context["last_backup_created_at"] = last_backup_created_at
+
+    # RAP queue + pending approvals
+    recent_rap_batches = list(
+        RAPImportBatch.objects.annotate(file_count=Count("files"))
+        .order_by("-imported_at")[:5]
     )
-    total_items = stats.get("vector_items", 0) + stats.get("tabular_items", 0)
-    now = timezone.now()
-    week_ago = now - timedelta(days=7)
-    actions_this_week = LogEntry.objects.filter(
-        user=request.user, action_time__gte=week_ago
-    ).count()
-    context["dashboard_summary"] = {
-        "total_datasets": total_datasets,
-        "total_items": total_items,
-        "actions_this_week": actions_this_week,
+    context["rap_batches_recent"] = [
+        {
+            "batch_ref": b.batch_ref,
+            "cyclone_name": b.cyclone_name,
+            "max_intensity_badge": _rap_intensity_badge(b.max_intensity),
+            "status_badge": _rap_status_badge(b.status),
+            "file_count": getattr(b, "file_count", 0) or 0,
+        }
+        for b in recent_rap_batches
+    ]
+
+    recent_approvals = list(
+        AreaDataSubmission.objects.filter(status=AreaDataSubmission.STATUS_SUBMITTED)
+        .select_related("dataset")
+        .order_by("-updated")[:5]
+    )
+    context["approvals_recent"] = [
+        {
+            "dataset_name": s.dataset.name,
+            "type": s.dataset.type,
+            "ministry": s.dataset.source or "—",
+            "submitted_at": s.submitted_at,
+        }
+        for s in recent_approvals
+    ]
+
+    # System status
+    celery_online = bool(internal.get("celery_online"))
+    redis_connected = _redis_connected()
+    context["system_status"] = {
+        "celery_online": celery_online,
+        "redis_connected": redis_connected,
+        "last_backup_created_at": last_backup_created_at,
+        "last_backup_age_label": last_backup_age_label,
+        "last_backup_stale": last_backup_stale,
     }
 
-    # Activity chart: admin actions per day (last 14 days)
-    activity_qs = (
-        LogEntry.objects.filter(user=request.user)
-        .annotate(day=TruncDate("action_time"))
-        .values("day", "action_flag")
-        .order_by("day")
-    )
-    days = [(now - timedelta(days=i)).date() for i in range(13, -1, -1)]
-    add_counts = {d: 0 for d in days}
-    change_counts = {d: 0 for d in days}
-    delete_counts = {d: 0 for d in days}
-    for row in activity_qs:
-        if row["day"] in add_counts:
-            if row["action_flag"] == ADDITION:
-                add_counts[row["day"]] += 1
-            elif row["action_flag"] == CHANGE:
-                change_counts[row["day"]] += 1
-            elif row["action_flag"] == DELETION:
-                delete_counts[row["day"]] += 1
-    context["activity_chart_data"] = json.dumps(
-        {
-            "labels": [d.strftime("%b %d") for d in days],
-            "datasets": [
-                {
-                    "label": "Added",
-                    "data": [add_counts[d] for d in days],
-                    "backgroundColor": "rgba(34, 197, 94, 0.7)",
-                    "borderColor": "rgb(34, 197, 94)",
-                },
-                {
-                    "label": "Changed",
-                    "data": [change_counts[d] for d in days],
-                    "backgroundColor": "rgba(59, 130, 246, 0.7)",
-                    "borderColor": "rgb(59, 130, 246)",
-                },
-                {
-                    "label": "Deleted",
-                    "data": [delete_counts[d] for d in days],
-                    "backgroundColor": "rgba(239, 68, 68, 0.7)",
-                    "borderColor": "rgb(239, 68, 68)",
-                },
-            ],
-        }
-    )
-    context["activity_chart_options"] = json.dumps(
-        {
-            "scales": {
-                "x": {"stacked": True},
-                "y": {"stacked": True, "beginAtZero": True},
-            },
-            "plugins": {"legend": {"position": "bottom"}},
-        }
-    )
-
-    # Dataset distribution pie chart
-    ds_labels = []
-    ds_data = []
-    ds_colors = []
-    if request.user.has_perm("datasets.view_vectordataset"):
-        c = VectorDataset.objects.count()
-        if c > 0:
-            ds_labels.append("Vector")
-            ds_data.append(c)
-            ds_colors.append("rgba(59, 130, 246, 0.8)")
-    if request.user.has_perm("datasets.view_pmtilesdataset"):
-        c = PMTilesDataset.objects.count()
-        if c > 0:
-            ds_labels.append("PMTiles")
-            ds_data.append(c)
-            ds_colors.append("rgba(34, 197, 94, 0.8)")
-    if request.user.has_perm("datasets.view_rasterdataset"):
-        c = RasterDataset.objects.count()
-        if c > 0:
-            ds_labels.append("Raster")
-            ds_data.append(c)
-            ds_colors.append("rgba(234, 179, 8, 0.8)")
-    if request.user.has_perm("datasets.view_tabulardataset"):
-        c = TabularDataset.objects.count()
-        if c > 0:
-            ds_labels.append("Tabular")
-            ds_data.append(c)
-            ds_colors.append("rgba(168, 85, 247, 0.8)")
-    if ds_labels:
-        context["dataset_chart_data"] = json.dumps(
-            {
-                "labels": ds_labels,
-                "datasets": [{"data": ds_data, "backgroundColor": ds_colors}],
-            }
-        )
-    else:
-        context["dataset_chart_data"] = None
-
-    # Enriched recent actions (last 15, with change details)
-    log_entries = (
-        LogEntry.objects.filter(user=request.user)
-        .select_related("content_type", "user")
-        .order_by("-action_time")[:15]
-    )
-
-    enriched_log = []
-    for entry in log_entries:
-        change_detail = ""
-        if entry.is_change and entry.change_message:
-            # get_change_message() returns translated, human-readable summary
-            try:
-                change_detail = entry.get_change_message()
-            except Exception:
-                change_detail = str(entry.change_message)[:200] if entry.change_message else ""
-
-        action_label = "Added" if entry.is_addition else "Changed" if entry.is_change else "Deleted"
-
-        enriched_log.append(
-            {
-                "entry": entry,
-                "action_label": action_label,
-                "change_detail": change_detail,
-                "action_class": "addlink" if entry.is_addition else "changelink" if entry.is_change else "deletelink",
-            }
-        )
-
-    context["admin_log"] = enriched_log
-
-    # RAP import summary (disaster-project-rap → MIS)
-    try:
-        from vbos.rap_import.models import RAPImportBatch
-
-        latest_batch = (
-            RAPImportBatch.objects.filter(status="complete").order_by("-imported_at").first()
-        )
-        pending_batches = RAPImportBatch.objects.filter(status="pending").count()
-        context["rap_latest_batch"] = latest_batch
-        context["rap_pending_count"] = pending_batches
-        if latest_batch:
-            context["rap_affected_provinces"] = latest_batch.provinces_affected or []
-            context["rap_max_intensity"] = latest_batch.max_intensity
-            context["rap_cyclone_name"] = latest_batch.cyclone_name
-        else:
-            context["rap_affected_provinces"] = []
-            context["rap_max_intensity"] = None
-            context["rap_cyclone_name"] = None
-    except Exception:
-        context["rap_latest_batch"] = None
-        context["rap_pending_count"] = 0
-        context["rap_affected_provinces"] = []
-        context["rap_max_intensity"] = None
-        context["rap_cyclone_name"] = None
+    context["audit_logging_active"] = bool(internal.get("audit_logging_active"))
+    context["recent_audit"] = internal.get("recent_audit") or []
 
     return context
