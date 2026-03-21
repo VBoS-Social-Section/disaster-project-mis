@@ -15,6 +15,14 @@ export const useUrlSync = () => {
   const { syncFromUrl: syncViewFromUrl } = useViewStore();
 
   useEffect(() => {
+    const syncCompareDeepLink = () => {
+      const sid = useViewStore.getState().scenarioId;
+      const params = new URLSearchParams(window.location.search);
+      if (sid === "compare" && params.get("compare") !== "1") {
+        useComparisonStore.getState().setComparisonMode(true);
+      }
+    };
+
     // Sync from URL on mount and on popstate (shareable links restore full view state)
     syncAreaFromUrl();
     syncDateFromUrl();
@@ -22,6 +30,7 @@ export const useUrlSync = () => {
     syncMapFromUrl();
     syncViewFromUrl();
     syncComparisonFromUrl();
+    syncCompareDeepLink();
 
     const handlePopState = () => {
       syncAreaFromUrl();
@@ -30,6 +39,7 @@ export const useUrlSync = () => {
       syncMapFromUrl();
       syncViewFromUrl();
       syncComparisonFromUrl();
+      syncCompareDeepLink();
     };
 
     window.addEventListener("popstate", handlePopState);

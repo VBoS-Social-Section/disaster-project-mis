@@ -1,3 +1,15 @@
+x-django-environment: &django-environment
+  DJANGO_CONFIGURATION: Local
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+  DJANGO_AWS_ACCESS_KEY_ID: ${DJANGO_AWS_ACCESS_KEY_ID}
+  DJANGO_AWS_SECRET_ACCESS_KEY: ${DJANGO_AWS_SECRET_ACCESS_KEY}
+  DJANGO_AWS_STORAGE_BUCKET_NAME: ${DJANGO_AWS_STORAGE_BUCKET_NAME}
+  POSTGRES_HOST: postgres
+  POSTGRES_DB: vbos
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  REDIS_URL: redis://redis:6379/0
+
 services:
   postgres:
     environment:
@@ -13,19 +25,17 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
+  redis:
+    image: redis:7-alpine
+    # No host port: avoid conflict with a local Redis on :6379. Other services use
+    # redis://redis:6379 on the Compose network. To expose on the host, e.g.:
+    # ports: ["127.0.0.1:6380:6379"]
+    restart: always
+
   web:
     working_dir: /code
     restart: always
-    environment:
-      - DJANGO_CONFIGURATION=Local
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_AWS_ACCESS_KEY_ID=${DJANGO_AWS_ACCESS_KEY_ID}
-      - DJANGO_AWS_SECRET_ACCESS_KEY=${DJANGO_AWS_SECRET_ACCESS_KEY}
-      - DJANGO_AWS_STORAGE_BUCKET_NAME=${DJANGO_AWS_STORAGE_BUCKET_NAME}
-      - POSTGRES_HOST=postgres
-      - POSTGRES_DB=vbos
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+    environment: *django-environment
     build: ./
     command: >
       bash -c "python3 wait_for_postgres.py &&
@@ -37,7 +47,44 @@ services:
     ports:
       - "8080:8000"  # 8080 to avoid conflict with VM deploy web (8000)
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+  celery-worker:
+    working_dir: /code
+    restart: always
+    environment: *django-environment
+    build: ./
+    command: >
+      bash -c "python3 wait_for_postgres.py &&
+               celery -A vbos worker --loglevel=info --concurrency=4"
+    volumes:
+      - ./:/code
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      web:
+        condition: service_started
+  celery-beat:
+    working_dir: /code
+    restart: always
+    environment: *django-environment
+    build: ./
+    command: >
+      bash -c "python3 wait_for_postgres.py &&
+               celery -A vbos beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    volumes:
+      - ./:/code
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      celery-worker:
+        condition: service_started
   documentation:
     restart: always
     build: ./

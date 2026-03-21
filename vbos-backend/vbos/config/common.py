@@ -34,6 +34,8 @@ class Common(Configuration):
         "django_filters",  # for filtering rest endpoints
         "corsheaders",
         "adminsortable2",  # drag-and-drop reordering in admin
+        "django_celery_beat",
+        "django_celery_results",
         # Your apps
         "vbos.users",
         "vbos.climate",
@@ -45,6 +47,7 @@ class Common(Configuration):
         "vbos.area_submissions",
         "vbos.field_check",
         "vbos.maintenance",
+        "vbos.rap_import",
     )
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
@@ -232,6 +235,14 @@ class Common(Configuration):
         }
     }
 
+    # Celery (broker from env; result backend via django-celery-results)
+    CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    CELERY_RESULT_BACKEND = "django-db"
+    CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+    CELERY_TASK_SERIALIZER = "json"
+    CELERY_ACCEPT_CONTENT = ["json"]
+    CELERY_TIMEZONE = TIME_ZONE
+
     # Django Rest Framework
     REST_FRAMEWORK = {
         "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
@@ -255,31 +266,57 @@ class Common(Configuration):
         "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     }
 
-    # Unfold admin theme (TailwindCSS) – professional blue palette (UN-style)
+    # Unfold admin theme (TailwindCSS) – dark charcoal + institutional blue
     UNFOLD = {
-        "SITE_TITLE": "DRMIS Admin · Django",
+        "SITE_TITLE": "DRMIS Admin",
         "SITE_HEADER": "DRMIS Admin",
         "SITE_URL": "/",
         "SITE_ICON": None,
         "SHOW_HISTORY": True,
         "SHOW_VIEW_ON_SITE": True,
+        "ENVIRONMENT": "vbos.admin_env.environment_callback",
         "STYLES": [
             lambda request: static("admin/css/gis_fix.css"),
+            lambda request: static("admin/css/theme.css"),
         ],
         "DASHBOARD_CALLBACK": "vbos.admin_dashboard.dashboard_callback",
         "COLORS": {
+            # Primary: institutional blue (hue 235, OKLCH)
             "primary": {
-                "50": "oklch(97.5% .012 235)",
-                "100": "oklch(94% .028 235)",
-                "200": "oklch(88% .06 235)",
-                "300": "oklch(78% .12 235)",
-                "400": "oklch(65% .18 235)",
-                "500": "oklch(55% .2 235)",
-                "600": "oklch(48% .18 235)",
-                "700": "oklch(42% .14 235)",
-                "800": "oklch(35% .11 235)",
-                "900": "oklch(28% .08 235)",
-                "950": "oklch(20% .06 235)",
+                "50":  "oklch(97.5% .012 235)",
+                "100": "oklch(94%   .028 235)",
+                "200": "oklch(88%   .06  235)",
+                "300": "oklch(78%   .12  235)",
+                "400": "oklch(65%   .18  235)",
+                "500": "oklch(55%   .2   235)",
+                "600": "oklch(48%   .18  235)",
+                "700": "oklch(42%   .14  235)",
+                "800": "oklch(35%   .11  235)",
+                "900": "oklch(28%   .08  235)",
+                "950": "oklch(20%   .06  235)",
+            },
+            # Base: deep slate-blue surfaces (avoids pure-black, keeps depth)
+            "base": {
+                "50":  "oklch(97%  .003 245)",
+                "100": "oklch(93%  .004 245)",
+                "200": "oklch(87%  .006 245)",
+                "300": "oklch(75%  .008 245)",
+                "400": "oklch(61%  .010 245)",
+                "500": "oklch(50%  .012 245)",
+                "600": "oklch(40%  .018 245)",
+                "700": "oklch(32%  .025 245)",
+                "800": "oklch(26%  .028 245)",
+                "900": "oklch(22%  .030 245)",
+                "950": "oklch(18%  .032 245)",
+            },
+            # Font: off-white to slightly warm
+            "font": {
+                "subtle-light": "oklch(50% 0 0)",
+                "default-light": "oklch(22% .008 235)",
+                "important-light": "oklch(13% .010 235)",
+                "subtle-dark": "oklch(60% 0 0)",
+                "default-dark": "oklch(85% .005 235)",
+                "important-dark": "oklch(96% .005 235)",
             },
         },
         "SIDEBAR": {
@@ -348,6 +385,9 @@ class Common(Configuration):
                         {"title": "Integration Sources", "link": "/admin/integrations/integrationsource/", "icon": "hub"},
                         {"title": "API Keys", "link": "/admin/integrations/integrationapikey/", "icon": "key"},
                         {"title": "External Data Sources", "link": "/admin/integrations/externaldatasource/", "icon": "cloud_sync"},
+                        {"title": "RAP Import Batches", "link": "/admin/rap_import/rapimportbatch/", "icon": "upload"},
+                        {"title": "RAP Import Files", "link": "/admin/rap_import/rapimportfile/", "icon": "description"},
+                        {"title": "RAP Import Upload", "link": "/admin/rap-import/upload/", "icon": "cloud_upload"},
                         {"title": "Changelog", "link": "/admin/admin/logentry/", "icon": "history"},
                         {"title": "Backup & Restore", "link": "/admin/maintenance/", "icon": "backup"},
                         {"title": "Backup History", "link": "/admin/maintenance/backuplog/", "icon": "folder"},

@@ -3,7 +3,13 @@
  * Replaces scattered if (viewMode === "climate") with scenario-driven logic.
  */
 
-export type ScenarioId = "disaster" | "climate" | "forecast" | "risk" | "planning";
+export type ScenarioId =
+  | "disaster"
+  | "climate"
+  | "compare"
+  | "forecast"
+  | "risk"
+  | "planning";
 
 export type LayerType = "tabular" | "vector" | "raster";
 
@@ -48,6 +54,18 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
       sidebarLayout: "climate",
     },
   },
+  /** Tabular / vector side-by-side compare (header “Compare” tab). */
+  compare: {
+    id: "compare",
+    label: "Compare",
+    allowedLayerTypes: ["tabular", "vector"],
+    allowedClusterTypes: [],
+    uiConfig: {
+      showStats: true,
+      showComparison: false,
+      sidebarLayout: "standard",
+    },
+  },
   forecast: {
     id: "forecast",
     label: "Forecast",
@@ -83,8 +101,8 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
   },
 };
 
-/** Scenarios shown in the header toggle (currently Disaster + Climate). */
-export const ACTIVE_SCENARIOS: ScenarioId[] = ["disaster", "climate"];
+/** Scenarios surfaced in the main header segmented control. */
+export const ACTIVE_SCENARIOS: ScenarioId[] = ["disaster", "climate", "compare"];
 
 export function getScenario(id: ScenarioId): Scenario {
   return SCENARIOS[id];
