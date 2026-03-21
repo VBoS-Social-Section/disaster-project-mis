@@ -7,8 +7,10 @@ from __future__ import annotations
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Count
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 
 from vbos.area_submissions.models import AreaDataSubmission
 from vbos.rap_import.models import RAPImportBatch
@@ -38,7 +40,8 @@ BAD_BADGE = ("#FEECEA", "#A32D2D", "#F7C1C1")
 
 def _format_age_label(dt) -> tuple[str, bool]:
     if dt is None:
-        return "—", False
+        # No backup record — treat as critical (same visual priority as >24h stale)
+        return "—", True
     delta = timezone.now() - dt
     seconds = max(0, delta.total_seconds())
     stale = seconds > 24 * 3600
@@ -104,6 +107,37 @@ def _redis_connected() -> bool:
         return False
 
 
+def _recent_admin_log_entries(limit: int = 6) -> list[dict[str, object]]:
+    """
+    Built-in Django admin action log (LogEntry) — available even when custom AuditLog is not wired.
+    """
+
+    try:
+        from django.contrib.admin.models import LogEntry
+
+        rows: list[dict[str, object]] = []
+        for e in (
+            LogEntry.objects.select_related("user", "content_type")
+            .order_by("-action_time")[:limit]
+        ):
+            rows.append(
+                {
+                    "when": e.action_time,
+                    "user": e.user.get_username() if e.user_id else "—",
+                    "action": e.get_action_flag_display(),
+                    "model": (
+                        f"{e.content_type.app_label}.{e.content_type.model}"
+                        if e.content_type_id
+                        else "—"
+                    ),
+                    "summary": (e.object_repr or "")[:120],
+                }
+            )
+        return rows
+    except Exception:
+        return []
+
+
 def _user_missing_mfa_count() -> int:
     try:
         from django_otp import user_has_device
@@ -135,7 +169,9 @@ def dashboard_callback(request, context):
     mfa_missing_count = internal.get("mfa_missing") or 0
 
     last_backup_created_at = internal.get("last_backup_created_at")
-    last_backup_age_label, last_backup_stale = _format_age_label(last_backup_created_at)
+    last_backup_age_label, fmt_stale = _format_age_label(last_backup_created_at)
+    # Merge: missing backup, >24h, or pipeline API flag — any is an alert state
+    last_backup_stale = bool(fmt_stale) or bool(internal.get("last_backup_stale"))
 
     context["kpi_rap_pending"] = rap_pending_count
     context["kpi_approvals_pending"] = approvals_pending_count
@@ -184,9 +220,24 @@ def dashboard_callback(request, context):
         "last_backup_created_at": last_backup_created_at,
         "last_backup_age_label": last_backup_age_label,
         "last_backup_stale": last_backup_stale,
+        "last_backup_status": internal.get("last_backup_status"),
     }
 
     context["audit_logging_active"] = bool(internal.get("audit_logging_active"))
     context["recent_audit"] = internal.get("recent_audit") or []
+
+    # Built-in admin log + URLs for audit placeholder / quick navigation
+    context["recent_admin_actions"] = _recent_admin_log_entries()
+    try:
+        context["admin_logentry_changelist_url"] = reverse("admin:admin_logentry_changelist")
+    except Exception:
+        context["admin_logentry_changelist_url"] = "/admin/admin/logentry/"
+
+    context["dashboard_quick_links"] = [
+        {"title": str(_("Upload RAP CSVs")), "url": "/admin/rap-import/upload/"},
+        {"title": str(_("Review pending approvals")), "url": "/admin/area_submissions/areadatasubmission/?status=submitted"},
+        {"title": str(_("Backup & Restore")), "url": "/admin/maintenance/"},
+        {"title": str(_("Users & roles")), "url": "/admin/users/user/"},
+    ]
 
     return context

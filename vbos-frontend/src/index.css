@@ -112,7 +112,8 @@
     --drmis-text-secondary: #4a5568;
     --drmis-text-muted: #8896b0;
     --drmis-text-ghost: #6b7280;
-    --drmis-warning-text: #854f0b;
+    /* Amber ~800 — readable on light amber fills (banners, callouts) */
+    --drmis-warning-text: #633806;
     --drmis-track-bg: rgba(0, 0, 0, 0.1);
     /* DRMIS left nav — always dark in both modes (brand) */
     --drmis-sidebar-bg: #111318;
@@ -209,6 +210,13 @@
     @apply antialiased;
     font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     font-feature-settings: "ss01" 1, "ss02" 1;
+  }
+
+  /* React root inherits theme from <html class="dark|light"> — avoids a grey void below the shell */
+  #root {
+    min-height: 100dvh;
+    background: var(--drmis-bg-app);
+    color: var(--drmis-text-primary);
   }
 }
 

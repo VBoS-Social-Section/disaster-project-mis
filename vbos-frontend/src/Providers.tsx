@@ -23,6 +23,8 @@ function Providers({ children }: React.PropsWithChildren) {
       storageKey="vbos-color-mode"
       defaultTheme="system"
       enableSystem
+      themes={["light", "dark"]}
+      enableColorScheme
     >
       <TooltipProvider>
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

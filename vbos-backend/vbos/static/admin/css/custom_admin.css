@@ -88,15 +88,38 @@ aside {
   border-left-color: #FF4B2B !important;
 }
 
-/* Sidebar badges */
-[class*="badge"],
-[class*="nav-badge"] {
+/* Sidebar / header badges only.
+   Do NOT use a global [class*="badge"] selector — it matches Unfold/Tailwind classes
+   in main content (e.g. stat/KPI wrappers) and overrides inline Syne numerals with
+   IBM Plex Mono via !important (especially visible when the KPI value is 0). */
+#nav-sidebar-inner [class*="badge"],
+#nav-sidebar-inner [class*="nav-badge"],
+#nav-sidebar [class*="badge"],
+#nav-sidebar [class*="nav-badge"],
+#header [class*="badge"],
+#header [class*="nav-badge"],
+[class*="topbar"] [class*="badge"],
+[class*="topbar"] [class*="nav-badge"] {
   font-family: 'IBM Plex Mono', monospace !important;
   font-size: 9px !important;
   padding: 1px 6px !important;
   border-radius: 3px !important;
   background: #FEECEA !important;
   color: #C03010 !important;
+}
+
+/* Admin dashboard KPI numerals — must win over any stray !important mono rules */
+.drmis-admin-kpi-value {
+  font-family: 'Syne', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 22px !important;
+  color: #0D1018 !important;
+  line-height: 1 !important;
+}
+
+/* Last backup missing or >24h — KPI value reads as alert */
+.drmis-admin-kpi-value.drmis-admin-kpi-value--alert {
+  color: #a32d2d !important;
 }
 
 /* ── MAIN CONTENT ── */

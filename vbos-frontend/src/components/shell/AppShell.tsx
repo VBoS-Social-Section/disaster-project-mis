@@ -1,10 +1,13 @@
 import { useCallback, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useColorMode } from "@/components/ui/color-mode";
 import { colors } from "@/tokens";
 import { useUiStore } from "@/store/ui-store";
 import { toast } from "@/utils/toast";
 import { Topbar } from "./Topbar";
 import { Sidebar } from "./Sidebar";
+import { getShellNavPlaceholder } from "@/config/shellNavPlaceholders";
+import { ShellNavPlaceholderDescription } from "./ShellNavPlaceholderDescription";
 
 export interface AppShellProps {
   children: ReactNode;
@@ -32,6 +35,7 @@ export function AppShell({
   topbarUserAvatar = true,
   mainClassName,
 }: AppShellProps) {
+  const { colorMode } = useColorMode();
   const shellNavId = useUiStore((s) => s.shellNavId);
   const setShellNavId = useUiStore((s) => s.setShellNavId);
   const setPrimaryWorkspace = useUiStore((s) => s.setPrimaryWorkspace);
@@ -48,7 +52,11 @@ export function AppShell({
         setPrimaryWorkspace("operations");
         return;
       }
-      toast.info("Coming soon", `“${id}” will open here in a future release.`);
+      const placeholder = getShellNavPlaceholder(id);
+      toast.info(
+        placeholder?.title ?? "On the roadmap",
+        <ShellNavPlaceholderDescription navId={id} />,
+      );
     },
     [setShellNavId, setPrimaryWorkspace],
   );
@@ -56,10 +64,12 @@ export function AppShell({
   return (
     <div
       className="grid h-[100dvh] w-full overflow-hidden"
+      data-color-mode={colorMode}
       style={{
         gridTemplateColumns: "220px 1fr",
         gridTemplateRows: "52px 1fr",
         backgroundColor: colors.bg.primary,
+        color: colors.text.primary,
       }}
     >
       <Topbar

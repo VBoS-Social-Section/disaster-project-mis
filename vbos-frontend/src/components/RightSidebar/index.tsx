@@ -68,11 +68,13 @@ const RightSidebar = () => {
         {!hasTabularInSelectedCluster &&
           selectedCluster &&
           scenarioId !== "climate" && (
-            <p className="mb-4 rounded-lg border border-amber-200/80 bg-[rgba(245,166,35,0.08)] px-4 py-3 text-sm text-[var(--drmis-warning-text)] dark:border-amber-800 dark:bg-amber-950/50">
-              This cluster has no tabular dataset. Select province and area
-              council to filter map layers.
-            </p>
-          )}
+          <p
+            className="mb-4 rounded-lg border border-amber-200/80 bg-[rgba(245,166,35,0.08)] px-4 py-3 text-sm text-[#633806] dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200"
+          >
+            This cluster has no tabular dataset. Select province and area council to filter map
+            layers.
+          </p>
+        )}
         {rightSidebarExpanded ? (
           <div className="w-full space-y-6">
             <div className="flex flex-wrap items-end gap-6 rounded-xl border border-border/40 bg-card/95 p-5 shadow-sm">

@@ -18,18 +18,34 @@ export type ColorMode = "light" | "dark";
 
 export interface UseColorModeReturn {
   colorMode: ColorMode;
-  setColorMode: (colorMode: ColorMode) => void;
+  setColorMode: (theme: string) => void;
   toggleColorMode: () => void;
 }
 
+/**
+ * Resolves the active appearance for the whole app (Command Centre + map shell).
+ * Uses `resolvedTheme` when set; falls back through `theme` / `systemTheme` so the
+ * topbar toggle always flips `document.documentElement` between light and dark.
+ */
 export function useColorMode(): UseColorModeReturn {
-  const { resolvedTheme, setTheme, forcedTheme } = useTheme();
-  const colorMode = forcedTheme || resolvedTheme;
+  const { resolvedTheme, setTheme, forcedTheme, theme, systemTheme } = useTheme();
+
+  const effective =
+    forcedTheme ||
+    resolvedTheme ||
+    (theme === "system" ? systemTheme : theme) ||
+    "light";
+
   const toggleColorMode = () => {
-    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+    const current =
+      resolvedTheme ||
+      (theme === "system" ? systemTheme : theme) ||
+      "light";
+    setTheme(current === "dark" ? "light" : "dark");
   };
+
   return {
-    colorMode: (colorMode as ColorMode) || "light",
+    colorMode: (effective === "dark" ? "dark" : "light") as ColorMode,
     setColorMode: setTheme,
     toggleColorMode,
   };

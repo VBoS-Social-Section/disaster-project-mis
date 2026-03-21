@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils";
 import { colors } from "@/tokens";
+import { DRMIS_VERSION_DISPLAY } from "@/config/version";
+import { Tooltip } from "@/components/ui";
 import { ColorModeButton } from "@/components/ui/color-mode";
 import { SystemStatusPill } from "./StatusPill";
 import { AlertCountPill } from "./AlertCountPill";
@@ -34,25 +36,34 @@ export function Topbar({
         backgroundColor: colors.bg.surface,
       }}
     >
-      {/* Logo lockup */}
-      <div className="flex min-w-0 shrink-0 items-center gap-2.5">
+      {/* Logo lockup — hover shows release string for support */}
+      <Tooltip
+        content={DRMIS_VERSION_DISPLAY}
+        positioning={{ placement: "bottom" }}
+        contentProps={{ className: "max-w-[18rem] font-mono text-[11px] text-balance" }}
+      >
         <div
-          className="flex size-6 shrink-0 items-center justify-center rounded-sm text-[10px] font-semibold leading-none text-white"
-          style={{
-            backgroundColor: colors.accent.red,
-            fontFamily: "'IBM Plex Mono', monospace",
-          }}
-          aria-hidden
+          className="flex min-w-0 shrink-0 cursor-default items-center gap-2.5"
+          aria-label={`DRMIS — ${DRMIS_VERSION_DISPLAY}`}
         >
-          DR
+          <div
+            className="flex size-6 shrink-0 items-center justify-center rounded-sm text-[10px] font-semibold leading-none text-white"
+            style={{
+              backgroundColor: colors.accent.red,
+              fontFamily: "'IBM Plex Mono', monospace",
+            }}
+            aria-hidden
+          >
+            DR
+          </div>
+          <span
+            className="truncate text-lg font-extrabold tracking-tight"
+            style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, color: colors.text.primary }}
+          >
+            DRMIS
+          </span>
         </div>
-        <span
-          className="truncate text-lg font-extrabold tracking-tight"
-          style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, color: colors.text.primary }}
-        >
-          DRMIS
-        </span>
-      </div>
+      </Tooltip>
 
       <div
         className="hidden h-4 w-px shrink-0 sm:block"

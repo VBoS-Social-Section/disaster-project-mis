@@ -39,8 +39,10 @@ export const HEADER_MODE_META: Record<
   },
   compare: {
     label: "Compare",
-    subtitle: "Side-by-side years & datasets",
+    subtitle:
+      "Drag the handle to compare · Change years in the context panel →",
     toastTitle: "Compare mode",
-    toastDescription: "Side-by-side comparison is on — adjust years in the context panel.",
+    toastDescription:
+      "Drag the map handle to compare years. Adjust years in the context panel (right).",
   },
 };

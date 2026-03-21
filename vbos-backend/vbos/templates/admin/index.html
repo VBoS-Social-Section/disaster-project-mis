@@ -8,8 +8,9 @@
 {% endblock %}
 
 {% block content %}
-    <div class="flex flex-col lg:flex-row lg:gap-8">
-        <div class="grow">
+    {# items-start + no flex-grow: avoids a tall empty band below the last panel (Unfold main is a flex column) #}
+    <div class="flex flex-col lg:flex-row lg:gap-8 lg:items-start">
+        <div class="w-full min-w-0 max-w-full">
 
             {# ── Mode banner (Disaster / Climate / Compare) — ?mode=disaster|climate|compare #}
             {% if admin_mode == "climate" %}
@@ -44,34 +45,50 @@
                 </div>
             {% endif %}
 
-            <p style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#B0BAD0;margin:-8px 0 16px 0;">
-                {% trans "Switch view:" %}
-                <a href="?mode=disaster" style="color:#378ADD;">{% trans "Disaster" %}</a>
-                · <a href="?mode=climate" style="color:#378ADD;">{% trans "Climate" %}</a>
-                · <a href="?mode=compare" style="color:#378ADD;">{% trans "Compare" %}</a>
-            </p>
+            {# Mode switcher — pills show active state (matches banner accent colors) #}
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px 12px;margin:-8px 0 16px 0;">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;">{% trans "Switch view" %}</span>
+                <div style="display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px;">
+                    <a href="?mode=disaster"
+                       {% if admin_mode == "disaster" %}aria-current="page"{% endif %}
+                       style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;text-decoration:none;padding:5px 12px;border-radius:999px;border:1px solid {% if admin_mode == "disaster" %}#FF4B2B{% else %}#E2E6EE{% endif %};background:{% if admin_mode == "disaster" %}#FFF1EE{% else %}#FFFFFF{% endif %};color:{% if admin_mode == "disaster" %}#C03010{% else %}#9AA5B8{% endif %};box-shadow:{% if admin_mode == "disaster" %}0 0 0 1px rgba(255,75,43,0.12){% else %}none{% endif %};">
+                        {% trans "Disaster" %}
+                    </a>
+                    <a href="?mode=climate"
+                       {% if admin_mode == "climate" %}aria-current="page"{% endif %}
+                       style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;text-decoration:none;padding:5px 12px;border-radius:999px;border:1px solid {% if admin_mode == "climate" %}#1D9E75{% else %}#E2E6EE{% endif %};background:{% if admin_mode == "climate" %}#EAF6EE{% else %}#FFFFFF{% endif %};color:{% if admin_mode == "climate" %}#085041{% else %}#9AA5B8{% endif %};box-shadow:{% if admin_mode == "climate" %}0 0 0 1px rgba(29,158,117,0.15){% else %}none{% endif %};">
+                        {% trans "Climate" %}
+                    </a>
+                    <a href="?mode=compare"
+                       {% if admin_mode == "compare" %}aria-current="page"{% endif %}
+                       style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;text-decoration:none;padding:5px 12px;border-radius:999px;border:1px solid {% if admin_mode == "compare" %}#7F77DD{% else %}#E2E6EE{% endif %};background:{% if admin_mode == "compare" %}#EEEDFE{% else %}#FFFFFF{% endif %};color:{% if admin_mode == "compare" %}#3C3489{% else %}#9AA5B8{% endif %};box-shadow:{% if admin_mode == "compare" %}0 0 0 1px rgba(127,119,221,0.2){% else %}none{% endif %};">
+                        {% trans "Compare" %}
+                    </a>
+                </div>
+            </div>
 
             {# ── KPI row (operator pipeline) ── #}
             <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
                     <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#FF4B2B;"></div>
                     <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "RAP Batches Pending" %}</div>
-                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:#0D1018;line-height:1;">{{ kpi_rap_pending }}</div>
+                    {# Use .drmis-admin-kpi-value so Syne wins over global [class*="badge"] mono !important rules #}
+                    <div class="drmis-admin-kpi-value">{{ kpi_rap_pending }}</div>
                 </div>
                 <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
                     <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#F5A623;"></div>
                     <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Datasets Awaiting Approval" %}</div>
-                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:#0D1018;line-height:1;">{{ kpi_approvals_pending }}</div>
+                    <div class="drmis-admin-kpi-value">{{ kpi_approvals_pending }}</div>
                 </div>
                 <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
                     <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#FF4B2B;"></div>
                     <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Users Without MFA" %}</div>
-                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:#0D1018;line-height:1;">{{ kpi_mfa_missing }}</div>
+                    <div class="drmis-admin-kpi-value">{{ kpi_mfa_missing }}</div>
                 </div>
-                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
-                    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:{% if kpi_last_backup_stale %}#FF4B2B{% else %}#1D9E75{% endif %};"></div>
+                <div style="background:{% if kpi_last_backup_stale %}#FFFBFA{% else %}#FFFFFF{% endif %};border:1px solid {% if kpi_last_backup_stale %}#F7C1C1{% else %}#E2E6EE{% endif %};border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
+                    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:{% if kpi_last_backup_stale %}#FF4B2B{% else %}#1D9E75{% endif %};"></div>
                     <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Last Backup" %}</div>
-                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:#0D1018;line-height:1;">{{ kpi_last_backup_age_label }}</div>
+                    <div class="drmis-admin-kpi-value {% if kpi_last_backup_stale %}drmis-admin-kpi-value--alert{% endif %}">{{ kpi_last_backup_age_label }}</div>
                 </div>
             </div>
 
@@ -189,15 +206,22 @@
                     </div>
                     <div style="margin-top:14px;">
                         <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Last backup" %}</div>
-                        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#0D1018;">
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#0D1018;line-height:1.5;">
                             {% if system_status.last_backup_created_at %}
                                 <span style="color:#0D1018;">{{ system_status.last_backup_created_at|date:"d M Y H:i" }}</span>
                                 <span style="color:{% if system_status.last_backup_stale %}#A32D2D{% else %}#9AA5B8{% endif %};"> · {{ system_status.last_backup_age_label }}</span>
+                                {% if system_status.last_backup_status == "success" %}
+                                    <span style="color:#27500A;"> · {% trans "success" %}</span>
+                                {% endif %}
                                 {% if system_status.last_backup_stale %}
                                     <span style="margin-left:10px;background:#FEECEA;color:#A32D2D;border:1px solid #F7C1C1;border-radius:4px;padding:2px 8px;font-size:10px;display:inline-block;">{% trans "Stale" %}</span>
                                 {% endif %}
                             {% else %}
-                                <span style="color:#9AA5B8;">—</span>
+                                <span style="color:#633806;">{% trans "No backups yet" %}</span>
+                                <span style="color:#9AA5B8;"> — {% trans "run your first backup to create a restore point." %}</span>
+                                <div style="margin-top:8px;">
+                                    <a href="/admin/maintenance/" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#378ADD;text-decoration:none;font-weight:600;">{% trans "Backup & Restore" %} →</a>
+                                </div>
                             {% endif %}
                         </div>
                     </div>
@@ -227,7 +251,7 @@
                                     {% for a in recent_audit %}
                                         <tr>
                                             <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA5B8;">{{ a.timestamp|date:"d M Y H:i" }}</td>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{% if a.user %}{{ a.user.username }}{% else %}—{% endif %}</td>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{% if a.user %}{{ a.user }}{% else %}—{% endif %}</td>
                                             <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{{ a.action|default:"—" }}</td>
                                             <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{{ a.model|default:"—" }}</td>
                                             <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA5B8;">{{ a.object|default:"—" }}</td>
@@ -241,10 +265,64 @@
                             </div>
                         {% endif %}
                     {% else %}
-                        <div style="color:#9AA5B8;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:14px 0;">
-                            {% trans "Audit logging not yet active. Enable in Phase A implementation." %}
+                        <div style="padding:12px 14px;border-radius:8px;border:1px solid #E2E6EE;background:#FAFBFC;">
+                            <p style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.5;color:#4A5568;">
+                                {% trans "Audit log is being set up. Once active, all data changes will appear here." %}
+                            </p>
+                            <p style="margin:10px 0 0 0;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;">
+                                <a href="{{ admin_logentry_changelist_url }}" style="color:#378ADD;text-decoration:none;font-weight:600;">{% trans "Learn more" %} →</a>
+                                <span style="color:#9AA5B8;"> — {% trans "review changes in the admin action log until then." %}</span>
+                            </p>
                         </div>
                     {% endif %}
+                </div>
+            </div>
+
+            {# ── Quick links + recent admin actions (fills lower area usefully; tight grid) ── #}
+            <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-4">
+                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;overflow:hidden;">
+                    <div style="padding:10px 14px;border-bottom:1px solid #F1F3F7;">
+                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#9AA5B8;">{% trans "Quick links" %}</span>
+                    </div>
+                    <ul style="margin:0;padding:12px 14px 14px 18px;list-style:disc;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;line-height:1.7;">
+                        {% for item in dashboard_quick_links %}
+                            <li><a href="{{ item.url }}" style="color:#378ADD;text-decoration:none;">{{ item.title }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;overflow:hidden;">
+                    <div style="padding:10px 14px;border-bottom:1px solid #F1F3F7;display:flex;align-items:center;justify-content:space-between;">
+                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#9AA5B8;">{% trans "Recent admin actions" %}</span>
+                        <a href="{{ admin_logentry_changelist_url }}" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#378ADD;letter-spacing:.04em;text-decoration:none;">{% trans "Full log →" %}</a>
+                    </div>
+                    <div style="padding:0 14px 14px;">
+                        {% if recent_admin_actions and recent_admin_actions|length > 0 %}
+                            <table style="width:100%;border-collapse:collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0 6px 0;border-bottom:1px solid #F1F3F7;">{% trans "When" %}</th>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0 6px 0;border-bottom:1px solid #F1F3F7;">{% trans "User" %}</th>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0 6px 0;border-bottom:1px solid #F1F3F7;">{% trans "Action" %}</th>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0 6px 0;border-bottom:1px solid #F1F3F7;">{% trans "Summary" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in recent_admin_actions %}
+                                        <tr>
+                                            <td style="padding:8px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA5B8;white-space:nowrap;">{{ row.when|date:"d M H:i" }}</td>
+                                            <td style="padding:8px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5568;">{{ row.user }}</td>
+                                            <td style="padding:8px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5568;">{{ row.action }}</td>
+                                            <td style="padding:8px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA5B8;">{{ row.summary }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div style="padding:14px 0;color:#9AA5B8;font-family:'IBM Plex Mono',monospace;font-size:11px;">
+                                {% trans "No recent admin actions." %}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
