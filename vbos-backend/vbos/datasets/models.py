@@ -306,6 +306,20 @@ class TabularDataset(models.Model):
     type = models.CharField(max_length=55, choices=TYPE_CHOICES, default="baseline")
     source = models.CharField(max_length=155, blank=True, null=True)
     unit = models.CharField(max_length=50, blank=True, null=True)
+    # RAP (disaster-project-rap) provenance — set when data is imported from a RAP batch
+    rap_batch = models.ForeignKey(
+        "rap_import.RAPImportBatch",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="tabular_datasets",
+    )
+    rap_sector_family = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True,
+        help_text="RAP sector_family when sourced from RAP CSV (education, hazard, …).",
+    )
 
     def __str__(self):
         return f"{self.name} - {self.cluster} / {self.type}"
@@ -323,6 +337,8 @@ class TabularItem(models.Model):
     province = models.ForeignKey(Province, null=True, on_delete=models.PROTECT)
     area_council = models.ForeignKey(AreaCouncil, null=True, on_delete=models.PROTECT)
     metadata = models.JSONField(default=dict)
+    # Cyclone category from RAP Intensity column (2–5), when applicable
+    intensity = models.PositiveSmallIntegerField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.id}"

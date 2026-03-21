@@ -93,16 +93,17 @@ class AreaDataSubmissionAdmin(UnfoldModelAdmin):
     )
 
     def status_badge(self, obj):
-        colors = {
-            "draft": "#6b7280",
-            "submitted": "#f59e0b",
-            "approved": "#10b981",
-            "rejected": "#ef4444",
+        styles = {
+            "draft": "background:#F8F9FB;color:#4A5568;border:1px solid #E2E6EE",
+            "submitted": "background:#FDF3E0;color:#633806;border:1px solid #F5C875",
+            "approved": "background:#EAF6EE;color:#27500A;border:1px solid #9FE1CB",
+            "rejected": "background:#FEECEA;color:#A32D2D;border:1px solid #F7C1C1",
         }
-        c = colors.get(obj.status, "#6b7280")
+        s = styles.get(obj.status, styles["draft"])
         return format_html(
-            '<span style="background:{}; color:white; padding:2px 8px; border-radius:4px;">{}</span>',
-            c,
+            '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;'
+            'padding:2px 8px;border-radius:4px;{}">{}</span>',
+            s,
             obj.get_status_display(),
         )
 

@@ -17,6 +17,7 @@ from vbos.land_accounts.admin_views import (
 )
 from vbos.climate.views import climate_dashboard, climate_import_geojson, climate_module_detail
 from vbos.field_check.admin import field_check_dashboard
+from vbos.compare.views import EventCompareView
 from vbos.rap_import.views import RAPUploadView
 from vbos.maintenance.task_status_views import celery_task_status
 from vbos.maintenance.views import backup_download, backup_restore_dashboard, restore_upload
@@ -119,6 +120,11 @@ urlpatterns = [
         "admin/rap-import/upload/",
         admin.site.admin_view(RAPUploadView.as_view()),
         name="admin_rap_import_upload",
+    ),
+    path(
+        "admin/compare/event/",
+        admin.site.admin_view(EventCompareView.as_view()),
+        name="admin_compare_event",
     ),
     path("admin/maintenance/", admin.site.admin_view(backup_restore_dashboard), name="admin_maintenance_backup_restore"),
     path("admin/maintenance/backup/", admin.site.admin_view(backup_download), name="admin_maintenance_backup"),

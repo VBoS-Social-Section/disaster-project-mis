@@ -279,6 +279,16 @@ def validate_rap_csv(file_obj: BinaryIO, sector_family: str) -> dict[str, Any]:
     }
 
 
+def normalize_place_name(name: str) -> str:
+    """
+    Strip and title-case for matching RAP Province / Area Council strings to DRMIS
+    ``Province`` / ``AreaCouncil`` names (minor spelling variants).
+    """
+    if not name or not str(name).strip():
+        return ""
+    return str(name).strip().title()
+
+
 def import_rap_batch_to_tabular(
     batch: RAPImportBatch,
     rap_file_obj: BinaryIO,
