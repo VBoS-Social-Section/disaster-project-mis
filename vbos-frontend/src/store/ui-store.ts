@@ -4,6 +4,9 @@ import type { DatasetType } from "@/types/api";
 
 export type ColorModeOption = "light" | "dark";
 
+/** Shell primary area: Command Centre dashboard vs map / operations workspace */
+export type PrimaryWorkspace = "command-centre" | "operations";
+
 /** Data view types that show the Disaster overlay (Damage, Resources, Financial) */
 export const DISASTER_VIEW_TYPES: DatasetType[] = [
   "estimated_damage",
@@ -45,6 +48,12 @@ interface UiState {
   /** Area data entry page (for area administrators) */
   dataEntryPageOpen: boolean;
   setDataEntryPageOpen: (v: boolean) => void;
+  /** Active item id in shell sidebar (`dashboard`, `live-map`, …) */
+  shellNavId: string;
+  setShellNavId: (id: string) => void;
+  /** Post-login landing vs map operations */
+  primaryWorkspace: PrimaryWorkspace;
+  setPrimaryWorkspace: (w: PrimaryWorkspace) => void;
 }
 
 export const useUiStore = create<UiState>()(
@@ -95,6 +104,12 @@ export const useUiStore = create<UiState>()(
 
       dataEntryPageOpen: false,
       setDataEntryPageOpen: (v) => set({ dataEntryPageOpen: v }),
+
+      shellNavId: "dashboard",
+      setShellNavId: (id) => set({ shellNavId: id }),
+
+      primaryWorkspace: "command-centre",
+      setPrimaryWorkspace: (w) => set({ primaryWorkspace: w }),
     }),
     {
       name: "vbos-ui",

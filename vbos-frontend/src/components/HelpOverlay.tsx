@@ -70,6 +70,10 @@ type HelpOverlayProps = {
   onOpenChange: (open: boolean) => void;
 };
 
+function tourScenarioFilter(id: string): "disaster" | "climate" {
+  return id === "climate" ? "climate" : "disaster";
+}
+
 function getFilteredSteps(scenarioId: "disaster" | "climate"): TourStep[] {
   return TOUR_STEPS.filter((s) => {
     if (!s.when) return true;
@@ -78,8 +82,8 @@ function getFilteredSteps(scenarioId: "disaster" | "climate"): TourStep[] {
 }
 
 export function HelpOverlay({ open, onOpenChange }: HelpOverlayProps) {
-  const scenarioId = useViewStore((s) => s.scenarioId) as "disaster" | "climate";
-  const steps = getFilteredSteps(scenarioId);
+  const scenarioId = useViewStore((s) => s.scenarioId);
+  const steps = getFilteredSteps(tourScenarioFilter(scenarioId));
   const [stepIndex, setStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);

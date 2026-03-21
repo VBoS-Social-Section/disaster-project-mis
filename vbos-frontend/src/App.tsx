@@ -1,4 +1,5 @@
 import { Header } from "./components/Header";
+import { AppShell } from "@/components/shell";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import type { MapRef } from "./components/Map";
 import { useRef, lazy, Suspense } from "react";
@@ -18,7 +19,6 @@ import { useMapStore } from "@/store/map-store";
 import { useViewStore } from "@/store/view-store";
 import { useLockStore } from "@/store/lock-store";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
-import { LeftSidebar } from "./components/LeftSidebar";
 import { RightSidebar } from "./components/RightSidebar";
 import { TabularLayers } from "./components/Map/TabularLayer";
 import { MapEmptyState } from "./components/MapEmptyState";
@@ -33,6 +33,9 @@ import { Login } from "./components/Login";
 import { ProfilePage } from "./components/ProfilePage";
 import { AreaDataEntryPage } from "./components/AreaDataEntry/AreaDataEntryPage";
 import { FeedbackButton } from "./components/Feedback/FeedbackButton";
+import { SimulationPanel } from "./components/SimulationPanel";
+import { FloatingLayerControl } from "./components/Map/FloatingLayerControl";
+import { CommandCentre } from "./pages/CommandCentre";
 
 // Lazy-load Map (Leaflet, layers) for faster initial paint
 const Map = lazy(() => import("./components/Map").then((m) => ({ default: m.default })));
@@ -106,7 +109,16 @@ function App() {
   const mapMode = useMapStore((s) => s.mapMode);
   const { isAuthenticated } = useAuth();
   const scenarioId = useViewStore((s) => s.scenarioId);
-  const { isMobile, mobileOpenPanel, setMobileOpenPanel, rightSidebarExpanded, rightSidebarIconMode, leftSidebarIconMode, profilePageOpen, dataEntryPageOpen } = useUiStore();
+  const {
+    isMobile,
+    mobileOpenPanel,
+    setMobileOpenPanel,
+    rightSidebarIconMode,
+    profilePageOpen,
+    dataEntryPageOpen,
+    setProfilePageOpen,
+    primaryWorkspace,
+  } = useUiStore();
   const { isLocked } = useLockStore();
   const isTimeSeriesOpen = useUiStore((s) => s.isTimeSeriesOpen);
   useUrlSync();
@@ -129,47 +141,37 @@ function App() {
     return <AreaDataEntryPage />;
   }
   return (
-    <div className="grid h-screen max-h-screen min-w-0 grid-rows-[max-content_1fr] overflow-hidden bg-background">
+    <>
       {isLocked && <LockScreen />}
       <OfflineIndicator />
       <LayerAnnouncer />
-      <Header />
-      <div
-        id="main"
-        className={cn(
-          "grid h-[calc(100vh-3.5rem)] min-w-0 overflow-hidden md:grid-rows-1 grid-rows-[auto_1fr_auto]",
-          scenarioId === "climate"
-            ? rightSidebarIconMode
-              ? "md:grid-cols-[1fr_3rem]"
-              : "md:grid-cols-[1fr_28rem]"
-            : rightSidebarIconMode
-              ? "md:grid-cols-[auto_1fr_3rem]"
-              : "md:grid-cols-[auto_1fr_28rem]",
-        )}
+      <AppShell
+        mainPadding={primaryWorkspace === "command-centre"}
+        alertCount={2}
+        onAvatarClick={() => setProfilePageOpen(true)}
       >
-        {scenarioId !== "climate" && (
-          <div
-            className={cn(
-              "min-h-0 min-w-0 overflow-hidden",
-              rightSidebarExpanded && !leftSidebarIconMode && "z-[1060] relative",
-            )}
-          >
-            <ErrorBoundary
-              fallbackRender={(error, retry) => (
-                <SidebarErrorFallback
-                  error={error}
-                  retry={retry}
-                  title="Data layers failed"
-                  side="left"
-                />
+        {primaryWorkspace === "command-centre" ? (
+          <CommandCentre />
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col">
+            <Header hideBrand hideUserMenu />
+            <div
+              id="main"
+              className={cn(
+                "grid min-h-0 min-w-0 flex-1 overflow-hidden md:grid-rows-1 grid-rows-[1fr_auto]",
+                rightSidebarIconMode
+                  ? "md:grid-cols-[1fr_3rem]"
+                  : "md:grid-cols-[1fr_28rem]",
               )}
             >
-              <LeftSidebar />
-            </ErrorBoundary>
-          </div>
-        )}
         <div
-          className="relative map-area min-w-0 min-h-0 overflow-hidden"
+          id="drmis-map-stage"
+          className={cn(
+            "relative map-area min-w-0 min-h-0 overflow-hidden transition-colors duration-500",
+            scenarioId === "climate" && "bg-emerald-500/[0.04]",
+            (scenarioId === "disaster" || scenarioId === "compare") &&
+              "bg-red-500/[0.03]",
+          )}
           onClick={() => {
             if (isMobile && mobileOpenPanel) setMobileOpenPanel(null);
           }}
@@ -183,6 +185,8 @@ function App() {
               </Suspense>
               <ClimateKeyIndicators />
               <MapEmptyState />
+              <FloatingLayerControl />
+              <SimulationPanel />
               <MobilePanelFAB />
               <MapModeBadge />
               {!isLocked && <FeedbackButton />}
@@ -208,8 +212,11 @@ function App() {
             <RightSidebar />
           </ErrorBoundary>
         </div>
-      </div>
-    </div>
+          </div>
+          </div>
+        )}
+      </AppShell>
+    </>
   );
 }
 

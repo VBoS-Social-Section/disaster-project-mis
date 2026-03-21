@@ -1,5 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,opsz,wght@0,8..144,200..900;1,8..144,200..900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600&display=swap");
+/* Design system: Syne (display), DM Sans (body), IBM Plex Mono (IDs, metrics, badges) */
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400;1,500&family=Syne:wght@700;800&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -100,6 +100,29 @@
     --sidebar-accent-foreground: #1a2332;
     --sidebar-border: #d1d9e2;
     --sidebar-ring: #0066b3;
+
+    /* DRMIS shell — main content (Command Centre, topbar, cards; toggles with .dark) */
+    --drmis-bg-app: #f8f9fb;
+    --drmis-bg-surface: #ffffff;
+    --drmis-bg-elevated: #f1f3f7;
+    --drmis-bg-overlay: rgba(0, 0, 0, 0.04);
+    --drmis-border-default: rgba(0, 0, 0, 0.1);
+    --drmis-border-strong: rgba(0, 0, 0, 0.18);
+    --drmis-text-primary: #0d1018;
+    --drmis-text-secondary: #4a5568;
+    --drmis-text-muted: #8896b0;
+    --drmis-text-ghost: #6b7280;
+    --drmis-warning-text: #854f0b;
+    --drmis-track-bg: rgba(0, 0, 0, 0.1);
+    /* DRMIS left nav — always dark in both modes (brand) */
+    --drmis-sidebar-bg: #111318;
+    --drmis-sidebar-border: rgba(255, 255, 255, 0.08);
+    --drmis-sidebar-text-muted: #8896b0;
+    --drmis-sidebar-text-hover: #8896b0;
+    --drmis-sidebar-text-active: #e8ebf0;
+    --drmis-sidebar-hover-bg: rgba(255, 255, 255, 0.06);
+    --drmis-sidebar-active-bg: #141824;
+    --drmis-sidebar-dot-inactive: #3a4255;
 }
 
 /* Dark mode: charcoal, institutional blue accents */
@@ -139,27 +162,70 @@
     --sidebar-accent-foreground: #e6edf3;
     --sidebar-border: #30363d;
     --sidebar-ring: #58a6ff;
+
+    --drmis-bg-app: #0a0d14;
+    --drmis-bg-surface: #0d1018;
+    --drmis-bg-elevated: #141824;
+    --drmis-bg-overlay: rgba(255, 255, 255, 0.03);
+    --drmis-border-default: rgba(255, 255, 255, 0.08);
+    --drmis-border-strong: rgba(255, 255, 255, 0.14);
+    --drmis-text-primary: #e8ebf0;
+    --drmis-text-secondary: #8896b0;
+    --drmis-text-muted: #5a6375;
+    --drmis-text-ghost: #3a4255;
+    --drmis-warning-text: #f5a623;
+    --drmis-track-bg: rgba(255, 255, 255, 0.06);
 }
 
 @layer base {
+  /* Global reset + enterprise shell defaults */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
   * {
+    margin: 0;
+    padding: 0;
     @apply border-border outline-ring/50;
   }
+
+  html {
+    margin: 0;
+    padding: 0;
+    background: var(--drmis-bg-app);
+    transition:
+      background-color 0.35s var(--ease-smooth),
+      color 0.35s var(--ease-smooth);
+  }
+
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100dvh;
+    background: var(--drmis-bg-app);
+    color: var(--drmis-text-primary);
+    @apply antialiased;
+    font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     font-feature-settings: "ss01" 1, "ss02" 1;
   }
 }
 
-/* Pro typography – Source Sans 3 (used by many international orgs) */
+/* Body / UI text — DM Sans */
 .font-sans {
-  font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
 }
 
-/* Numbers/metrics: IBM Plex Mono for tables and KPIs */
+/* Display / marketing headings — Syne (weights 700–800) */
+.font-display {
+  font-family: "Syne", sans-serif;
+}
+
+/* IDs, dates, metrics, labels, badges — IBM Plex Mono */
+.font-mono,
 .font-mono-num {
-  font-family: "IBM Plex Mono", "Source Sans 3", ui-monospace, monospace;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
 }
 
 /* Heading hierarchy: bolder in dark, lighter in light */
@@ -316,10 +382,6 @@
 }
 
 /* Theme switch: smooth crossfade (respects prefers-reduced-motion) */
-html {
-  transition: background-color 0.35s var(--ease-smooth), color 0.35s var(--ease-smooth);
-}
-
 @media (prefers-reduced-motion: reduce) {
   html {
     transition: none;

@@ -23,7 +23,12 @@ function useClusterDatasets(
   options?: { enabled?: boolean; replace?: boolean },
 ) {
   const scenarioId = useViewStore((s) => s.scenarioId);
-  const scenario = scenarioId === "disaster" ? "disaster" : scenarioId === "climate" ? "climate" : undefined;
+  const scenario =
+    scenarioId === "climate"
+      ? "climate"
+      : scenarioId === "disaster" || scenarioId === "compare"
+        ? "disaster"
+        : undefined;
   const { setAllDatasets } = useLayerStore();
   const { isPending, error, data } = useQuery({
     queryKey: ["datasets", cluster, scenario],

@@ -18,6 +18,12 @@ django-otp>=1.6.0
 pyotp>=2.9.0
 qrcode[pil]>=7.4.0
 
+# Celery + Redis (django-celery-beat >=2.8 supports Django 5.2; 2.6.x capped at Django<5.1)
+celery==5.3.6
+redis==5.0.1
+django-celery-beat==2.8.1
+django-celery-results==2.6.0
+
 # Rest apis
 djangorestframework==3.16.1
 djangorestframework-gis==1.2.0

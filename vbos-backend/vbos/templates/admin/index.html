@@ -10,129 +10,187 @@
 {% block content %}
     <div class="flex flex-col lg:flex-row lg:gap-8">
         <div class="grow">
+
+            {# ── Summary bar ── #}
             {% if dashboard_summary %}
-                <div class="mb-6 flex flex-wrap gap-4">
-                    <div class="bg-primary-50 border border-primary-200 flex items-center gap-3 rounded-default px-4 py-3 dark:bg-primary-950/30 dark:border-primary-800">
-                        <span class="material-symbols-outlined text-2xl text-primary-600 dark:text-primary-500">folder</span>
+                <div class="mb-7 flex flex-wrap gap-3">
+                    <div class="flex items-center gap-3 rounded-lg border border-primary-200 bg-gradient-to-br from-primary-50 to-white px-5 py-3.5 shadow-sm dark:from-primary-950/40 dark:to-base-900 dark:border-primary-800/60">
+                        <span class="material-symbols-outlined text-2xl text-primary-500">folder_open</span>
                         <div>
-                            <span class="font-semibold text-xl text-primary-900 dark:text-primary-100">{{ dashboard_summary.total_datasets }}</span>
-                            <span class="ml-1 text-sm text-primary-700 dark:text-primary-300">{% trans "datasets" %}</span>
+                            <span class="font-bold text-2xl text-primary-900 dark:text-primary-100 tabular-nums">{{ dashboard_summary.total_datasets }}</span>
+                            <p class="text-xs font-medium text-primary-600 dark:text-primary-400 mt-0.5 uppercase tracking-wide">{% trans "datasets" %}</p>
                         </div>
                     </div>
-                    <div class="bg-primary-50 border border-primary-200 flex items-center gap-3 rounded-default px-4 py-3 dark:bg-primary-950/30 dark:border-primary-800">
-                        <span class="material-symbols-outlined text-2xl text-primary-600 dark:text-primary-500">inventory_2</span>
+                    <div class="flex items-center gap-3 rounded-lg border border-primary-200 bg-gradient-to-br from-primary-50 to-white px-5 py-3.5 shadow-sm dark:from-primary-950/40 dark:to-base-900 dark:border-primary-800/60">
+                        <span class="material-symbols-outlined text-2xl text-primary-500">inventory_2</span>
                         <div>
-                            <span class="font-semibold text-xl text-primary-900 dark:text-primary-100">{{ dashboard_summary.total_items }}</span>
-                            <span class="ml-1 text-sm text-primary-700 dark:text-primary-300">{% trans "items" %}</span>
+                            <span class="font-bold text-2xl text-primary-900 dark:text-primary-100 tabular-nums">{{ dashboard_summary.total_items }}</span>
+                            <p class="text-xs font-medium text-primary-600 dark:text-primary-400 mt-0.5 uppercase tracking-wide">{% trans "items" %}</p>
                         </div>
                     </div>
-                    <div class="bg-primary-50 border border-primary-200 flex items-center gap-3 rounded-default px-4 py-3 dark:bg-primary-950/30 dark:border-primary-800">
-                        <span class="material-symbols-outlined text-2xl text-primary-600 dark:text-primary-500">history</span>
+                    <div class="flex items-center gap-3 rounded-lg border border-primary-200 bg-gradient-to-br from-primary-50 to-white px-5 py-3.5 shadow-sm dark:from-primary-950/40 dark:to-base-900 dark:border-primary-800/60">
+                        <span class="material-symbols-outlined text-2xl text-primary-500">history</span>
                         <div>
-                            <span class="font-semibold text-xl text-primary-900 dark:text-primary-100">{{ dashboard_summary.actions_this_week }}</span>
-                            <span class="ml-1 text-sm text-primary-700 dark:text-primary-300">{% trans "actions this week" %}</span>
+                            <span class="font-bold text-2xl text-primary-900 dark:text-primary-100 tabular-nums">{{ dashboard_summary.actions_this_week }}</span>
+                            <p class="text-xs font-medium text-primary-600 dark:text-primary-400 mt-0.5 uppercase tracking-wide">{% trans "actions this week" %}</p>
                         </div>
                     </div>
                 </div>
             {% endif %}
 
+            {# ── Overview grid ── #}
             {% if dashboard_stats and dashboard_stats|length > 0 %}
                 <div class="mb-8">
-                    <h2 class="font-semibold mb-4 text-base-900 text-lg dark:text-base-100">{% trans "Overview" %}</h2>
+                    <h2 class="flex items-center gap-2 font-bold mb-4 text-base-800 text-sm uppercase tracking-widest dark:text-base-300">
+                        <span class="material-symbols-outlined text-base text-base-400">grid_view</span>
+                        {% trans "Overview" %}
+                    </h2>
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+
                         {% if dashboard_stats.users is not None %}
-                            <a href="/admin/users/user/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
-                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">people</span>
-                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.users }}</span>
-                                <span class="text-subtle text-sm">{% trans "Users" %}</span>
+                            <a href="/admin/users/user/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                                <div class="flex items-center justify-between">
+                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">people</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                </div>
+                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.users }}</span>
+                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Users" %}</span>
                             </a>
                         {% endif %}
+
                         {% if dashboard_stats.clusters is not None %}
-                            <a href="/admin/datasets/cluster/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
-                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">category</span>
-                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.clusters }}</span>
-                                <span class="text-subtle text-sm">{% trans "Clusters" %}</span>
+                            <a href="/admin/datasets/cluster/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                                <div class="flex items-center justify-between">
+                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">category</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                </div>
+                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.clusters }}</span>
+                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Clusters" %}</span>
                             </a>
                         {% endif %}
+
                         {% if dashboard_stats.vector_datasets is not None %}
-                            <a href="/admin/datasets/vectordataset/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
-                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">layers</span>
-                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.vector_datasets }}</span>
-                                <span class="text-subtle text-sm">{% trans "Vector datasets" %}</span>
+                            <a href="/admin/datasets/vectordataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                                <div class="flex items-center justify-between">
+                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">layers</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                </div>
+                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.vector_datasets }}</span>
+                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Vector datasets" %}</span>
                             </a>
                         {% endif %}
+
                         {% if dashboard_stats.vector_items is not None %}
-                            <a href="/admin/datasets/vectoritem/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
-                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">place</span>
-                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.vector_items }}</span>
-                                <span class="text-subtle text-sm">{% trans "Vector items" %}</span>
+                            <a href="/admin/datasets/vectoritem/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                                <div class="flex items-center justify-between">
+                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">place</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                </div>
+                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.vector_items }}</span>
+                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Vector items" %}</span>
                             </a>
                         {% endif %}
+
                         {% if dashboard_stats.pmtiles_datasets is not None %}
-                            <a href="/admin/datasets/pmtilesdataset/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
-                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">map</span>
-                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.pmtiles_datasets }}</span>
-                                <span class="text-subtle text-sm">{% trans "PMTiles datasets" %}</span>
+                            <a href="/admin/datasets/pmtilesdataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                                <div class="flex items-center justify-between">
+                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">map</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                </div>
+                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.pmtiles_datasets }}</span>
+                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "PMTiles datasets" %}</span>
                             </a>
                         {% endif %}
+
                         {% if dashboard_stats.raster_datasets is not None %}
-                            <a href="/admin/datasets/rasterdataset/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
-                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">image</span>
-                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.raster_datasets }}</span>
-                                <span class="text-subtle text-sm">{% trans "Raster datasets" %}</span>
+                            <a href="/admin/datasets/rasterdataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                                <div class="flex items-center justify-between">
+                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">image</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                </div>
+                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.raster_datasets }}</span>
+                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Raster datasets" %}</span>
                             </a>
                         {% endif %}
+
                         {% if dashboard_stats.tabular_datasets is not None %}
-                            <a href="/admin/datasets/tabulardataset/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
-                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">table_chart</span>
-                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.tabular_datasets }}</span>
-                                <span class="text-subtle text-sm">{% trans "Tabular datasets" %}</span>
+                            <a href="/admin/datasets/tabulardataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                                <div class="flex items-center justify-between">
+                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">table_chart</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                </div>
+                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.tabular_datasets }}</span>
+                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Tabular datasets" %}</span>
                             </a>
                         {% endif %}
+
                         {% if dashboard_stats.tabular_items is not None %}
-                            <a href="/admin/datasets/tabularitem/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
-                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">grid_on</span>
-                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.tabular_items }}</span>
-                                <span class="text-subtle text-sm">{% trans "Tabular items" %}</span>
+                            <a href="/admin/datasets/tabularitem/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                                <div class="flex items-center justify-between">
+                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">grid_on</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                </div>
+                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.tabular_items }}</span>
+                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Tabular items" %}</span>
                             </a>
                         {% endif %}
+
                         {% if dashboard_stats.area_submissions is not None %}
-                            <a href="/admin/area_submissions/areadatasubmission/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
-                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">upload_file</span>
-                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.area_submissions }}</span>
-                                <span class="text-subtle text-sm">{% trans "Area submissions" %}</span>
+                            <a href="/admin/area_submissions/areadatasubmission/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                                <div class="flex items-center justify-between">
+                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">upload_file</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                </div>
+                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.area_submissions }}</span>
+                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Area submissions" %}</span>
                             </a>
                         {% endif %}
+
                         {% if dashboard_stats.field_checks is not None %}
-                            <a href="/admin/field-check/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
-                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">fact_check</span>
-                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.field_checks }}</span>
-                                <span class="text-subtle text-sm">{% trans "Field checks" %}</span>
+                            <a href="/admin/field-check/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                                <div class="flex items-center justify-between">
+                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">fact_check</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                </div>
+                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.field_checks }}</span>
+                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Field checks" %}</span>
                             </a>
                         {% endif %}
+
                         {% if dashboard_stats.feedback is not None %}
-                            <a href="/admin/feedback/feedback/" class="bg-base-50 border border-base-200 flex flex-col gap-1 p-4 rounded-default shadow-xs transition-colors hover:border-primary-300 hover:shadow-sm dark:bg-base-800 dark:border-base-700 dark:hover:border-primary-600">
-                                <span class="material-symbols-outlined text-primary-600 dark:text-primary-500">feedback</span>
-                                <span class="font-semibold text-2xl text-base-900 dark:text-base-100">{{ dashboard_stats.feedback }}</span>
-                                <span class="text-subtle text-sm">{% trans "Feedback" %}</span>
+                            <a href="/admin/feedback/feedback/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700">
+                                <div class="flex items-center justify-between">
+                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">feedback</span>
+                                    <span class="material-symbols-outlined text-sm text-base-300 dark:text-base-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                </div>
+                                <span class="font-bold text-3xl text-base-900 dark:text-base-100 tabular-nums">{{ dashboard_stats.feedback }}</span>
+                                <span class="text-xs font-medium text-base-500 dark:text-base-400 uppercase tracking-wide">{% trans "Feedback" %}</span>
                             </a>
                         {% endif %}
+
                     </div>
                 </div>
 
+                {# ── Charts ── #}
                 {% if activity_chart_data or dataset_chart_data %}
                     <div class="mb-8 grid gap-6 lg:grid-cols-2">
                         {% if activity_chart_data %}
-                            <div class="bg-base-50 border border-base-200 rounded-default p-4 dark:bg-base-800 dark:border-base-700">
-                                <h3 class="font-semibold mb-3 text-base-900 dark:text-base-100">{% trans "Activity (last 14 days)" %}</h3>
+                            <div class="rounded-lg border border-base-200 bg-white p-5 shadow-sm dark:bg-base-800 dark:border-base-700">
+                                <h3 class="flex items-center gap-1.5 font-semibold mb-4 text-sm text-base-700 dark:text-base-200 uppercase tracking-wide">
+                                    <span class="material-symbols-outlined text-base text-primary-500">bar_chart</span>
+                                    {% trans "Activity (last 14 days)" %}
+                                </h3>
                                 <div class="relative h-48 w-full">
                                     <canvas class="chart" data-type="bar" data-value="{{ activity_chart_data|escape }}" {% if activity_chart_options %}data-options="{{ activity_chart_options|escape }}"{% endif %} height="192"></canvas>
                                 </div>
                             </div>
                         {% endif %}
                         {% if dataset_chart_data %}
-                            <div class="bg-base-50 border border-base-200 rounded-default p-4 dark:bg-base-800 dark:border-base-700">
-                                <h3 class="font-semibold mb-3 text-base-900 dark:text-base-100">{% trans "Datasets by type" %}</h3>
+                            <div class="rounded-lg border border-base-200 bg-white p-5 shadow-sm dark:bg-base-800 dark:border-base-700">
+                                <h3 class="flex items-center gap-1.5 font-semibold mb-4 text-sm text-base-700 dark:text-base-200 uppercase tracking-wide">
+                                    <span class="material-symbols-outlined text-base text-primary-500">donut_large</span>
+                                    {% trans "Datasets by type" %}
+                                </h3>
                                 <div class="relative mx-auto h-48 w-full max-w-[240px]">
                                     <canvas class="chart" data-type="doughnut" data-value="{{ dataset_chart_data|escape }}" height="192"></canvas>
                                 </div>
@@ -140,67 +198,70 @@
                         {% endif %}
                     </div>
                 {% endif %}
+
             {% else %}
-                <div class="bg-base-50 border border-base-200 rounded-default p-8 text-center dark:bg-base-800 dark:border-base-700">
-                    <span class="material-symbols-outlined mb-4 block text-4xl text-base-400 dark:text-base-500">dashboard</span>
-                    <h2 class="font-semibold mb-2 text-base-900 dark:text-base-100">{% trans "Welcome to DRMIS Admin" %}</h2>
+                <div class="rounded-lg border border-base-200 bg-white p-10 text-center shadow-sm dark:bg-base-800 dark:border-base-700">
+                    <span class="material-symbols-outlined mb-4 block text-5xl text-base-300 dark:text-base-600">dashboard</span>
+                    <h2 class="font-bold mb-2 text-base-900 dark:text-base-100">{% trans "Welcome to DRMIS Admin" %}</h2>
                     <p class="text-subtle text-sm">{% trans "Use the sidebar to navigate and manage your data." %}</p>
                 </div>
             {% endif %}
         </div>
 
-        {% if admin_log %}
-            <div id="content-related" class="lg:w-96 shrink-0">
-                <div id="recent-actions-module" class="module bg-base-50 rounded-default p-4 dark:bg-base-800">
-                    <h2 class="mb-4 font-semibold text-base-900 dark:text-base-100">
-                        {% trans "Recent actions" %}
-                    </h2>
-
-                    <ul class="flex flex-col gap-3">
+        {# ── Recent actions panel ── #}
+        <div id="content-related" class="lg:w-80 xl:w-96 shrink-0">
+            <div id="recent-actions-module" class="rounded-lg border border-base-200 bg-white shadow-sm dark:bg-base-800 dark:border-base-700 overflow-hidden">
+                <div class="flex items-center gap-2 px-4 py-3 border-b border-base-200 dark:border-base-700 bg-base-50 dark:bg-base-900">
+                    <span class="material-symbols-outlined text-base text-primary-500">update</span>
+                    <h2 class="font-semibold text-sm text-base-800 dark:text-base-100 uppercase tracking-wide">{% trans "Recent actions" %}</h2>
+                </div>
+                {% if admin_log %}
+                    <ul class="flex flex-col divide-y divide-base-100 dark:divide-base-700">
                         {% for item in admin_log %}
-                            <li class="border border-base-200 bg-white rounded-default p-3 shadow-xs dark:bg-base-900 dark:border-base-700">
-                                <div class="flex items-start gap-2">
-                                    <span class="material-symbols-outlined mt-0.5 shrink-0 text-base-500 {% if item.action_class == 'addlink' %}text-green-600 dark:text-green-500{% elif item.action_class == 'deletelink' %}text-red-600 dark:text-red-500{% else %}text-primary-600 dark:text-primary-500{% endif %}">
+                            <li class="px-4 py-3 hover:bg-base-50 dark:hover:bg-base-750 transition-colors">
+                                <div class="flex items-start gap-2.5">
+                                    <span class="mt-0.5 shrink-0 material-symbols-outlined text-base {% if item.action_class == 'addlink' %}text-emerald-500{% elif item.action_class == 'deletelink' %}text-red-500{% else %}text-primary-500{% endif %}">
                                         {% if item.action_class == 'addlink' %}add_circle{% elif item.action_class == 'deletelink' %}delete{% else %}edit{% endif %}
                                     </span>
                                     <div class="min-w-0 flex-1">
-                                        <div class="mb-1 truncate font-medium text-base-900 dark:text-base-100">
+                                        <div class="mb-0.5 truncate text-sm font-medium text-base-900 dark:text-base-100">
                                             {% if item.entry.is_deletion or not item.entry.get_admin_url %}
                                                 {{ item.entry.object_repr }}
                                             {% else %}
-                                                <a href="{{ item.entry.get_admin_url }}" class="hover:text-primary-600 dark:hover:text-primary-500">{{ item.entry.object_repr }}</a>
+                                                <a href="{{ item.entry.get_admin_url }}" class="hover:text-primary-600 dark:hover:text-primary-400">{{ item.entry.object_repr }}</a>
                                             {% endif %}
                                         </div>
-                                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-base-500 dark:text-base-400">
-                                            <span class="font-medium {% if item.action_class == 'addlink' %}text-green-600 dark:text-green-500{% elif item.action_class == 'deletelink' %}text-red-600 dark:text-red-500{% else %}text-primary-600 dark:text-primary-500{% endif %}">
+                                        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-base-400 dark:text-base-500">
+                                            <span class="font-semibold {% if item.action_class == 'addlink' %}text-emerald-500{% elif item.action_class == 'deletelink' %}text-red-500{% else %}text-primary-500{% endif %}">
                                                 {{ item.action_label }}
                                             </span>
+                                            <span>·</span>
                                             <span>
                                                 {% if item.entry.content_type %}
                                                     {% filter capfirst %}{{ item.entry.content_type.name }}{% endfilter %}
                                                 {% else %}
-                                                    {% trans "Unknown content" %}
+                                                    {% trans "Unknown" %}
                                                 {% endif %}
                                             </span>
-                                            <span>{{ item.entry.action_time|timesince }} {% trans "ago" %}</span>
+                                            <span>·</span>
+                                            <span class="tabular-nums">{{ item.entry.action_time|timesince }} {% trans "ago" %}</span>
                                         </div>
                                         {% if item.change_detail %}
-                                            <p class="mt-2 text-xs text-base-500 dark:text-base-400 line-clamp-2">{{ item.change_detail }}</p>
+                                            <p class="mt-1 text-xs text-base-400 dark:text-base-500 line-clamp-2">{{ item.change_detail }}</p>
                                         {% endif %}
                                     </div>
                                 </div>
                             </li>
                         {% endfor %}
                     </ul>
-                </div>
+                {% else %}
+                    <div class="px-4 py-8 text-center">
+                        <span class="material-symbols-outlined block text-3xl text-base-300 dark:text-base-600 mb-2">history</span>
+                        <p class="text-subtle text-sm">{% trans "No recent actions." %}</p>
+                    </div>
+                {% endif %}
             </div>
-        {% else %}
-            <div id="content-related" class="lg:w-96 shrink-0">
-                <div class="module bg-base-50 rounded-default p-4 dark:bg-base-800">
-                    <h2 class="mb-4 font-semibold text-base-900 dark:text-base-100">{% trans "Recent actions" %}</h2>
-                    <p class="text-subtle text-sm">{% trans "No recent actions." %}</p>
-                </div>
-            </div>
-        {% endif %}
+        </div>
+
     </div>
 {% endblock %}

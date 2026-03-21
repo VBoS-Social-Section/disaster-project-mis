@@ -1,0 +1,166 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+{% block title %}RAP import upload | {{ site_title|default:_("Django site admin") }}{% endblock %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+  &rsaquo; {% trans "RAP import upload" %}
+</div>
+{% endblock %}
+{% block extrahead %}
+{{ block.super }}
+<style>
+  .rap-dropzone {
+    border: 2px dashed var(--border-color, #cbd5e1);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background: var(--body-bg, #f8fafc);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .rap-dropzone.dragover {
+    border-color: #2563eb;
+    background: #eff6ff;
+  }
+  .rap-dropzone p { margin: 0.5rem 0 0; color: #64748b; font-size: 0.875rem; }
+  .rap-results { margin-top: 1.5rem; font-family: ui-monospace, monospace; font-size: 12px; }
+  .rap-results table { width: 100%; border-collapse: collapse; }
+  .rap-results th, .rap-results td { border: 1px solid #e2e8f0; padding: 0.35rem 0.5rem; text-align: left; }
+  .rap-ok { color: #15803d; }
+  .rap-err { color: #b91c1c; }
+  .rap-banner { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; }
+  .rap-banner.error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+  .rap-banner.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+</style>
+{% endblock %}
+{% block content %}
+<div id="content-main">
+  <h1>{% trans "RAP batch upload" %}</h1>
+  <p class="help">
+    {% trans "Upload all CSV files from one RAP export in a single batch. Filenames must match RAP conventions (e.g. ex_hazard_…, education_…)." %}
+  </p>
+
+  <form id="rap-upload-form" class="module aligned">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+      <div class="form-row">
+        <label for="id_batch_ref">{% trans "Batch ref" %} <span class="required">*</span></label>
+        <input type="text" name="batch_ref" id="id_batch_ref" required maxlength="50"
+               placeholder="e.g. TC-HAROLD-2026" class="vTextField" style="max-width: 28rem;" />
+      </div>
+      <div class="form-row">
+        <label for="id_cyclone_name">{% trans "Cyclone name" %} <span class="required">*</span></label>
+        <input type="text" name="cyclone_name" id="id_cyclone_name" required maxlength="100" class="vTextField" style="max-width: 28rem;" />
+      </div>
+      <div class="form-row">
+        <label for="id_event_year">{% trans "Event year" %} <span class="required">*</span></label>
+        <input type="text" name="event_year" id="id_event_year" required inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="2026" class="vTextField" style="max-width: 8rem;" />
+      </div>
+    </fieldset>
+
+    <div class="form-row">
+      <label for="id_csv_files">{% trans "CSV files" %}</label>
+      <input type="file" name="csv_files" id="id_csv_files" accept=".csv,text/csv" multiple hidden />
+      <div class="rap-dropzone" id="rap-dropzone" tabindex="0" role="button" aria-label="{% trans 'Drop CSV files here or click to browse' %}">
+        <strong>{% trans "Drag and drop CSV files here" %}</strong>
+        <p>{% trans "or click to select — multiple files allowed" %}</p>
+      </div>
+    </div>
+
+    <div class="submit-row">
+      <button type="submit" class="default" id="rap-submit">{% trans "Upload & validate" %}</button>
+    </div>
+  </form>
+
+  <div id="rap-message" style="display:none"></div>
+  <div id="rap-results" class="rap-results" style="display:none"></div>
+</div>
+
+<script>
+(function() {
+  var form = document.getElementById('rap-upload-form');
+  var fileInput = document.getElementById('id_csv_files');
+  var dropzone = document.getElementById('rap-dropzone');
+  var messageEl = document.getElementById('rap-message');
+  var resultsEl = document.getElementById('rap-results');
+  var submitBtn = document.getElementById('rap-submit');
+
+  function getCookie(name) {
+    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? decodeURIComponent(v[2]) : null;
+  }
+  function csrfToken() {
+    var inp = form.querySelector('[name=csrfmiddlewaretoken]');
+    return inp ? inp.value : getCookie('csrftoken');
+  }
+
+  dropzone.addEventListener('click', function() { fileInput.click(); });
+  dropzone.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+  });
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(function(ev) {
+    dropzone.addEventListener(ev, function(e) { e.preventDefault(); e.stopPropagation(); }, false);
+  });
+  dropzone.addEventListener('dragover', function() { dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', function() { dropzone.classList.remove('dragover'); });
+  dropzone.addEventListener('drop', function(e) {
+    dropzone.classList.remove('dragover');
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+      fileInput.files = e.dataTransfer.files;
+    }
+  });
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    messageEl.style.display = 'none';
+    resultsEl.style.display = 'none';
+    resultsEl.innerHTML = '';
+
+    if (!fileInput.files || !fileInput.files.length) {
+      messageEl.className = 'rap-banner error';
+      messageEl.textContent = '{% trans "Please choose at least one CSV file." %}';
+      messageEl.style.display = 'block';
+      return;
+    }
+    var fd = new FormData(form);
+
+    submitBtn.disabled = true;
+    fetch(form.action || window.location.pathname, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest' },
+      body: fd,
+      credentials: 'same-origin'
+    }).then(function(r) { return r.json().then(function(data) { return { ok: r.ok, status: r.status, data: data }; }); })
+    .then(function(res) {
+      submitBtn.disabled = false;
+      var d = res.data;
+      if (!res.ok || !d.ok) {
+        var errs = (d.errors && d.errors.join) ? d.errors.join(' ') : (d.detail || res.status);
+        messageEl.className = 'rap-banner error';
+        messageEl.textContent = errs || '{% trans "Upload failed." %}';
+        messageEl.style.display = 'block';
+        return;
+      }
+      messageEl.className = 'rap-banner success';
+      messageEl.innerHTML = '{% trans "Batch saved." %} <a href="' + (d.batch_url || '#') + '">{% trans "Open batch in admin" %}</a>';
+      messageEl.style.display = 'block';
+      if (d.files && d.files.length) {
+        var rows = d.files.map(function(f) {
+          var ok = f.valid ? '<span class="rap-ok">OK</span>' : '<span class="rap-err">ERR</span>';
+          var errList = (f.errors || []).concat(f.warnings || []).join('; ');
+          return '<tr><td>' + (f.filename || '') + '</td><td>' + (f.sector || '') + '</td><td>' + ok + '</td><td>' + (f.rows != null ? f.rows : '') + '</td><td>' + errList + '</td></tr>';
+        }).join('');
+        resultsEl.innerHTML = '<table><thead><tr><th>File</th><th>Sector</th><th>Valid</th><th>Rows</th><th>Notes</th></tr></thead><tbody>' + rows + '</tbody></table>';
+        resultsEl.style.display = 'block';
+      }
+    }).catch(function() {
+      submitBtn.disabled = false;
+      messageEl.className = 'rap-banner error';
+      messageEl.textContent = '{% trans "Network error." %}';
+      messageEl.style.display = 'block';
+    });
+  });
+})();
+</script>
+{% endblock %}

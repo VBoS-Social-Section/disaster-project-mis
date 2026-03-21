@@ -1,0 +1,88 @@
+import { useCallback, type ReactNode } from "react";
+import { cn } from "@/lib/utils";
+import { colors } from "@/tokens";
+import { useUiStore } from "@/store/ui-store";
+import { toast } from "@/utils/toast";
+import { Topbar } from "./Topbar";
+import { Sidebar } from "./Sidebar";
+
+export interface AppShellProps {
+  children: ReactNode;
+  /** Alert count for `<AlertCountPill />`. */
+  alertCount?: number;
+  /** Shell `<UserAvatar />` click handler (e.g. open profile). */
+  onAvatarClick?: () => void;
+  /** When true (default), main uses `overflow-auto` and **20px** padding per spec. */
+  mainPadding?: boolean;
+  /** Show `<UserAvatar />` in topbar (default **true** per spec). */
+  topbarUserAvatar?: boolean;
+  /** Optional class on `<main>`. */
+  mainClassName?: string;
+}
+
+/**
+ * CSS grid: **52px** top row (full width) | **220px** sidebar + **1fr** main.
+ * Main: `overflow-auto`, **padding 20px** (unless `mainPadding={false}` for full-bleed map).
+ */
+export function AppShell({
+  children,
+  alertCount = 0,
+  onAvatarClick,
+  mainPadding = true,
+  topbarUserAvatar = true,
+  mainClassName,
+}: AppShellProps) {
+  const shellNavId = useUiStore((s) => s.shellNavId);
+  const setShellNavId = useUiStore((s) => s.setShellNavId);
+  const setPrimaryWorkspace = useUiStore((s) => s.setPrimaryWorkspace);
+
+  const handleNavigate = useCallback(
+    (id: string) => {
+      if (id === "dashboard") {
+        setShellNavId(id);
+        setPrimaryWorkspace("command-centre");
+        return;
+      }
+      if (id === "live-map") {
+        setShellNavId(id);
+        setPrimaryWorkspace("operations");
+        return;
+      }
+      toast.info("Coming soon", `“${id}” will open here in a future release.`);
+    },
+    [setShellNavId, setPrimaryWorkspace],
+  );
+
+  return (
+    <div
+      className="grid h-[100dvh] w-full overflow-hidden"
+      style={{
+        gridTemplateColumns: "220px 1fr",
+        gridTemplateRows: "52px 1fr",
+        backgroundColor: colors.bg.primary,
+      }}
+    >
+      <Topbar
+        alertCount={alertCount}
+        onAvatarClick={onAvatarClick}
+        showUserAvatar={topbarUserAvatar}
+      />
+      <Sidebar activeId={shellNavId} onNavigate={handleNavigate} />
+      <main
+        className={cn(
+          "row-start-2 col-start-2 min-h-0 min-w-0",
+          mainPadding
+            ? "flex flex-col overflow-auto p-5"
+            : "flex flex-col overflow-hidden p-0",
+          mainClassName,
+        )}
+        style={{
+          backgroundColor: colors.bg.primary,
+          color: colors.text.primary,
+        }}
+      >
+        {children}
+      </main>
+    </div>
+  );
+}

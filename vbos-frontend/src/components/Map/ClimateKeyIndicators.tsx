@@ -238,9 +238,7 @@ export function ClimateKeyIndicators() {
     />,
   );
 
-  return (
-    <div className="pointer-events-none absolute left-4 right-4 top-3 z-[1000] flex flex-wrap items-center gap-2">
-      {indicators}
-    </div>
-  );
+  // Cards removed from map overlay — data available in right sidebar charts
+  void indicators;
+  return null;
 }

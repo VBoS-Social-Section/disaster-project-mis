@@ -17,6 +17,8 @@ from vbos.land_accounts.admin_views import (
 )
 from vbos.climate.views import climate_dashboard, climate_import_geojson, climate_module_detail
 from vbos.field_check.admin import field_check_dashboard
+from vbos.rap_import.views import RAPUploadView
+from vbos.maintenance.task_status_views import celery_task_status
 from vbos.maintenance.views import backup_download, backup_restore_dashboard, restore_upload
 from vbos.coastal_changes.admin_views import (
     add_coastal_changes,
@@ -84,6 +86,11 @@ api_urls = [
 ]
 
 urlpatterns = [
+    path(
+        f"{API_BASE_URL}/tasks/<str:task_id>/status/",
+        celery_task_status,
+        name="api_celery_task_status",
+    ),
     path("admin", RedirectView.as_view(url="/admin/", permanent=True)),
     # Redirect admin paths without trailing slash (APPEND_SLASH=False)
     re_path(
@@ -108,6 +115,11 @@ urlpatterns = [
     path("admin/coastal-changes/<int:object_id>/edit/", admin.site.admin_view(edit_coastal_changes), name="admin_coastal_changes_edit"),
     path("admin/coastal-changes/<int:object_id>/delete/", admin.site.admin_view(delete_coastal_changes), name="admin_coastal_changes_delete"),
     path("admin/field-check/", admin.site.admin_view(field_check_dashboard), name="admin_field_check_dashboard"),
+    path(
+        "admin/rap-import/upload/",
+        admin.site.admin_view(RAPUploadView.as_view()),
+        name="admin_rap_import_upload",
+    ),
     path("admin/maintenance/", admin.site.admin_view(backup_restore_dashboard), name="admin_maintenance_backup_restore"),
     path("admin/maintenance/backup/", admin.site.admin_view(backup_download), name="admin_maintenance_backup"),
     path("admin/maintenance/restore/", admin.site.admin_view(restore_upload), name="admin_maintenance_restore"),

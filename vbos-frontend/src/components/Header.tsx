@@ -2,7 +2,7 @@
  * Minimal header: logo + title | avatar, theme toggle.
  * Sticky with glass blur + shadow on scroll. Inter/SF Pro typography.
  */
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, type ReactNode } from "react";
 import { HelpOverlay } from "@/components/HelpOverlay";
 import {
   Dialog,
@@ -21,7 +21,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ColorModeButton } from "@/components/ui/color-mode";
 import {
   LuCircleHelp,
   LuLockKeyhole,
@@ -34,14 +33,24 @@ import {
   LuCheck,
   LuShield,
   LuLeaf,
+  LuSquareSplitHorizontal,
   LuClipboardList,
+  LuGauge,
+  LuBookOpen,
+  LuMenu,
 } from "react-icons/lu";
-import { ClimateModuleSelect } from "./LeftSidebar/ClimateModuleSelect";
 import { useAuthStore } from "@/store/auth-store";
 import { useViewStore } from "@/store/view-store";
-import { useComparisonStore } from "@/store/comparison-store";
+import { useModeTransition } from "@/hooks/useModeTransition";
+import {
+  HEADER_MODE_IDS,
+  HEADER_MODE_META,
+  isHeaderModeId,
+  type HeaderModeId,
+} from "@/config/modes";
 import { useLockStore } from "@/store/lock-store";
 import { useUiStore } from "@/store/ui-store";
+import { useSimulationStore } from "@/store/simulation-store";
 import { toast } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 
@@ -52,16 +61,25 @@ function avatarUrl(avatar: string | null | undefined): string | null {
   return `${API_HOST.replace(/\/$/, "")}${avatar.startsWith("/") ? "" : "/"}${avatar}`;
 }
 
-export const Header = () => {
+export type HeaderProps = {
+  /** Hide left logo block when the shell topbar already shows DRMIS branding. */
+  hideBrand?: boolean;
+  /** Use a menu icon instead of avatar trigger (when shell `<UserAvatar />` shows account). */
+  hideUserMenu?: boolean;
+};
+
+export function Header({ hideBrand = false, hideUserMenu = false }: HeaderProps) {
   const [shareDialogIsOpen, setShareDialogIsOpen] = useState(false);
   const [helpOverlayOpen, setHelpOverlayOpen] = useState(false);
   const setProfilePageOpen = useUiStore((s) => s.setProfilePageOpen);
   const setDataEntryPageOpen = useUiStore((s) => s.setDataEntryPageOpen);
   const [scrolled, setScrolled] = useState(false);
   const { user, clearAuth } = useAuthStore();
-  const { scenarioId, setScenario } = useViewStore();
-  const setComparisonMode = useComparisonStore((s) => s.setComparisonMode);
+  const scenarioId = useViewStore((s) => s.scenarioId);
+  const { switchToMode } = useModeTransition();
+  const [modeHelpOpen, setModeHelpOpen] = useState(false);
   const { lock, pinHash, resetLockOnLogout } = useLockStore();
+  const { isOpen: simOpen, setIsOpen: setSimOpen } = useSimulationStore();
 
   const handleLogout = () => {
     resetLockOnLogout();
@@ -78,6 +96,38 @@ export const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const headerActiveMode: HeaderModeId | null = isHeaderModeId(scenarioId)
+    ? scenarioId
+    : null;
+  const activeTabIndex = headerActiveMode
+    ? HEADER_MODE_IDS.indexOf(headerActiveMode)
+    : 0;
+
+  const focusModeTab = useCallback((index: number) => {
+    const n = HEADER_MODE_IDS.length;
+    const i = ((index % n) + n) % n;
+    const id = HEADER_MODE_IDS[i];
+    switchToMode(id);
+    window.setTimeout(() => {
+      document.getElementById(`view-mode-tab-${id}`)?.focus();
+    }, 0);
+  }, [switchToMode]);
+
+  const modeIcons: Record<HeaderModeId, ReactNode> = {
+    disaster: <LuShield className="size-3.5 shrink-0" aria-hidden />,
+    climate: <LuLeaf className="size-3.5 shrink-0" aria-hidden />,
+    compare: <LuSquareSplitHorizontal className="size-3.5 shrink-0" aria-hidden />,
+  };
+
+  const modeActiveClasses: Record<HeaderModeId, string> = {
+    disaster:
+      "bg-red-500/12 text-red-800 ring-1 ring-red-500/40 dark:bg-red-500/10 dark:text-red-300 dark:ring-red-400/35",
+    climate:
+      "bg-emerald-500/12 text-emerald-900 ring-1 ring-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-400/35",
+    compare:
+      "bg-violet-500/12 text-violet-900 ring-1 ring-violet-500/40 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-400/35",
+  };
+
   return (
     <header
       className={cn(
@@ -87,92 +137,161 @@ export const Header = () => {
         scrolled && "shadow-[0_1px_0_0_var(--border),0_4px_12px_-2px_rgba(0,0,0,0.08)] dark:shadow-[0_1px_0_0_var(--border),0_4px_12px_-2px_rgba(0,0,0,0.25)]",
       )}
     >
-      {/* Left: Logo + Title */}
-      <div className="flex shrink-0 items-center gap-2 md:gap-3">
-        <img
-          src="/DRMISLogo.svg"
-          alt="DRMIS Logo"
-          className="size-8 shrink-0"
-        />
-        <div className="flex min-w-0 flex-col gap-0">
-          <h1
-            className="font-sans text-sm font-bold tracking-tight text-foreground"
-            title="Disaster Risk Management Information System"
-          >
-            DRMIS
-          </h1>
-          <span className="hidden text-[10px] font-medium uppercase tracking-wider text-muted-foreground md:inline">
-            Disaster Risk Management Information System
-          </span>
-        </div>
-      </div>
-
-      {/* Center: View mode toggle + Climate module dropdown when in Climate mode */}
-      <div className="flex shrink-0 items-center gap-2">
-        <div
-          data-tour="view-mode"
-          className="flex shrink-0 items-center gap-0.5 rounded-md border border-border bg-muted/50 p-0.5 md:gap-1"
-          role="tablist"
-          aria-label="View mode"
-        >
-        <Button
-          variant={scenarioId === "disaster" ? "secondary" : "ghost"}
-          size="sm"
-          className={cn(
-            "h-9 w-9 gap-1.5 px-2 md:h-7 md:w-auto md:px-2.5",
-            "text-xs transition-all duration-200",
-            scenarioId === "disaster" && "ring-1 ring-primary/30",
-          )}
-          onClick={() => {
-            setScenario("disaster");
-            setComparisonMode(false);
-          }}
-          title="Disaster & preparedness"
-          role="tab"
-          aria-selected={scenarioId === "disaster"}
-          aria-current={scenarioId === "disaster" ? "page" : undefined}
-        >
-          <LuShield className="size-4 md:size-3.5" />
-          <span className="hidden md:inline">Disaster</span>
-        </Button>
-        <Button
-          variant={scenarioId === "climate" ? "secondary" : "ghost"}
-          size="sm"
-          className={cn(
-            "h-9 w-9 gap-1.5 px-2 md:h-7 md:w-auto md:px-2.5",
-            "text-xs transition-all duration-200",
-            scenarioId === "climate" && "ring-1 ring-primary/30",
-          )}
-          onClick={() => setScenario("climate")}
-          title="Climate change: land cover, raster maps, year comparison"
-          role="tab"
-          aria-selected={scenarioId === "climate"}
-          aria-current={scenarioId === "climate" ? "page" : undefined}
-        >
-          <LuLeaf className="size-4 md:size-3.5" />
-          <span className="hidden md:inline">Climate</span>
-        </Button>
-        </div>
-        {scenarioId === "climate" && (
-          <div className="hidden sm:block">
-            <ClimateModuleSelect compact />
+      {/* Left: Logo + Title (optional — hidden when AppShell Topbar shows brand) */}
+      {!hideBrand ? (
+        <div className="flex shrink-0 items-center gap-2 md:gap-3">
+          <img
+            src="/DRMISLogo.svg"
+            alt="DRMIS Logo"
+            className="size-8 shrink-0"
+          />
+          <div className="flex min-w-0 flex-col gap-0">
+            <h1
+              className="font-sans text-sm font-bold tracking-tight text-foreground"
+              title="Disaster Risk Management Information System"
+            >
+              DRMIS
+            </h1>
+            <span className="hidden text-[10px] font-medium uppercase tracking-wider text-muted-foreground md:inline">
+              Disaster Risk Management Information System
+            </span>
           </div>
-        )}
+        </div>
+      ) : null}
+
+      {/* Center: segmented Disaster | Climate | Compare */}
+      <div className="flex min-w-0 flex-1 items-center justify-center px-2">
+        <div className="flex flex-col items-center gap-0.5">
+          <div className="flex items-center gap-1">
+            <div
+              data-tour="view-mode"
+              className="flex shrink-0 items-center gap-0.5 rounded-lg border border-border bg-muted/60 p-0.5 shadow-sm md:gap-0.5"
+              role="tablist"
+              aria-label="View mode: Disaster, Climate, or Compare"
+              id="view-mode-tablist"
+              onKeyDown={(e) => {
+                if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+                e.preventDefault();
+                const base = activeTabIndex >= 0 ? activeTabIndex : 0;
+                if (e.key === "ArrowRight") focusModeTab(base + 1);
+                else focusModeTab(base - 1);
+              }}
+            >
+              {HEADER_MODE_IDS.map((id) => {
+                const selected = scenarioId === id;
+                const meta = HEADER_MODE_META[id];
+                return (
+                  <Button
+                    key={id}
+                    type="button"
+                    variant={selected ? "secondary" : "ghost"}
+                    size="sm"
+                    id={`view-mode-tab-${id}`}
+                    role="tab"
+                    aria-selected={selected}
+                    aria-controls="drmis-mode-panel"
+                    tabIndex={selected ? 0 : -1}
+                    className={cn(
+                      "h-9 gap-1 px-2 text-xs font-semibold transition-all duration-200 md:h-8 md:px-2.5",
+                      selected && modeActiveClasses[id],
+                      !selected && "text-muted-foreground",
+                    )}
+                    title={`${meta.label}: ${meta.subtitle}`}
+                    onClick={() => switchToMode(id)}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      {modeIcons[id]}
+                      <span className="hidden sm:inline">{meta.label}</span>
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-8 shrink-0 text-muted-foreground"
+              aria-label="What do Disaster, Climate, and Compare show?"
+              onClick={() => setModeHelpOpen(true)}
+            >
+              <LuCircleHelp className="size-4" />
+            </Button>
+          </div>
+          {headerActiveMode ? (
+            <p
+              className="hidden max-w-[20rem] text-center text-[10px] leading-tight text-muted-foreground md:block"
+              aria-live="polite"
+            >
+              <span className="sr-only">Current mode: </span>
+              {HEADER_MODE_META[headerActiveMode].subtitle}
+            </p>
+          ) : null}
+        </div>
       </div>
 
-      {/* Right: Theme, Avatar - 44px touch targets on mobile */}
-      <div className="ml-auto flex shrink-0 items-center gap-1">
-        <ColorModeButton
-          aria-label="Toggle light/dark theme"
-          className="min-h-11 min-w-11 md:min-h-0 md:min-w-0"
-        />
+      <Dialog open={modeHelpOpen} onOpenChange={setModeHelpOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>View modes</DialogTitle>
+            <DialogDescription className="sr-only">
+              Short guide to Disaster, Climate, and Compare modes in DRMIS.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>
+              <strong className="text-foreground">Disaster (hazard)</strong> —{" "}
+              {HEADER_MODE_META.disaster.subtitle}. Vector and tabular layers for risk
+              and response.
+            </p>
+            <p>
+              <strong className="text-foreground">Climate (trend)</strong> —{" "}
+              {HEADER_MODE_META.climate.subtitle}. Baseline rasters and drivers by
+              climate module.
+            </p>
+            <p>
+              <strong className="text-foreground">Compare</strong> —{" "}
+              {HEADER_MODE_META.compare.subtitle}. Use the context panel to pick years
+              and swipe between them for tabular data.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button size="sm" onClick={() => setModeHelpOpen(false)}>
+              Got it
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
+      {/* Right: Simulation, Theme, Avatar - 44px touch targets on mobile */}
+      <div className="ml-auto flex shrink-0 items-center gap-1">
+        <Button
+          variant={simOpen ? "secondary" : "ghost"}
+          size="sm"
+          className={cn(
+            "min-h-11 min-w-11 md:min-h-0 md:min-w-0 md:h-8 md:w-auto gap-1.5 px-2 md:px-2.5 text-xs",
+            simOpen && "ring-1 ring-primary/30",
+          )}
+          onClick={() => setSimOpen(!simOpen)}
+          title="Open simulation control panel"
+          aria-pressed={simOpen}
+        >
+          <LuGauge className="size-4 md:size-3.5" />
+          <span className="hidden md:inline">Simulate</span>
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="min-h-11 min-w-11 rounded-full hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 size-11 md:size-8 inline-flex items-center justify-center overflow-hidden shrink-0 touch-manipulation"
+            className={cn(
+              "min-h-11 min-w-11 shrink-0 touch-manipulation hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 inline-flex items-center justify-center md:size-8",
+              hideUserMenu
+                ? "size-11 rounded-md md:size-8"
+                : "size-11 overflow-hidden rounded-full md:size-8",
+            )}
             aria-label="Open menu"
           >
-            {avatarUrl(user?.avatar) ? (
+            {hideUserMenu ? (
+              <LuMenu className="size-4 md:size-4" />
+            ) : avatarUrl(user?.avatar) ? (
               <img
                 src={avatarUrl(user?.avatar)!}
                 alt=""
@@ -192,6 +311,17 @@ export const Header = () => {
             <DropdownMenuItem onSelect={() => setHelpOverlayOpen(true)}>
               <LuCircleHelp className="size-4" />
               Help
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a
+                href="https://vbos-social-section.github.io/disaster-mis-user-manual/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-inherit no-underline"
+              >
+                <LuBookOpen className="size-4" />
+                User manual
+              </a>
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => setDataEntryPageOpen(true)}>
               <LuClipboardList className="size-4" />

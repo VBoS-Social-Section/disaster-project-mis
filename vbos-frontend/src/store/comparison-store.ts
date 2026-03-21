@@ -38,37 +38,43 @@ export const useComparisonStore = create<ComparisonState>((set, get) => ({
 
   setComparisonMode: (enabled) => {
     set({ comparisonMode: enabled });
+    const path = window.location.pathname;
     if (enabled) {
       const params = new URLSearchParams(window.location.search);
       params.set("compare", "1");
       params.set("yearLeft", get().yearLeft);
       params.set("yearRight", get().yearRight);
-      window.history.replaceState(null, "", `?${params.toString()}`);
+      const rest = params.toString();
+      window.history.replaceState(null, "", rest ? `${path}?${rest}` : path);
     } else {
       const params = new URLSearchParams(window.location.search);
       params.delete("compare");
       params.delete("yearLeft");
       params.delete("yearRight");
       const rest = params.toString();
-      window.history.replaceState(null, "", rest ? `?${rest}` : window.location.pathname);
+      window.history.replaceState(null, "", rest ? `${path}?${rest}` : path);
     }
   },
 
   setYearLeft: (year) => {
     set({ yearLeft: year });
     if (get().comparisonMode) {
+      const path = window.location.pathname;
       const params = new URLSearchParams(window.location.search);
       params.set("yearLeft", year);
-      window.history.replaceState(null, "", `?${params.toString()}`);
+      const rest = params.toString();
+      window.history.replaceState(null, "", rest ? `${path}?${rest}` : path);
     }
   },
 
   setYearRight: (year) => {
     set({ yearRight: year });
     if (get().comparisonMode) {
+      const path = window.location.pathname;
       const params = new URLSearchParams(window.location.search);
       params.set("yearRight", year);
-      window.history.replaceState(null, "", `?${params.toString()}`);
+      const rest = params.toString();
+      window.history.replaceState(null, "", rest ? `${path}?${rest}` : path);
     }
   },
 
