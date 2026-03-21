@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { colors } from "@/tokens";
+import { useAuthStore } from "@/store/auth-store";
 import { NavItem } from "./NavItem";
 import {
   LuLayoutDashboard,
@@ -31,6 +32,8 @@ function SectionTitle({ children }: { children: string }) {
  * Left navigation: Operations, Data, Governance — 220px column.
  */
 export function Sidebar({ activeId, onNavigate, className }: SidebarProps) {
+  const user = useAuthStore((s) => s.user);
+
   return (
     <aside
       className={cn(
@@ -90,6 +93,42 @@ export function Sidebar({ activeId, onNavigate, className }: SidebarProps) {
           onClick={() => onNavigate("settings")}
         />
       </nav>
+
+      {user?.is_staff && (
+        <div
+          style={{
+            borderTop: `0.5px solid ${colors.border.default}`,
+            marginTop: "auto",
+            paddingTop: "8px",
+          }}
+        >
+          <a
+            href="/admin/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "7px 16px",
+              fontSize: "12px",
+              color: colors.text.muted,
+              textDecoration: "none",
+            }}
+          >
+            <span
+              style={{
+                width: "5px",
+                height: "5px",
+                borderRadius: "50%",
+                background: "currentColor",
+                flexShrink: 0,
+              }}
+            />
+            Admin Panel ↗
+          </a>
+        </div>
+      )}
     </aside>
   );
 }

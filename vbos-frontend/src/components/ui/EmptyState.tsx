@@ -3,7 +3,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { colors } from "@/tokens";
 
-import { Button } from "./Button";
+import { Button } from "./button";
 
 export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   message: string;
@@ -33,7 +33,7 @@ export function EmptyState({ className, message, action, ...props }: EmptyStateP
         {message}
       </p>
       {action ? (
-        <Button type="button" variant="primary" size="sm" onClick={action.onClick}>
+        <Button type="button" variant="default" size="sm" onClick={action.onClick}>
           {action.label}
         </Button>
       ) : null}

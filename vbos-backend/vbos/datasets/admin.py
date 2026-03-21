@@ -162,6 +162,10 @@ class VectorDatasetAdmin(UnfoldModelAdmin):
     list_filter = ["cluster", "type", "climate_module"]
     list_editable = ["climate_module", "icon", "color"]
     change_form_template = "admin/datasets/vectordataset/change_form.html"
+    readonly_fields = ["view_on_map_link"]
+    # `created`/`updated` are non-editable model fields.
+    # Exclude them to avoid FieldError when Unfold builds fieldsets.
+    exclude = ("created", "updated")
 
     fieldsets = (
         (None, {"fields": ("name", "type", "description", "source", "cluster")}),
@@ -174,9 +178,21 @@ class VectorDatasetAdmin(UnfoldModelAdmin):
         ),
         (
             "Map display",
-            {"fields": ("icon", "color", "cyclone_name")},
+            {"fields": ("icon", "color", "cyclone_name", "view_on_map_link")},
         ),
     )
+
+    @admin.display(description="View on map")
+    def view_on_map_link(self, obj):
+        province = getattr(obj, "province", None)
+        layers = f"v{obj.pk}"
+        url = f"/app/live-map?layers={layers}"
+        if province is not None:
+            url += f"&province={province.pk}"
+        return format_html(
+            '<a href="{}" target="_blank" style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:#185FA5;text-decoration:none;">Open in Live Map →</a>',
+            url,
+        )
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "icon":
@@ -403,6 +419,22 @@ class TabularDatasetAdmin(UnfoldModelAdmin):
     list_filter = ["cluster", "type", "rap_sector_family", "rap_batch"]
     search_fields = ["name", "description", "rap_sector_family"]
     actions = ["clean_redundant_items"]
+    readonly_fields = ["view_on_map_link"]
+    # `created`/`updated` are non-editable model fields.
+    # Exclude them to avoid FieldError when Unfold builds fieldsets.
+    exclude = ("created", "updated")
+
+    @admin.display(description="View on map")
+    def view_on_map_link(self, obj):
+        province = getattr(obj, "province", None)
+        layers = f"t{obj.pk}"
+        url = f"/app/live-map?layers={layers}"
+        if province is not None:
+            url += f"&province={province.pk}"
+        return format_html(
+            '<a href="{}" target="_blank" style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:#185FA5;text-decoration:none;">Open in Live Map →</a>',
+            url,
+        )
 
     @admin.display(description="RAP Batch")
     def rap_batch_link(self, obj):

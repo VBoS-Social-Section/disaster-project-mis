@@ -13,35 +13,35 @@
 
             {# ── Mode banner (Disaster / Climate / Compare) — ?mode=disaster|climate|compare #}
             {% if admin_mode == "climate" %}
-            <div style="padding:8px 14px;border-left:3px solid #1D9E75;background:#EAF6EE;border-radius:0 6px 6px 0;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
-                <div>
-                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#085041;">{% trans "Climate Mode" %}</div>
-                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#9AA5B8;margin-top:2px;">
-                        {% trans "Raster · PMTiles · Vector · Climate dashboard" %}
+                <div style="padding:8px 14px;border-left:3px solid #1D9E75;background:#EAF6EE;border-radius:0 6px 6px 0;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+                    <div>
+                        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#085041;">{% trans "Climate Operator" %}</div>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#9AA5B8;margin-top:2px;">
+                            {% trans "Raster · PMTiles · Vector · Deployment controls" %}
+                        </div>
                     </div>
+                    <a href="{% url 'admin_climate_dashboard' %}" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#378ADD;">{% trans "Climate dashboard" %} →</a>
                 </div>
-                <a href="{% url 'admin_climate_dashboard' %}" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#378ADD;">{% trans "Climate dashboard" %} →</a>
-            </div>
             {% elif admin_mode == "compare" %}
-            <div style="padding:8px 14px;border-left:3px solid #7F77DD;background:#EEEDFE;border-radius:0 6px 6px 0;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
-                <div>
-                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#3C3489;">{% trans "Compare Mode" %}</div>
-                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#9AA5B8;margin-top:2px;">
-                        {% trans "RAP batch diffs · Provinces · Sectors · Intensity" %}
+                <div style="padding:8px 14px;border-left:3px solid #7F77DD;background:#EEEDFE;border-radius:0 6px 6px 0;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+                    <div>
+                        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#3C3489;">{% trans "Compare Operator" %}</div>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#9AA5B8;margin-top:2px;">
+                            {% trans "RAP batch diffs · Provinces · Sectors · Intensity" %}
+                        </div>
                     </div>
+                    <a href="{% url 'admin_compare_event' %}" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#378ADD;">{% trans "Open compare" %} →</a>
                 </div>
-                <a href="{% url 'admin_compare_event' %}" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#378ADD;">{% trans "Open compare" %} →</a>
-            </div>
             {% else %}
-            <div style="padding:8px 14px;border-left:3px solid #FF4B2B;background:#FFF8F7;border-radius:0 6px 6px 0;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
-                <div>
-                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#C03010;">{% trans "Disaster Mode" %}</div>
-                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#9AA5B8;margin-top:2px;">
-                        {% trans "Incidents · Field Checks · Area Submissions · RAP Pipeline" %}
+                <div style="padding:8px 14px;border-left:3px solid #FF4B2B;background:#FFF8F7;border-radius:0 6px 6px 0;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+                    <div>
+                        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#C03010;">{% trans "Operator Pipeline" %}</div>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#9AA5B8;margin-top:2px;">
+                            {% trans "RAP queue · Approvals · MFA · Backups" %}
+                        </div>
                     </div>
+                    <a href="{% url 'admin_rap_import_upload' %}" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#378ADD;">{% trans "Upload RAP CSVs" %} →</a>
                 </div>
-                <a href="{% url 'admin_rap_import_upload' %}" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#378ADD;">{% trans "Upload RAP CSVs" %} →</a>
-            </div>
             {% endif %}
 
             <p style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#B0BAD0;margin:-8px 0 16px 0;">
@@ -51,273 +51,203 @@
                 · <a href="?mode=compare" style="color:#378ADD;">{% trans "Compare" %}</a>
             </p>
 
-            {# ── KPI row (light) ── #}
-            {% if dashboard_summary %}
-                <div class="mb-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
-                        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#FF4B2B;"></div>
-                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Total datasets" %}</div>
-                        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:#0D1018;line-height:1;">{{ dashboard_summary.total_datasets }}</div>
+            {# ── KPI row (operator pipeline) ── #}
+            <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
+                    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#FF4B2B;"></div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "RAP Batches Pending" %}</div>
+                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:#0D1018;line-height:1;">{{ kpi_rap_pending }}</div>
+                </div>
+                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
+                    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#F5A623;"></div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Datasets Awaiting Approval" %}</div>
+                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:#0D1018;line-height:1;">{{ kpi_approvals_pending }}</div>
+                </div>
+                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
+                    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#FF4B2B;"></div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Users Without MFA" %}</div>
+                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:#0D1018;line-height:1;">{{ kpi_mfa_missing }}</div>
+                </div>
+                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
+                    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:{% if kpi_last_backup_stale %}#FF4B2B{% else %}#1D9E75{% endif %};"></div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Last Backup" %}</div>
+                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:#0D1018;line-height:1;">{{ kpi_last_backup_age_label }}</div>
+                </div>
+            </div>
+
+            {# ── RAP queue + pending approvals ── #}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;overflow:hidden;">
+                    <div style="padding:10px 14px;border-bottom:1px solid #F1F3F7;display:flex;align-items:center;justify-content:space-between;">
+                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#9AA5B8;">{% trans "RAP Import Queue" %}</span>
+                        <a href="{% url 'admin_rap_import_upload' %}" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#378ADD;letter-spacing:.04em;text-decoration:none;">{% trans "Upload new batch →" %}</a>
                     </div>
-                    <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
-                        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#F5A623;"></div>
-                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Total items" %}</div>
-                        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:#0D1018;line-height:1;">{{ dashboard_summary.total_items }}</div>
-                    </div>
-                    <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
-                        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#378ADD;"></div>
-                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Actions (7 days)" %}</div>
-                        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:#0D1018;line-height:1;">{{ dashboard_summary.actions_this_week }}</div>
+                    <div style="padding:0 14px 14px;">
+                        {% if rap_batches_recent and rap_batches_recent|length > 0 %}
+                            <table style="width:100%;border-collapse:collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Batch" %}</th>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Cyclone" %}</th>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Max Cat" %}</th>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Status" %}</th>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:right;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Files" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for batch in rap_batches_recent %}
+                                        <tr>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{{ batch.batch_ref }}</td>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{{ batch.cyclone_name }}</td>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;">{{ batch.max_intensity_badge }}</td>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;">{{ batch.status_badge }}</td>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA5B8;">{{ batch.file_count }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div style="padding:14px 0;color:#9AA5B8;font-family:'IBM Plex Mono',monospace;font-size:11px;">
+                                {% trans "No batches yet. Upload RAP CSVs to begin." %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
-            {% endif %}
 
-            {% if rap_latest_batch or rap_pending_count %}
-                <div class="mb-7 flex flex-col gap-3">
-                    {% if rap_latest_batch %}
-                    <div style="border-left:3px solid #378ADD;padding:10px 14px;background:#FFFFFF;border:1px solid #E2E6EE;border-radius:0 8px 8px 0;">
-                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9AA5B8;">{% trans "Latest RAP Import" %}</div>
-                        <div style="font-size:13px;font-weight:500;margin-top:4px;color:#0D1018;">{{ rap_cyclone_name }}</div>
-                        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA5B8;margin-top:3px;">
-                            {% trans "Max Cat" %} {{ rap_max_intensity|default:"—" }} · {{ rap_affected_provinces|join:", " }}
+                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;overflow:hidden;">
+                    <div style="padding:10px 14px;border-bottom:1px solid #F1F3F7;display:flex;align-items:center;justify-content:space-between;">
+                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#9AA5B8;">{% trans "Pending Approvals" %}</span>
+                        <a href="/admin/area_submissions/areadatasubmission/?status=submitted" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#378ADD;letter-spacing:.04em;text-decoration:none;">{% trans "Review all →" %}</a>
+                    </div>
+                    <div style="padding:0 14px 14px;">
+                        {% if approvals_recent and approvals_recent|length > 0 %}
+                            <table style="width:100%;border-collapse:collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Dataset" %}</th>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Type" %}</th>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Ministry" %}</th>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:right;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Submitted" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in approvals_recent %}
+                                        <tr>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{{ item.dataset_name }}</td>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;">
+                                                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;background:#F8F9FB;color:#4A5568;border:1px solid #E2E6EE;display:inline-block;">{{ item.type }}</span>
+                                            </td>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA5B8;">{{ item.ministry }}</td>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA5B8;">
+                                                {% if item.submitted_at %}{{ item.submitted_at|date:"d M Y" }}{% else %}—{% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div style="padding:14px 0;color:#9AA5B8;font-family:'IBM Plex Mono',monospace;font-size:11px;">
+                                {% trans "No items pending approval." %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {# ── System status ── #}
+            <div style="margin-top:16px;background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;overflow:hidden;">
+                <div style="padding:10px 14px;border-bottom:1px solid #F1F3F7;display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#9AA5B8;">{% trans "System Status" %}</span>
+                    <a href="/api/v1/health/" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#378ADD;letter-spacing:.04em;text-decoration:none;">{% trans "Full health check →" %}</a>
+                </div>
+                <div style="padding:14px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div>
+                            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Celery workers" %}</div>
+                            {% if system_status.celery_online %}
+                                <div style="display:inline-flex;align-items:center;gap:8px;">
+                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;background:#EAF6EE;color:#27500A;border:1px solid #9FE1CB;">Online</span>
+                                </div>
+                            {% else %}
+                                <div style="display:inline-flex;align-items:center;gap:8px;">
+                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;background:#FEECEA;color:#A32D2D;border:1px solid #F7C1C1;">Offline</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Redis" %}</div>
+                            {% if system_status.redis_connected %}
+                                <div style="display:inline-flex;align-items:center;gap:8px;">
+                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;background:#EAF6EE;color:#27500A;border:1px solid #9FE1CB;">Connected</span>
+                                </div>
+                            {% else %}
+                                <div style="display:inline-flex;align-items:center;gap:8px;">
+                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;background:#FEECEA;color:#A32D2D;border:1px solid #F7C1C1;">Disconnected</span>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
-                    {% endif %}
-                    {% if rap_pending_count %}
-                    <div style="border-left:3px solid #F5A623;padding:8px 14px;background:#FDF3E0;border-radius:0 6px 6px 0;">
-                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#633806;">
-                            {{ rap_pending_count }} {% trans "RAP batch" %}{{ rap_pending_count|pluralize }} {% trans "pending import" %} →
-                            <a href="{% url 'admin_rap_import_upload' %}" style="color:#378ADD;">{% trans "Upload now" %}</a>
-                        </span>
-                    </div>
-                    {% endif %}
-                </div>
-            {% endif %}
-
-            {# ── Overview grid ── #}
-            {% if dashboard_stats and dashboard_stats|length > 0 %}
-                <div class="mb-8">
-                    <h2 class="flex items-center gap-2 font-bold mb-4 text-base-800 text-sm uppercase tracking-widest">
-                        <span class="material-symbols-outlined text-base text-base-400">grid_view</span>
-                        {% trans "Overview" %}
-                    </h2>
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-
-                        {% if dashboard_stats.users is not None %}
-                            <a href="/admin/users/user/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">people</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                                </div>
-                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.users }}</span>
-                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Users" %}</span>
-                            </a>
-                        {% endif %}
-
-                        {% if dashboard_stats.clusters is not None %}
-                            <a href="/admin/datasets/cluster/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">category</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                                </div>
-                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.clusters }}</span>
-                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Clusters" %}</span>
-                            </a>
-                        {% endif %}
-
-                        {% if dashboard_stats.vector_datasets is not None %}
-                            <a href="/admin/datasets/vectordataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">layers</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                                </div>
-                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.vector_datasets }}</span>
-                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Vector datasets" %}</span>
-                            </a>
-                        {% endif %}
-
-                        {% if dashboard_stats.vector_items is not None %}
-                            <a href="/admin/datasets/vectoritem/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">place</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                                </div>
-                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.vector_items }}</span>
-                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Vector items" %}</span>
-                            </a>
-                        {% endif %}
-
-                        {% if dashboard_stats.pmtiles_datasets is not None %}
-                            <a href="/admin/datasets/pmtilesdataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">map</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                                </div>
-                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.pmtiles_datasets }}</span>
-                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "PMTiles datasets" %}</span>
-                            </a>
-                        {% endif %}
-
-                        {% if dashboard_stats.raster_datasets is not None %}
-                            <a href="/admin/datasets/rasterdataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">image</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                                </div>
-                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.raster_datasets }}</span>
-                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Raster datasets" %}</span>
-                            </a>
-                        {% endif %}
-
-                        {% if dashboard_stats.tabular_datasets is not None %}
-                            <a href="/admin/datasets/tabulardataset/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">table_chart</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                                </div>
-                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.tabular_datasets }}</span>
-                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Tabular datasets" %}</span>
-                            </a>
-                        {% endif %}
-
-                        {% if dashboard_stats.tabular_items is not None %}
-                            <a href="/admin/datasets/tabularitem/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">grid_on</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                                </div>
-                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.tabular_items }}</span>
-                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Tabular items" %}</span>
-                            </a>
-                        {% endif %}
-
-                        {% if dashboard_stats.area_submissions is not None %}
-                            <a href="/admin/area_submissions/areadatasubmission/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">upload_file</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                                </div>
-                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.area_submissions }}</span>
-                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Area submissions" %}</span>
-                            </a>
-                        {% endif %}
-
-                        {% if dashboard_stats.field_checks is not None %}
-                            <a href="/admin/field-check/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">fact_check</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                                </div>
-                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.field_checks }}</span>
-                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Field checks" %}</span>
-                            </a>
-                        {% endif %}
-
-                        {% if dashboard_stats.feedback is not None %}
-                            <a href="/admin/feedback/feedback/" class="stat-card group flex flex-col gap-2 p-4 rounded-lg border border-base-200 bg-white shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="material-symbols-outlined text-xl text-primary-500 group-hover:text-primary-600">feedback</span>
-                                    <span class="material-symbols-outlined text-sm text-base-300 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                                </div>
-                                <span class="font-bold text-3xl text-base-900 tabular-nums">{{ dashboard_stats.feedback }}</span>
-                                <span class="text-xs font-medium text-base-500 uppercase tracking-wide">{% trans "Feedback" %}</span>
-                            </a>
-                        {% endif %}
-
+                    <div style="margin-top:14px;">
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Last backup" %}</div>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#0D1018;">
+                            {% if system_status.last_backup_created_at %}
+                                <span style="color:#0D1018;">{{ system_status.last_backup_created_at|date:"d M Y H:i" }}</span>
+                                <span style="color:{% if system_status.last_backup_stale %}#A32D2D{% else %}#9AA5B8{% endif %};"> · {{ system_status.last_backup_age_label }}</span>
+                                {% if system_status.last_backup_stale %}
+                                    <span style="margin-left:10px;background:#FEECEA;color:#A32D2D;border:1px solid #F7C1C1;border-radius:4px;padding:2px 8px;font-size:10px;display:inline-block;">{% trans "Stale" %}</span>
+                                {% endif %}
+                            {% else %}
+                                <span style="color:#9AA5B8;">—</span>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
-
-                {# ── Charts ── #}
-                {% if activity_chart_data or dataset_chart_data %}
-                    <div class="mb-8 grid gap-6 lg:grid-cols-2">
-                        {% if activity_chart_data %}
-                            <div class="rounded-lg border border-base-200 bg-white p-5 shadow-sm">
-                                <h3 class="flex items-center gap-1.5 font-semibold mb-4 text-sm text-base-700 uppercase tracking-wide">
-                                    <span class="material-symbols-outlined text-base text-primary-500">bar_chart</span>
-                                    {% trans "Activity (last 14 days)" %}
-                                </h3>
-                                <div class="relative h-48 w-full">
-                                    <canvas class="chart" data-type="bar" data-value="{{ activity_chart_data|escape }}" {% if activity_chart_options %}data-options="{{ activity_chart_options|escape }}"{% endif %} height="192"></canvas>
-                                </div>
-                            </div>
-                        {% endif %}
-                        {% if dataset_chart_data %}
-                            <div class="rounded-lg border border-base-200 bg-white p-5 shadow-sm">
-                                <h3 class="flex items-center gap-1.5 font-semibold mb-4 text-sm text-base-700 uppercase tracking-wide">
-                                    <span class="material-symbols-outlined text-base text-primary-500">donut_large</span>
-                                    {% trans "Datasets by type" %}
-                                </h3>
-                                <div class="relative mx-auto h-48 w-full max-w-[240px]">
-                                    <canvas class="chart" data-type="doughnut" data-value="{{ dataset_chart_data|escape }}" height="192"></canvas>
-                                </div>
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endif %}
-
-            {% else %}
-                <div class="rounded-lg border border-base-200 bg-white p-10 text-center shadow-sm">
-                    <span class="material-symbols-outlined mb-4 block text-5xl text-base-300">dashboard</span>
-                    <h2 class="font-bold mb-2 text-base-900">{% trans "Welcome to DRMIS Admin" %}</h2>
-                    <p class="text-subtle text-sm">{% trans "Use the sidebar to navigate and manage your data." %}</p>
-                </div>
-            {% endif %}
-        </div>
-
-        {# ── Recent actions panel ── #}
-        <div id="content-related" class="lg:w-80 xl:w-96 shrink-0">
-            <div id="recent-actions-module" class="rounded-lg border border-base-200 bg-white shadow-sm overflow-hidden">
-                <div class="flex items-center gap-2 px-4 py-3 border-b border-base-200 bg-base-50">
-                    <span class="material-symbols-outlined text-base text-primary-500">update</span>
-                    <h2 class="font-semibold text-sm text-base-800 uppercase tracking-wide">{% trans "Recent actions" %}</h2>
-                </div>
-                {% if admin_log %}
-                    <ul class="flex flex-col divide-y divide-base-100">
-                        {% for item in admin_log %}
-                            <li class="px-4 py-3 hover:bg-base-50 transition-colors">
-                                <div class="flex items-start gap-2.5">
-                                    <span class="mt-0.5 shrink-0 material-symbols-outlined text-base {% if item.action_class == 'addlink' %}text-emerald-600{% elif item.action_class == 'deletelink' %}text-red-600{% else %}text-primary-500{% endif %}">
-                                        {% if item.action_class == 'addlink' %}add_circle{% elif item.action_class == 'deletelink' %}delete{% else %}edit{% endif %}
-                                    </span>
-                                    <div class="min-w-0 flex-1">
-                                        <div class="mb-0.5 truncate text-sm font-medium text-base-900">
-                                            {% if item.entry.is_deletion or not item.entry.get_admin_url %}
-                                                {{ item.entry.object_repr }}
-                                            {% else %}
-                                                <a href="{{ item.entry.get_admin_url }}" class="hover:text-primary-600">{{ item.entry.object_repr }}</a>
-                                            {% endif %}
-                                        </div>
-                                        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-base-400">
-                                            <span class="font-semibold {% if item.action_class == 'addlink' %}text-emerald-600{% elif item.action_class == 'deletelink' %}text-red-600{% else %}text-primary-500{% endif %}">
-                                                {{ item.action_label }}
-                                            </span>
-                                            <span>·</span>
-                                            <span>
-                                                {% if item.entry.content_type %}
-                                                    {% filter capfirst %}{{ item.entry.content_type.name }}{% endfilter %}
-                                                {% else %}
-                                                    {% trans "Unknown" %}
-                                                {% endif %}
-                                            </span>
-                                            <span>·</span>
-                                            <span class="tabular-nums">{{ item.entry.action_time|timesince }} {% trans "ago" %}</span>
-                                        </div>
-                                        {% if item.change_detail %}
-                                            <p class="mt-1 text-xs text-base-400 line-clamp-2">{{ item.change_detail }}</p>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <div class="px-4 py-8 text-center">
-                        <span class="material-symbols-outlined block text-3xl text-base-300 mb-2">history</span>
-                        <p class="text-subtle text-sm">{% trans "No recent actions." %}</p>
-                    </div>
-                {% endif %}
             </div>
-        </div>
 
+            {# ── Recent audit activity ── #}
+            <div style="margin-top:16px;background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;overflow:hidden;">
+                <div style="padding:10px 14px;border-bottom:1px solid #F1F3F7;display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#9AA5B8;">{% trans "Recent Audit Activity" %}</span>
+                    <a href="/admin/core/auditlog/" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#378ADD;letter-spacing:.04em;text-decoration:none;">{% trans "Full audit log →" %}</a>
+                </div>
+                <div style="padding:14px;">
+                    {% if audit_logging_active %}
+                        {% if recent_audit and recent_audit|length > 0 %}
+                            <table style="width:100%;border-collapse:collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Timestamp" %}</th>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "User" %}</th>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Action" %}</th>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Model" %}</th>
+                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Object" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for a in recent_audit %}
+                                        <tr>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA5B8;">{{ a.timestamp|date:"d M Y H:i" }}</td>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{% if a.user %}{{ a.user.username }}{% else %}—{% endif %}</td>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{{ a.action|default:"—" }}</td>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{{ a.model|default:"—" }}</td>
+                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA5B8;">{{ a.object|default:"—" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div style="color:#9AA5B8;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:14px 0;">
+                                {% trans "No audit entries yet." %}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div style="color:#9AA5B8;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:14px 0;">
+                            {% trans "Audit logging not yet active. Enable in Phase A implementation." %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
     </div>
 {% endblock %}
