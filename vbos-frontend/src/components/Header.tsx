@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Tooltip } from "@/components/ui";
 import {
   LuCircleHelp,
   LuLockKeyhole,
@@ -220,7 +221,12 @@ export function Header({ hideBrand = false, hideUserMenu = false }: HeaderProps)
           </div>
           {headerActiveMode ? (
             <p
-              className="hidden max-w-[20rem] text-center text-[10px] leading-tight text-muted-foreground md:block"
+              className={cn(
+                "max-w-[min(100%,22rem)] px-1 text-center text-[10px] leading-snug text-muted-foreground",
+                headerActiveMode === "compare"
+                  ? "block"
+                  : "hidden md:block",
+              )}
               aria-live="polite"
             >
               <span className="sr-only">Current mode: </span>
@@ -251,8 +257,8 @@ export function Header({ hideBrand = false, hideUserMenu = false }: HeaderProps)
             </p>
             <p>
               <strong className="text-foreground">Compare</strong> —{" "}
-              {HEADER_MODE_META.compare.subtitle}. Use the context panel to pick years
-              and swipe between them for tabular data.
+              Side-by-side years on the map. Drag the center handle to compare; use the
+              context panel to pick years and layers (tabular or raster).
             </p>
           </div>
           <DialogFooter>
@@ -265,20 +271,26 @@ export function Header({ hideBrand = false, hideUserMenu = false }: HeaderProps)
 
       {/* Right: Simulation, Theme, Avatar - 44px touch targets on mobile */}
       <div className="ml-auto flex shrink-0 items-center gap-1">
-        <Button
-          variant={simOpen ? "secondary" : "ghost"}
-          size="sm"
-          className={cn(
-            "min-h-11 min-w-11 md:min-h-0 md:min-w-0 md:h-8 md:w-auto gap-1.5 px-2 md:px-2.5 text-xs",
-            simOpen && "ring-1 ring-primary/30",
-          )}
-          onClick={() => setSimOpen(!simOpen)}
-          title="Open simulation control panel"
-          aria-pressed={simOpen}
+        <Tooltip
+          content="Run a scenario simulation using current layer settings"
+          positioning={{ placement: "bottom" }}
+          contentProps={{ className: "max-w-[16rem] text-balance" }}
         >
-          <LuGauge className="size-4 md:size-3.5" />
-          <span className="hidden md:inline">Simulate</span>
-        </Button>
+          <Button
+            variant={simOpen ? "secondary" : "ghost"}
+            size="sm"
+            className={cn(
+              "min-h-11 min-w-11 md:min-h-0 md:min-w-0 md:h-8 md:w-auto gap-1.5 px-2 md:px-2.5 text-xs",
+              simOpen && "ring-1 ring-primary/30",
+            )}
+            onClick={() => setSimOpen(!simOpen)}
+            aria-label="Simulate: run a scenario using current layer settings"
+            aria-pressed={simOpen}
+          >
+            <LuGauge className="size-4 md:size-3.5" />
+            <span className="hidden md:inline">Simulate</span>
+          </Button>
+        </Tooltip>
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
@@ -371,7 +383,7 @@ export function Header({ hideBrand = false, hideUserMenu = false }: HeaderProps)
       <HelpOverlay open={helpOverlayOpen} onOpenChange={setHelpOverlayOpen} />
     </header>
   );
-};
+}
 
 type ShareDialogProps = {
   isOpen: boolean;

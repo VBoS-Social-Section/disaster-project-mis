@@ -21,7 +21,9 @@ def pending_rap_batches_badge(request):
 
 def get_navigation(request) -> list[dict[str, Any]]:
     """
-    Unfold sidebar navigation (Disaster / RAP / Climate / Modules / Settings).
+    Unfold sidebar navigation groups:
+      Dashboard · Disaster · Data · RAP Pipeline · Climate · Modules ·
+      Integrations · Audit & Logs · Settings
     Referenced from UNFOLD["SIDEBAR"]["navigation"].
     """
     return [
@@ -39,6 +41,40 @@ def get_navigation(request) -> list[dict[str, Any]]:
             "separator": True,
             "collapsible": True,
             "items": [
+                {
+                    "title": "Incidents",
+                    "link": "/admin/area_submissions/areadatasubmission/?status__exact=approved",
+                    "icon": "report",
+                },
+                {
+                    "title": "Field Checks",
+                    "link": "/admin/field-check/",
+                    "icon": "fact_check",
+                },
+                {
+                    "title": "Area Submissions",
+                    "link": "/admin/area_submissions/areadatasubmission/",
+                    "icon": "upload_file",
+                },
+                {
+                    "title": "Feedback",
+                    "link": "/admin/feedback/feedback/",
+                    "icon": "feedback",
+                },
+                {
+                    "title": "RAP Import",
+                    "icon": "cloud_upload",
+                    "link": "/admin/rap-import/upload/",
+                    "badge": "vbos.admin_config.pending_rap_batches_badge",
+                },
+            ],
+        },
+        {
+            "title": "Data",
+            "icon": "database",
+            "separator": True,
+            "collapsible": True,
+            "items": [
                 {"title": "Clusters", "link": "/admin/datasets/cluster/", "icon": "category"},
                 {"title": "PMTiles Datasets", "link": "/admin/datasets/pmtilesdataset/", "icon": "map"},
                 {"title": "Vector Datasets", "link": "/admin/datasets/vectordataset/", "icon": "layers"},
@@ -53,12 +89,6 @@ def get_navigation(request) -> list[dict[str, Any]]:
             "separator": True,
             "collapsible": True,
             "items": [
-                {
-                    "title": "Upload RAP CSVs",
-                    "icon": "upload_file",
-                    "link": "/admin/rap-import/upload/",
-                    "badge": "vbos.admin_config.pending_rap_batches_badge",
-                },
                 {
                     "title": "Import Batches",
                     "icon": "batch_prediction",
@@ -93,9 +123,28 @@ def get_navigation(request) -> list[dict[str, Any]]:
                 {"title": "Land Accounts", "link": "/admin/land-accounts/", "icon": "landscape"},
                 {"title": "Coastal Changes", "link": "/admin/coastal-changes/", "icon": "water"},
                 {"title": "Area Administrators", "link": "/admin/area_submissions/areaadministrator/", "icon": "manage_accounts"},
-                {"title": "Area Submissions", "link": "/admin/area_submissions/areadatasubmission/", "icon": "upload_file"},
-                {"title": "Field Check", "link": "/admin/field-check/", "icon": "fact_check"},
-                {"title": "Feedback", "link": "/admin/feedback/feedback/", "icon": "feedback"},
+            ],
+        },
+        {
+            "title": "Integrations",
+            "icon": "hub",
+            "separator": True,
+            "collapsible": True,
+            "items": [
+                {"title": "Integration Sources", "link": "/admin/integrations/integrationsource/", "icon": "hub"},
+                {"title": "API Keys", "link": "/admin/integrations/integrationapikey/", "icon": "key"},
+                {"title": "External Data Sources", "link": "/admin/integrations/externaldatasource/", "icon": "cloud_sync"},
+            ],
+        },
+        {
+            "title": "Audit & Logs",
+            "icon": "manage_search",
+            "separator": True,
+            "collapsible": True,
+            "items": [
+                {"title": "Audit Log", "link": "/admin/admin/logentry/", "icon": "history"},
+                {"title": "Backup & Restore", "link": "/admin/maintenance/", "icon": "backup"},
+                {"title": "Backup History", "link": "/admin/maintenance/backuplog/", "icon": "folder"},
             ],
         },
         {
@@ -107,14 +156,6 @@ def get_navigation(request) -> list[dict[str, Any]]:
                 {"title": "Users", "link": "/admin/users/user/", "icon": "people"},
                 {"title": "Roles", "link": "/admin/users/role/", "icon": "admin_panel_settings"},
                 {"title": "SMTP Settings", "link": "/admin/users/smtpsettings/", "icon": "email"},
-                {"title": "Integration Sources", "link": "/admin/integrations/integrationsource/", "icon": "hub"},
-                {"title": "API Keys", "link": "/admin/integrations/integrationapikey/", "icon": "key"},
-                {"title": "External Data Sources", "link": "/admin/integrations/externaldatasource/", "icon": "cloud_sync"},
-                {"title": "RAP Import Batches", "link": "/admin/rap_import/rapimportbatch/", "icon": "upload"},
-                {"title": "RAP Import Files", "link": "/admin/rap_import/rapimportfile/", "icon": "description"},
-                {"title": "Changelog", "link": "/admin/admin/logentry/", "icon": "history"},
-                {"title": "Backup & Restore", "link": "/admin/maintenance/", "icon": "backup"},
-                {"title": "Backup History", "link": "/admin/maintenance/backuplog/", "icon": "folder"},
             ],
         },
     ]

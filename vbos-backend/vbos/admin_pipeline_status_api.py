@@ -83,12 +83,13 @@ def compute_admin_pipeline_status_internal() -> dict[str, object]:
         else:
             data["last_backup_created_at"] = None
             data["last_backup_age_hours"] = None
-            data["last_backup_stale"] = False
+            data["last_backup_stale"] = True
             data["last_backup_status"] = "missing"
     except Exception:
         data["last_backup_created_at"] = None
         data["last_backup_age_hours"] = None
-        data["last_backup_stale"] = False
+        # Unknown state — fail closed so operators see red until backup health is confirmed
+        data["last_backup_stale"] = True
         data["last_backup_status"] = None
 
     try:
@@ -137,6 +138,7 @@ class AdminPipelineStatusView(APIView):
                 "mfa_missing": internal.get("mfa_missing"),
                 "last_backup_age_hours": internal.get("last_backup_age_hours"),
                 "last_backup_status": internal.get("last_backup_status"),
+                "last_backup_stale": internal.get("last_backup_stale"),
                 "celery_online": internal.get("celery_online"),
                 "recent_audit": internal.get("recent_audit", []),
             }

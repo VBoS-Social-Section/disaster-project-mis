@@ -100,6 +100,8 @@ class Common(Configuration):
     }
 
     # General
+    # Shown in admin sidebar footer; keep in sync with frontend `src/config/version.ts`
+    DRMIS_VERSION_DISPLAY = "v1.0.0 · Build 2026.03.21"
     APPEND_SLASH = False
     # Allow bulk delete and changelist edits for many items (TabularItems, VectorItems)
     DATA_UPLOAD_MAX_NUMBER_FIELDS = int(os.getenv("DATA_UPLOAD_MAX_NUMBER_FIELDS", 200000))

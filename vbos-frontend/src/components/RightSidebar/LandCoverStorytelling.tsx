@@ -8,6 +8,7 @@ import {
 import { LAND_COVER_IMPACTS } from "@/config/landCoverImpacts";
 import { useAreaStore } from "@/store/area-store";
 import { useLandAccounts } from "@/hooks/useLandAccounts";
+import { cn } from "@/lib/utils";
 import { useMemo } from "react";
 
 export function LandCoverStorytelling() {
@@ -48,17 +49,24 @@ export function LandCoverStorytelling() {
 
   return (
     <div className="rounded-lg border border-border/60 bg-card/50 p-4">
-      <h3 className="mb-3 text-sm font-semibold">What changed?</h3>
+      <h3 className="mb-3 text-[10px] font-mono font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        What changed?
+      </h3>
       <ul className="space-y-3">
         {changes.slice(0, 5).map((c) => {
           const isLoss = c.netChange < 0;
           const pctChange = (c.netChange / c.totalOpening) * 100;
           return (
             <li key={c.category} className="flex flex-col gap-1">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="font-medium text-foreground">{c.category}</span>
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-sm font-medium text-foreground">{c.category}</span>
                 <span
-                  className={isLoss ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}
+                  className={cn(
+                    "shrink-0 text-sm font-semibold tabular-nums",
+                    isLoss
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-emerald-600 dark:text-emerald-400",
+                  )}
                 >
                   {isLoss ? "↓" : "↑"} {Math.abs(pctChange).toFixed(1)}%
                 </span>
