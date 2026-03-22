@@ -2178,17 +2178,27 @@ vertical-align: -.125em;
   <ul class="collapse">
   <li><a href="#view-modes" id="toc-view-modes" class="nav-link" data-scroll-target="#view-modes">View Modes</a></li>
   </ul></li>
-  <li><a href="#enabling-data-layers" id="toc-enabling-data-layers" class="nav-link" data-scroll-target="#enabling-data-layers">3. Enabling Data Layers</a></li>
-  <li><a href="#filtering-by-area-and-year" id="toc-filtering-by-area-and-year" class="nav-link" data-scroll-target="#filtering-by-area-and-year">4. Filtering by Area and Year</a>
+  <li><a href="#command-centre-operations" id="toc-command-centre-operations" class="nav-link" data-scroll-target="#command-centre-operations">3. Command Centre Operations</a>
+  <ul class="collapse">
+  <li><a href="#live-alerts-and-notifications" id="toc-live-alerts-and-notifications" class="nav-link" data-scroll-target="#live-alerts-and-notifications">Live alerts and notifications</a></li>
+  <li><a href="#creating-a-new-incident" id="toc-creating-a-new-incident" class="nav-link" data-scroll-target="#creating-a-new-incident">Creating a new incident</a></li>
+  </ul></li>
+  <li><a href="#enabling-data-layers" id="toc-enabling-data-layers" class="nav-link" data-scroll-target="#enabling-data-layers">4. Enabling Data Layers</a></li>
+  <li><a href="#filtering-by-area-and-year" id="toc-filtering-by-area-and-year" class="nav-link" data-scroll-target="#filtering-by-area-and-year">5. Filtering by Area and Year</a>
   <ul class="collapse">
   <li><a href="#administrative-area" id="toc-administrative-area" class="nav-link" data-scroll-target="#administrative-area">Administrative Area</a></li>
-  <li><a href="#year" id="toc-year" class="nav-link" data-scroll-target="#year">Year</a></li>
+  <li><a href="#data-view-and-year" id="toc-data-view-and-year" class="nav-link" data-scroll-target="#data-view-and-year">Data View and Year</a></li>
   <li><a href="#attribute-filter" id="toc-attribute-filter" class="nav-link" data-scroll-target="#attribute-filter">Attribute Filter</a></li>
   <li><a href="#expand-to-full-width" id="toc-expand-to-full-width" class="nav-link" data-scroll-target="#expand-to-full-width">Expand to Full Width</a></li>
   </ul></li>
-  <li><a href="#downloading-data" id="toc-downloading-data" class="nav-link" data-scroll-target="#downloading-data">5. Downloading Data</a></li>
-  <li><a href="#quick-reference" id="toc-quick-reference" class="nav-link" data-scroll-target="#quick-reference">6. Quick Reference</a></li>
-  <li><a href="#signing-out" id="toc-signing-out" class="nav-link" data-scroll-target="#signing-out">7. Signing Out</a></li>
+  <li><a href="#compare-mode-side-by-side-years" id="toc-compare-mode-side-by-side-years" class="nav-link" data-scroll-target="#compare-mode-side-by-side-years">6. Compare Mode (Side-by-Side Years)</a></li>
+  <li><a href="#simulation-wizard-map" id="toc-simulation-wizard-map" class="nav-link" data-scroll-target="#simulation-wizard-map">7. Simulation Wizard (Map)</a></li>
+  <li><a href="#exporting-data-exports-page" id="toc-exporting-data-exports-page" class="nav-link" data-scroll-target="#exporting-data-exports-page">8. Exporting Data (Exports Page)</a></li>
+  <li><a href="#downloading-data-from-context-panel" id="toc-downloading-data-from-context-panel" class="nav-link" data-scroll-target="#downloading-data-from-context-panel">9. Downloading Data from Context Panel</a></li>
+  <li><a href="#audit-log" id="toc-audit-log" class="nav-link" data-scroll-target="#audit-log">10. Audit Log</a></li>
+  <li><a href="#roles-and-access" id="toc-roles-and-access" class="nav-link" data-scroll-target="#roles-and-access">11. Roles and Access</a></li>
+  <li><a href="#quick-reference" id="toc-quick-reference" class="nav-link" data-scroll-target="#quick-reference">12. Quick Reference</a></li>
+  <li><a href="#signing-out" id="toc-signing-out" class="nav-link" data-scroll-target="#signing-out">13. Signing Out</a></li>
   </ul>
 </nav>
 </div>
@@ -2218,7 +2228,7 @@ vertical-align: -.125em;
 
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>This user manual guides you through the <strong>DRMIS</strong> (Disaster Risk Management Information System) web application. You will learn how to sign in, explore disaster and climate data on the map, apply filters, and download datasets.</p>
+<p>This user manual guides you through the <strong>DRMIS</strong> (Disaster Risk Management Information System) web application. You will learn how to sign in, use the Command Centre, explore map data, run simulations, review audit logs, export datasets, and manage your account.</p>
 </section>
 <section id="signing-in" class="level2">
 <h2 class="anchored" data-anchor-id="signing-in">1. Signing In</h2>
@@ -2255,12 +2265,12 @@ vertical-align: -.125em;
 </section>
 <section id="main-dashboard" class="level2">
 <h2 class="anchored" data-anchor-id="main-dashboard">2. Main Dashboard</h2>
-<p>After signing in, you will see the main dashboard:</p>
+<p>After signing in, you land in the <strong>Command Centre</strong>:</p>
 <ul>
-<li><strong>Header:</strong> Logo, title, and view mode (Disaster / Climate).</li>
-<li><strong>Left sidebar:</strong> Data layers — choose which datasets to display on the map.</li>
-<li><strong>Center:</strong> Interactive map showing geographic data.</li>
-<li><strong>Right sidebar:</strong> Context panel — filters, charts, and download options.</li>
+<li><strong>Top bar:</strong> System status, live alert counter, color mode toggle, account menu.</li>
+<li><strong>KPI cards:</strong> Pending submissions, live alerts, field teams deployed, and daily updates.</li>
+<li><strong>Recent submissions table:</strong> Latest data submissions and quick edit links.</li>
+<li><strong>Live alerts and risk panels:</strong> Operational awareness widgets.</li>
 </ul>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -2271,14 +2281,40 @@ vertical-align: -.125em;
 <section id="view-modes" class="level3">
 <h3 class="anchored" data-anchor-id="view-modes">View Modes</h3>
 <ul>
-<li><strong>Disaster:</strong> Disaster risk data and related datasets.</li>
-<li><strong>Climate:</strong> Climate and land cover baseline datasets.</li>
+<li><strong>Disaster:</strong> Hazard and response datasets.</li>
+<li><strong>Climate:</strong> Climate and land cover datasets.</li>
+<li><strong>Compare:</strong> Side-by-side year comparison on the map.</li>
 </ul>
 <p>Switch between modes using the tabs in the header.</p>
 </section>
 </section>
+<section id="command-centre-operations" class="level2">
+<h2 class="anchored" data-anchor-id="command-centre-operations">3. Command Centre Operations</h2>
+<section id="live-alerts-and-notifications" class="level3">
+<h3 class="anchored" data-anchor-id="live-alerts-and-notifications">Live alerts and notifications</h3>
+<ul>
+<li>DRMIS merges <strong>USGS, VMGD, GDACS, and internal DRMIS alerts</strong>.</li>
+<li>When new critical/high alerts arrive:
+<ul>
+<li>the top alert badge pulses,</li>
+<li>browser notifications can appear (if allowed),</li>
+<li>a short alert tone is played.</li>
+</ul></li>
+</ul>
+</section>
+<section id="creating-a-new-incident" class="level3">
+<h3 class="anchored" data-anchor-id="creating-a-new-incident">Creating a new incident</h3>
+<p>Use <strong>+ New Incident</strong> in Command Centre:</p>
+<ol type="1">
+<li>Select incident <strong>type</strong> and <strong>severity</strong>.</li>
+<li>Select <strong>province</strong> and optional <strong>area council</strong>.</li>
+<li>Enter title + summary, optionally attach a photo, then <strong>Publish incident</strong>.</li>
+</ol>
+<p>Published incidents are saved to DRMIS alerts and appear in the live alert feed.</p>
+</section>
+</section>
 <section id="enabling-data-layers" class="level2">
-<h2 class="anchored" data-anchor-id="enabling-data-layers">3. Enabling Data Layers</h2>
+<h2 class="anchored" data-anchor-id="enabling-data-layers">4. Enabling Data Layers</h2>
 <p>The left sidebar shows available <strong>Data Layers</strong> grouped by cluster (e.g., Education, Health, Infrastructure).</p>
 <ol type="1">
 <li><strong>Select a cluster</strong> from the dropdown at the top.</li>
@@ -2294,7 +2330,7 @@ vertical-align: -.125em;
 </div>
 </section>
 <section id="filtering-by-area-and-year" class="level2">
-<h2 class="anchored" data-anchor-id="filtering-by-area-and-year">4. Filtering by Area and Year</h2>
+<h2 class="anchored" data-anchor-id="filtering-by-area-and-year">5. Filtering by Area and Year</h2>
 <p>The right sidebar lets you filter data by location and time.</p>
 <section id="administrative-area" class="level3">
 <h3 class="anchored" data-anchor-id="administrative-area">Administrative Area</h3>
@@ -2309,10 +2345,17 @@ vertical-align: -.125em;
 </figure>
 </div>
 </section>
-<section id="year" class="level3">
-<h3 class="anchored" data-anchor-id="year">Year</h3>
+<section id="data-view-and-year" class="level3">
+<h3 class="anchored" data-anchor-id="data-view-and-year">Data View and Year</h3>
 <ul>
-<li><strong>Year:</strong> Select the year for tabular data (e.g., 2024). This filter is available in Disaster mode.</li>
+<li><strong>Data View:</strong> choose one of:
+<ul>
+<li>Baseline</li>
+<li>Damage</li>
+<li>Resources</li>
+<li>Financial</li>
+</ul></li>
+<li><strong>Year:</strong> select the year for tabular analysis (Disaster mode).</li>
 </ul>
 </section>
 <section id="attribute-filter" class="level3">
@@ -2338,8 +2381,43 @@ vertical-align: -.125em;
 <p>This is useful when you want to focus on data analysis without the map, or when viewing multiple charts side by side.</p>
 </section>
 </section>
-<section id="downloading-data" class="level2">
-<h2 class="anchored" data-anchor-id="downloading-data">5. Downloading Data</h2>
+<section id="compare-mode-side-by-side-years" class="level2">
+<h2 class="anchored" data-anchor-id="compare-mode-side-by-side-years">6. Compare Mode (Side-by-Side Years)</h2>
+<p>In <strong>Compare</strong> mode, map years can be adjusted directly on the map overlay:</p>
+<ul>
+<li>Use <code>-</code> / <code>+</code> controls near the year labels to change left and right years.</li>
+<li>Drag the center handle to compare areas visually.</li>
+<li>Use context filters to refine province and dataset view.</li>
+</ul>
+</section>
+<section id="simulation-wizard-map" class="level2">
+<h2 class="anchored" data-anchor-id="simulation-wizard-map">7. Simulation Wizard (Map)</h2>
+<p>Click <strong>Simulate</strong> (top-right of map) to open the simulation panel.</p>
+<p>You can configure:</p>
+<ul>
+<li>Hazard intensity parameters (cyclone, flood, earthquake, etc.),</li>
+<li>Scenario assumptions,</li>
+<li>Estimated impact indicators.</li>
+</ul>
+<p>Use <strong>Run Simulation</strong> to update outputs and <strong>Reset</strong> to return defaults.</p>
+</section>
+<section id="exporting-data-exports-page" class="level2">
+<h2 class="anchored" data-anchor-id="exporting-data-exports-page">8. Exporting Data (Exports Page)</h2>
+<p>Use the <strong>Exports</strong> menu in the left navigation for full export workflows.</p>
+<ol type="1">
+<li>Select a cluster.</li>
+<li>Select datasets and formats (XLSX, GeoJSON, GeoTIFF, VRT, PMTiles).</li>
+<li>Click <strong>Export</strong>.</li>
+<li>Monitor status in-row and in the export queue:
+<ul>
+<li>loading spinner while downloading,</li>
+<li>success/failure indicators,</li>
+<li>toast messages for start/success/error.</li>
+</ul></li>
+</ol>
+</section>
+<section id="downloading-data-from-context-panel" class="level2">
+<h2 class="anchored" data-anchor-id="downloading-data-from-context-panel">9. Downloading Data from Context Panel</h2>
 <p>You can download tabular (XLSX) or vector (GeoJSON) data for the layers you have enabled.</p>
 <ol type="1">
 <li><strong>Enable at least one layer</strong> from the left sidebar.</li>
@@ -2377,8 +2455,28 @@ vertical-align: -.125em;
 </div>
 </div>
 </section>
+<section id="audit-log" class="level2">
+<h2 class="anchored" data-anchor-id="audit-log">10. Audit Log</h2>
+<p>Open <strong>Audit Log</strong> from the left navigation:</p>
+<ul>
+<li>Filter by action, date, and search terms.</li>
+<li>Adjust page size (25/50/100).</li>
+<li>Use <strong>Export CSV</strong> for compliance and handover reporting.</li>
+</ul>
+</section>
+<section id="roles-and-access" class="level2">
+<h2 class="anchored" data-anchor-id="roles-and-access">11. Roles and Access</h2>
+<p>DRMIS uses role-based UI visibility:</p>
+<ul>
+<li><strong>Admin:</strong> full access to all sections.</li>
+<li><strong>Analyst:</strong> all operational sections except Settings.</li>
+<li><strong>Field officer:</strong> Dashboard + Live Map + Data Entry.</li>
+<li><strong>Read-only:</strong> read-focused sections (no admin-only controls).</li>
+</ul>
+<p>If you try to open a restricted section, DRMIS shows a <strong>You don’t have permission</strong> message.</p>
+</section>
 <section id="quick-reference" class="level2">
-<h2 class="anchored" data-anchor-id="quick-reference">6. Quick Reference</h2>
+<h2 class="anchored" data-anchor-id="quick-reference">12. Quick Reference</h2>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 40%">
@@ -2397,37 +2495,49 @@ vertical-align: -.125em;
 </tr>
 <tr class="even">
 <td>Switch view</td>
-<td>Use Disaster / Climate tabs in header</td>
+<td>Use Disaster / Climate / Compare tabs in header</td>
 </tr>
 <tr class="odd">
 <td>Add data to map</td>
 <td>Enable layers from left sidebar</td>
 </tr>
 <tr class="even">
+<td>Choose analysis lens</td>
+<td>Select Data View: Baseline / Damage / Resources / Financial</td>
+</tr>
+<tr class="odd">
 <td>Filter by area</td>
 <td>Use Province and Area Council dropdowns (multi-select)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Filter by year</td>
 <td>Use Year dropdown in right sidebar</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Expand right panel</td>
 <td>Click expand icon in right sidebar header for full-width view</td>
 </tr>
+<tr class="even">
+<td>Create incident</td>
+<td>Command Centre → + New Incident (3-step wizard)</td>
+</tr>
 <tr class="odd">
-<td>Download data</td>
-<td>Click Download Data, then Download for each dataset</td>
+<td>Export datasets</td>
+<td>Left menu → Exports, then run export queue</td>
+</tr>
+<tr class="even">
+<td>Audit export</td>
+<td>Left menu → Audit Log → Export CSV</td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="signing-out" class="level2">
-<h2 class="anchored" data-anchor-id="signing-out">7. Signing Out</h2>
+<h2 class="anchored" data-anchor-id="signing-out">13. Signing Out</h2>
 <p>Sign out from the user menu in the header:</p>
 <ol type="1">
-<li>Click your <strong>avatar</strong> or <strong>username</strong> in the top-right.</li>
-<li>Select <strong>Sign out</strong>.</li>
+<li>Click your <strong>avatar</strong> in the top-right topbar.</li>
+<li>Select <strong>Logout</strong>.</li>
 </ol>
 </section>
 

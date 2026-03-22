@@ -15,7 +15,19 @@ createRoot(document.getElementById("root")!).render(
     <ErrorBoundary>
       <Providers>
         <App />
-        <Toaster richColors position="top-right" closeButton />
+        <Toaster
+          richColors
+          position="top-right"
+          closeButton
+          visibleToasts={3}
+          gap={10}
+          toastOptions={{
+            duration: 4500,
+            classNames: {
+              toast: "drmis-panel-enter rounded-[var(--drmis-radius-card)] border-border shadow-[var(--drmis-shadow-sm)]",
+            },
+          }}
+        />
       </Providers>
     </ErrorBoundary>
   </StrictMode>

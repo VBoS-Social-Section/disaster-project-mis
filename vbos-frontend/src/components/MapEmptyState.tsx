@@ -39,7 +39,7 @@ export function MapEmptyState() {
         "pointer-events-none [&>*]:pointer-events-auto",
       )}
     >
-      <div className="relative inline-flex flex-col items-center rounded-lg border border-border px-5 py-4 shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface">
+      <div className="relative inline-flex flex-col items-center rounded-[var(--drmis-radius-card)] border border-border px-5 py-4 shadow-[var(--drmis-shadow-sm)] glass-surface duration-200 animate-in fade-in zoom-in-95">
         <Button
           variant="ghost"
           size="icon-xs"
@@ -59,11 +59,26 @@ export function MapEmptyState() {
         <p className="mb-0.5 text-xs font-semibold text-foreground">
           {isClimate ? "Land cover map" : "No datasets selected"}
         </p>
-        <p className="max-w-[220px] text-[11px] leading-snug text-muted-foreground">
+        <p className="max-w-[240px] text-[11px] leading-relaxed text-muted-foreground">
           {isClimate
             ? "Select a year to view land cover. Layers auto-activate when available."
-            : "Select datasets from the left sidebar to visualize on the map."}
+            : "Open the layer picker in the top toolbar to choose clusters and datasets."}
         </p>
+        <Button
+          type="button"
+          variant="default"
+          size="sm"
+          className="drmis-touch-target mt-3 min-h-10 px-4 text-xs"
+          onClick={() => {
+            (
+              document.querySelector(
+                "[data-drmis-layer-trigger]",
+              ) as HTMLButtonElement | null
+            )?.click();
+          }}
+        >
+          {isClimate ? "Open layers" : "Choose layers"}
+        </Button>
       </div>
     </div>
   );

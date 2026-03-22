@@ -44,8 +44,8 @@ const RightSidebar = () => {
       <div
         data-tour="area-filter"
         className={cn(
-          "space-y-3 border-b border-border bg-card",
-          rightSidebarExpanded ? "px-6 py-4" : "px-5 py-4 max-md:space-y-4 max-md:py-4 md:px-6 md:py-4",
+          "sticky top-0 z-10 space-y-3 border-b border-border bg-card/95 py-4 backdrop-blur-sm supports-[backdrop-filter]:bg-card/85",
+          rightSidebarExpanded ? "px-6" : "px-5 max-md:space-y-4 md:px-6",
         )}
       >
         <AreaSelect />
@@ -53,17 +53,17 @@ const RightSidebar = () => {
       </div>
       <div
         className={cn(
-          "scrollbar-thin flex-1 overflow-auto bg-card",
+          "scrollbar-thin flex-1 overflow-auto bg-card leading-relaxed",
           rightSidebarExpanded
             ? "min-h-0 bg-gradient-to-b from-muted/20 to-background px-6 py-6"
-            : "px-5 py-4 max-md:py-4 max-md:space-y-4 max-md:text-sm md:px-6 md:py-5 md:space-y-4",
+            : "space-y-4 px-5 py-5 max-md:space-y-5 max-md:py-5 max-md:text-sm md:px-6 md:py-6 md:space-y-4",
         )}
       >
         {!hasTabularInSelectedCluster &&
           selectedCluster &&
           scenarioId !== "climate" && (
           <p
-            className="mb-4 rounded-lg border border-amber-200/80 bg-[rgba(245,166,35,0.08)] px-4 py-3 text-sm text-[#633806] dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200"
+            className="mb-4 rounded-[var(--drmis-radius-card)] border border-amber-200/80 bg-[rgba(245,166,35,0.1)] px-4 py-3.5 text-sm leading-relaxed text-[var(--drmis-text-on-amber)] dark:border-amber-800 dark:bg-amber-950/50 dark:text-[var(--drmis-text-on-amber)]"
           >
             This cluster has no tabular dataset. Select province and area council to filter map
             layers.
@@ -71,7 +71,7 @@ const RightSidebar = () => {
         )}
         {rightSidebarExpanded ? (
           <div className="w-full space-y-6">
-            <div className="flex flex-wrap items-end gap-6 rounded-xl border border-border/40 bg-card/95 p-5 shadow-sm">
+            <div className="flex flex-wrap items-end gap-6 rounded-[var(--drmis-radius-card)] border border-border/40 bg-card/95 p-5 shadow-[var(--drmis-shadow-sm)]">
               <TabularDatasetSelect />
               {scenarioId === "climate" ? null : (
                 <div data-tour="year-filter">

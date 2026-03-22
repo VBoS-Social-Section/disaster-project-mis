@@ -18,6 +18,7 @@ import { useUiStore } from "@/store/ui-store";
 import { useMapStore } from "@/store/map-store";
 import { useViewStore } from "@/store/view-store";
 import { useLockStore } from "@/store/lock-store";
+import { useAuthStore } from "@/store/auth-store";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { RightSidebar } from "./components/RightSidebar";
 import { TabularLayers } from "./components/Map/TabularLayer";
@@ -34,7 +35,7 @@ import { ProfilePage } from "./components/ProfilePage";
 import { AreaDataEntryPage } from "./components/AreaDataEntry/AreaDataEntryPage";
 import { FeedbackButton } from "./components/Feedback/FeedbackButton";
 import { SimulationPanel } from "./components/SimulationPanel";
-import { FloatingLayerControl } from "./components/Map/FloatingLayerControl";
+import { MapFloatingChrome } from "./components/Map/MapFloatingChrome";
 import { CommandCentre } from "./pages/CommandCentre";
 import { DatasetsPage } from "./pages/DatasetsPage";
 import { ExportsPage } from "./pages/ExportsPage";
@@ -55,8 +56,13 @@ const FloatingTimeSeries = lazy(() =>
 
 function MapLoadingSkeleton() {
   return (
-    <div className="flex flex-1 flex-col bg-muted p-4">
-      <div className="h-full w-full animate-pulse rounded-md bg-muted-foreground/20" />
+    <div className="flex flex-1 flex-col bg-[var(--drmis-bg-elevated)] p-4 duration-200 animate-in fade-in">
+      <div className="flex h-10 max-w-md gap-2 rounded-[var(--drmis-radius-card)] bg-card/80 p-2 shadow-[var(--drmis-shadow-sm)]">
+        <div className="h-6 w-20 animate-pulse rounded-md bg-muted-foreground/15" />
+        <div className="h-6 flex-1 animate-pulse rounded-md bg-muted-foreground/15" />
+        <div className="h-6 w-16 animate-pulse rounded-md bg-muted-foreground/15" />
+      </div>
+      <div className="mt-4 h-full min-h-[12rem] w-full animate-pulse rounded-[var(--drmis-radius-card)] bg-muted-foreground/10" />
     </div>
   );
 }
@@ -195,7 +201,7 @@ function App() {
           )
         ) : (
           <div className="flex min-h-0 flex-1 flex-col">
-            <Header hideBrand hideUserMenu />
+            <Header hideBrand hideUserMenu hideSimulateButton />
             <div
               id="main"
               className={cn(
@@ -226,7 +232,7 @@ function App() {
                     </Suspense>
                     <ClimateKeyIndicators />
                     <MapEmptyState />
-                    <FloatingLayerControl />
+                    <MapFloatingChrome />
                     <SimulationPanel />
                     <MobilePanelFAB />
                     <MapModeBadge />

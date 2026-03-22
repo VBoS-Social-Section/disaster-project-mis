@@ -25,7 +25,6 @@ import { useLayerStore } from "@/store/layer-store";
 import { usePanelStore } from "@/store/panel-store";
 import { AdminAreaMapLayers } from "./AdminAreaLayers";
 import { VectorLayers } from "./VectorLayers";
-import { Legend } from "./Legend";
 import { MapPopup } from "./MapPopup";
 import { RasterLayers } from "./RasterLayer";
 import { PMTilesLayers } from "./PMTilesLayers";
@@ -255,7 +254,6 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
         <TabularDeltaOverlay />
         <RasterComparisonOverlay />
         <LandCoverLegend />
-        <Legend />
         <CycloneNameMapOverlay />
         <MapControlsCluster map={mapRefAdapter} />
         {popupInfo && <MapPopup {...popupInfo} />}

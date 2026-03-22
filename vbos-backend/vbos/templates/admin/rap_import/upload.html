@@ -224,7 +224,14 @@
       submitBtn.disabled = false;
       var d = res.data;
       if (!res.ok || !d.ok) {
-        var errs = (d.errors && d.errors.join) ? d.errors.join(' ') : (d.detail || res.status);
+        var errs = d.detail;
+        if (!errs && d.errors) {
+          if (d.errors.join) errs = d.errors.join(' ');
+          else if (d.errors.non_field_errors && d.errors.non_field_errors.join) {
+            errs = d.errors.non_field_errors.join(' ');
+          } else errs = JSON.stringify(d.errors);
+        }
+        if (!errs) errs = String(res.status);
         messageEl.className = 'rap-banner error';
         messageEl.textContent = errs || '{% trans "Upload failed." %}';
         messageEl.style.display = 'block';
