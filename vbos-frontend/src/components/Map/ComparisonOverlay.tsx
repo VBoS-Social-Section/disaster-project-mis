@@ -29,25 +29,88 @@ function addSwipeLabels(
   yearLeft: string,
   yearRight: string,
   control: SideBySideControl,
+  opts: {
+    minYear: number;
+    maxYear: number;
+    onYearLeftChange: (year: string) => void;
+    onYearRightChange: (year: string) => void;
+  },
 ): () => void {
+  const clampYear = (value: number) => Math.max(opts.minYear, Math.min(opts.maxYear, value));
   const container = map.getContainer();
   const hint = document.createElement("div");
   hint.style.cssText =
     "position:absolute;top:12px;left:0;right:0;pointer-events:none;z-index:1000;display:flex;justify-content:space-between;align-items:center;padding:0 16px;gap:8px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.95);text-shadow:0 1px 2px rgba(0,0,0,0.5)";
-  const leftSpan = document.createElement("span");
-  leftSpan.textContent = `${yearLeft} (Baseline)`;
-  leftSpan.style.cssText = "padding:4px 10px;border-radius:6px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px)";
+  const leftSpan = document.createElement("div");
+  leftSpan.style.cssText = "pointer-events:auto;display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:6px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px)";
+  const leftMinus = document.createElement("button");
+  leftMinus.textContent = "−";
+  leftMinus.style.cssText = "cursor:pointer;border:0;background:transparent;color:inherit;font-weight:700;line-height:1;padding:0 2px";
+  leftMinus.title = "Previous baseline year";
+  const leftText = document.createElement("span");
+  leftText.textContent = `${yearLeft} (Baseline)`;
+  const leftPlus = document.createElement("button");
+  leftPlus.textContent = "+";
+  leftPlus.style.cssText = "cursor:pointer;border:0;background:transparent;color:inherit;font-weight:700;line-height:1;padding:0 2px";
+  leftPlus.title = "Next baseline year";
+  leftSpan.appendChild(leftMinus);
+  leftSpan.appendChild(leftText);
+  leftSpan.appendChild(leftPlus);
+
   const centerSpan = document.createElement("span");
   centerSpan.textContent = "Drag handle to compare";
   centerSpan.style.cssText = "opacity:0.85";
-  const rightSpan = document.createElement("span");
-  rightSpan.textContent = `${yearRight} (Compare)`;
-  rightSpan.style.cssText = "padding:4px 10px;border-radius:6px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px)";
+
+  const rightSpan = document.createElement("div");
+  rightSpan.style.cssText = "pointer-events:auto;display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:6px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px)";
+  const rightMinus = document.createElement("button");
+  rightMinus.textContent = "−";
+  rightMinus.style.cssText = "cursor:pointer;border:0;background:transparent;color:inherit;font-weight:700;line-height:1;padding:0 2px";
+  rightMinus.title = "Previous compare year";
+  const rightText = document.createElement("span");
+  rightText.textContent = `${yearRight} (Compare)`;
+  const rightPlus = document.createElement("button");
+  rightPlus.textContent = "+";
+  rightPlus.style.cssText = "cursor:pointer;border:0;background:transparent;color:inherit;font-weight:700;line-height:1;padding:0 2px";
+  rightPlus.title = "Next compare year";
+  rightSpan.appendChild(rightMinus);
+  rightSpan.appendChild(rightText);
+  rightSpan.appendChild(rightPlus);
+
   hint.appendChild(leftSpan);
   hint.appendChild(centerSpan);
   hint.appendChild(rightSpan);
   container.style.position = "relative";
   container.appendChild(hint);
+
+  const updateYear = (
+    target: "left" | "right",
+    delta: number,
+    current: string,
+  ) => {
+    const currentN = Number.parseInt(current, 10);
+    if (!Number.isFinite(currentN)) return;
+    const next = clampYear(currentN + delta);
+    if (target === "left") opts.onYearLeftChange(String(next));
+    else opts.onYearRightChange(String(next));
+  };
+
+  leftMinus.onclick = (e) => {
+    e.stopPropagation();
+    updateYear("left", -1, yearLeft);
+  };
+  leftPlus.onclick = (e) => {
+    e.stopPropagation();
+    updateYear("left", 1, yearLeft);
+  };
+  rightMinus.onclick = (e) => {
+    e.stopPropagation();
+    updateYear("right", -1, yearRight);
+  };
+  rightPlus.onclick = (e) => {
+    e.stopPropagation();
+    updateYear("right", 1, yearRight);
+  };
 
   const divider = control._divider;
   if (divider) {
@@ -73,7 +136,16 @@ export function ComparisonOverlay() {
   const leftLayerRef = useRef<L.GeoJSON | null>(null);
   const rightLayerRef = useRef<L.GeoJSON | null>(null);
 
-  const { comparisonMode, comparisonView, yearLeft, yearRight } = useComparisonStore();
+  const {
+    comparisonMode,
+    comparisonView,
+    yearLeft,
+    yearRight,
+    setYearLeft,
+    setYearRight,
+    minYear,
+    maxYear,
+  } = useComparisonStore();
   const { layers } = useLayerStore();
   const { acList, provinces, acGeoJSON } = useAreaStore();
   const { data: provincesGeojson } = useProvinces();
@@ -154,7 +226,18 @@ export function ComparisonOverlay() {
     const control = sideBySide(leftLayer, rightLayer, { padding: 44 });
     control.addTo(map);
 
-    const cleanupLabels = addSwipeLabels(map, yearLeft, yearRight, control as SideBySideControl);
+    const cleanupLabels = addSwipeLabels(
+      map,
+      yearLeft,
+      yearRight,
+      control as SideBySideControl,
+      {
+        minYear,
+        maxYear,
+        onYearLeftChange: setYearLeft,
+        onYearRightChange: setYearRight,
+      },
+    );
 
     controlRef.current = control;
     leftLayerRef.current = leftLayer;
@@ -184,6 +267,10 @@ export function ComparisonOverlay() {
     tabularOpacity,
     acList,
     mapPalette,
+    minYear,
+    maxYear,
+    setYearLeft,
+    setYearRight,
   ]);
 
   return null;

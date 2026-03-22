@@ -14,6 +14,12 @@ export interface ExposureResult {
   layer_name: string;
 }
 
+export interface ProvinceExposureResult {
+  province: string;
+  score: number;
+  raw_count: number;
+}
+
 /** Check which hazard (vector polygon) layers contain a point. For asset-level direct risk. */
 export async function getAssetExposure(
   lat: number,
@@ -27,6 +33,13 @@ export async function getAssetExposure(
     vector_layer_ids: vectorLayerIds.join(","),
   });
   const response = await HTTP.get(`${API_BASE}/exposure/?${params}`);
+  if (!response.ok) return [];
+  return response.json();
+}
+
+/** Province-level exposure scores for Command Centre risk panel. */
+export async function getProvinceExposure(): Promise<ProvinceExposureResult[]> {
+  const response = await HTTP.get(`${API_BASE}/exposure/?group_by=province`);
   if (!response.ok) return [];
   return response.json();
 }

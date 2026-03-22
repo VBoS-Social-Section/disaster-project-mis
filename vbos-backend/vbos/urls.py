@@ -39,6 +39,7 @@ from vbos.users.auth_2fa import (
     setup_totp_verify,
     setup_email_otp,
     disable_2fa,
+    auth_me,
 )
 
 admin.site.site_header = "DRMIS Admin"
@@ -84,6 +85,10 @@ api_urls = [
     path(
         f"{API_BASE_URL}/integrations/",
         include(("vbos.integrations.urls", "vbos.integrations"), namespace="integrations"),
+    ),
+    path(
+        f"{API_BASE_URL}/",
+        include(("vbos.alerts.urls", "vbos.alerts"), namespace="alerts"),
     ),
 ]
 
@@ -144,6 +149,7 @@ urlpatterns = [
     path("api/v1/auth/setup-totp-verify/", setup_totp_verify),
     path("api/v1/auth/setup-email-otp/", setup_email_otp),
     path("api/v1/auth/disable-2fa/", disable_2fa),
+    path("api/v1/auth/me/", auth_me),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     # API-Docs
     path(f"{API_BASE_URL}/schema/", SpectacularAPIView.as_view(), name="schema"),

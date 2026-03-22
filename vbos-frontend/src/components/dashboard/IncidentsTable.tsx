@@ -1,9 +1,10 @@
 import { colors } from "@/tokens";
 import { cn } from "@/lib/utils";
+import type { AreaSubmission, SubmissionStatus } from "@/api/getSubmissions";
 
+// ── Severity badge ─────────────────────────────────────────────────
 export type SeverityLevel = "Critical" | "High" | "Medium" | "Low" | "Watch";
 
-/** Border, fill, and label colours — readable on light and dark surfaces. */
 const severityBadge: Record<
   SeverityLevel,
   { border: string; background: string; color: string }
@@ -40,9 +41,6 @@ export interface SeverityBadgeProps {
   className?: string;
 }
 
-/**
- * Pill badge: border + tinted background + dark text for contrast in both themes.
- */
 export function SeverityBadge({ level, className }: SeverityBadgeProps) {
   const s = severityBadge[level];
   return (
@@ -63,75 +61,85 @@ export function SeverityBadge({ level, className }: SeverityBadgeProps) {
   );
 }
 
-function formatIncidentDate(d: Date): string {
+// ── Status → severity mapping ──────────────────────────────────────
+function statusToSeverity(status: SubmissionStatus): SeverityLevel {
+  switch (status) {
+    case "submitted":
+      return "High";
+    case "draft":
+      return "Medium";
+    case "rejected":
+      return "Watch";
+    case "approved":
+      return "Low";
+    default:
+      return "Medium";
+  }
+}
+
+function formatStatusLabel(status: SubmissionStatus): string {
+  switch (status) {
+    case "submitted":
+      return "Pending review";
+    case "draft":
+      return "Draft";
+    case "approved":
+      return "Approved";
+    case "rejected":
+      return "Rejected";
+    default:
+      return status;
+  }
+}
+
+function formatDate(isoString: string | null): string {
+  if (!isoString) return "—";
   return new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
     month: "short",
-  }).format(d);
+  }).format(new Date(isoString));
 }
 
-export interface IncidentRow {
-  id: string;
-  severity: SeverityLevel;
-  name: string;
-  location: string;
-  /** Displayed as “20 Mar” in mono */
-  date: Date;
-  status: string;
+// ── Skeleton row ───────────────────────────────────────────────────
+function SkeletonRow() {
+  return (
+    <tr style={{ borderBottom: `1px solid ${colors.border.default}` }}>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <td key={i} className="px-4 py-3">
+          <div
+            className="h-4 animate-pulse rounded"
+            style={{ background: colors.border.default, width: i === 1 ? "80%" : "60%" }}
+          />
+        </td>
+      ))}
+    </tr>
+  );
 }
 
-const PLACEHOLDER_ROWS: IncidentRow[] = [
-  {
-    id: "1",
-    severity: "High",
-    name: "Cyclone — North Efate",
-    location: "Shefa",
-    date: new Date(2026, 2, 20),
-    status: "Active response",
-  },
-  {
-    id: "2",
-    severity: "Medium",
-    name: "Coastal flood — Luganville",
-    location: "Sanma",
-    date: new Date(2026, 2, 19),
-    status: "Monitoring",
-  },
-  {
-    id: "3",
-    severity: "Low",
-    name: "Landslide watch — Tanna",
-    location: "Tafea",
-    date: new Date(2026, 2, 18),
-    status: "Watch",
-  },
-  {
-    id: "4",
-    severity: "Watch",
-    name: "Drought advisory — South",
-    location: "Tafea",
-    date: new Date(2026, 2, 17),
-    status: "Advisory",
-  },
-];
-
+// ── Header ─────────────────────────────────────────────────────────
 const headerMono = {
   fontFamily: "'IBM Plex Mono', monospace",
   color: colors.text.ghost,
 } as const;
 
+// ── Props ──────────────────────────────────────────────────────────
 export interface IncidentsTableProps {
-  rows?: IncidentRow[];
-  /** Called when “View all” is activated (e.g. navigate or open drawer). */
+  submissions?: AreaSubmission[];
+  isLoading?: boolean;
+  isError?: boolean;
+  /** Called when "View all" is activated (e.g. navigate or open drawer). */
   onViewAll?: () => void;
   className?: string;
 }
 
 /**
- * Recent incidents panel: severity badges, incident + location, short dates, status.
+ * Recent submissions panel: maps area data submissions to an incidents-style table.
+ * Severity is inferred from submission status; Edit links point to real admin records.
  */
 export function IncidentsTable({
-  rows = PLACEHOLDER_ROWS,
+  submissions,
+  isLoading = false,
+  isError = false,
   onViewAll,
   className,
 }: IncidentsTableProps) {
@@ -159,7 +167,7 @@ export function IncidentsTable({
             color: colors.text.muted,
           }}
         >
-          Recent Incidents
+          Recent Submissions
         </h2>
         <button
           type="button"
@@ -178,7 +186,7 @@ export function IncidentsTable({
         <table className="w-full border-collapse text-left">
           <thead>
             <tr style={{ borderBottom: `1px solid ${colors.border.default}` }}>
-              {(["Severity", "Incident", "Date", "Status", "Edit"] as const).map((label) => (
+              {(["Status", "Dataset", "Date", "Province", "Edit"] as const).map((label) => (
                 <th
                   key={label}
                   className="px-4 py-2.5 text-[9px] font-semibold uppercase tracking-[0.1em]"
@@ -191,63 +199,102 @@ export function IncidentsTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr
-                key={row.id}
-                className="transition-colors hover:bg-muted/30"
-                style={{ borderBottom: `1px solid ${colors.border.default}` }}
-              >
-                <td className="px-4 py-3 align-middle">
-                  <SeverityBadge level={row.severity} />
-                </td>
-                <td className="px-4 py-3 align-middle">
-                  <div className="min-w-0">
-                    <div
-                      className="text-sm font-medium leading-snug"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {row.name}
-                    </div>
-                    <div
-                      className="mt-0.5 text-xs leading-snug"
-                      style={{ color: colors.text.muted }}
-                    >
-                      {row.location}
-                    </div>
-                  </div>
-                </td>
+            {/* Loading skeletons */}
+            {isLoading &&
+              [0, 1, 2, 3].map((i) => <SkeletonRow key={i} />)}
+
+            {/* Error state */}
+            {isError && !isLoading && (
+              <tr>
                 <td
-                  className="px-4 py-3 align-middle text-sm tabular-nums"
-                  style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    color: colors.text.secondary,
-                  }}
+                  colSpan={5}
+                  className="px-4 py-8 text-center text-sm"
+                  style={{ color: colors.text.muted }}
                 >
-                  {formatIncidentDate(row.date)}
-                </td>
-                <td
-                  className="px-4 py-3 align-middle text-sm"
-                  style={{ color: colors.text.secondary }}
-                >
-                  {row.status}
-                </td>
-                <td className="px-4 py-3 align-middle text-right">
-                  <a
-                    href={`/admin/area_submissions/areadatasubmission/${row.id}/change/`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      fontSize: "10px",
-                      color: colors.text.muted,
-                      textDecoration: "none",
-                    }}
-                  >
-                    Edit ↗
-                  </a>
+                  Could not load submissions. Check your connection.
                 </td>
               </tr>
-            ))}
+            )}
+
+            {/* Empty state */}
+            {!isLoading && !isError && submissions?.length === 0 && (
+              <tr>
+                <td
+                  colSpan={5}
+                  className="px-4 py-8 text-center text-sm"
+                  style={{ color: colors.text.muted }}
+                >
+                  No submissions yet.
+                </td>
+              </tr>
+            )}
+
+            {/* Real rows */}
+            {!isLoading &&
+              !isError &&
+              submissions?.map((row) => (
+                <tr
+                  key={row.id}
+                  className="transition-colors hover:bg-muted/30"
+                  style={{ borderBottom: `1px solid ${colors.border.default}` }}
+                >
+                  <td className="px-4 py-3 align-middle">
+                    <SeverityBadge level={statusToSeverity(row.status)} />
+                  </td>
+                  <td className="px-4 py-3 align-middle">
+                    <div className="min-w-0">
+                      <div
+                        className="text-sm font-medium leading-snug"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {row.dataset_name}
+                      </div>
+                      <div
+                        className="mt-0.5 text-xs leading-snug"
+                        style={{ color: colors.text.muted }}
+                      >
+                        {formatStatusLabel(row.status)} · {row.submitted_by_username}
+                      </div>
+                    </div>
+                  </td>
+                  <td
+                    className="px-4 py-3 align-middle text-sm tabular-nums"
+                    style={{
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      color: colors.text.secondary,
+                    }}
+                  >
+                    {formatDate(row.submitted_at ?? row.updated)}
+                  </td>
+                  <td
+                    className="px-4 py-3 align-middle text-sm"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    {row.province_name}
+                    {row.area_council_name ? (
+                      <span style={{ color: colors.text.muted }}>
+                        {" "}
+                        · {row.area_council_name}
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className="px-4 py-3 align-middle text-right">
+                    <a
+                      href={`/admin/area_submissions/areadatasubmission/${row.id}/change/`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontSize: "10px",
+                        color: colors.text.muted,
+                        textDecoration: "none",
+                      }}
+                    >
+                      Edit ↗
+                    </a>
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>

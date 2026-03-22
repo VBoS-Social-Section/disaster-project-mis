@@ -36,6 +36,12 @@ import { FeedbackButton } from "./components/Feedback/FeedbackButton";
 import { SimulationPanel } from "./components/SimulationPanel";
 import { FloatingLayerControl } from "./components/Map/FloatingLayerControl";
 import { CommandCentre } from "./pages/CommandCentre";
+import { DatasetsPage } from "./pages/DatasetsPage";
+import { ExportsPage } from "./pages/ExportsPage";
+import { AuditLogPage } from "./pages/AuditLogPage";
+import { SettingsPage } from "./pages/SettingsPage";
+import { useAlertNotificationCenter } from "./hooks/useAlertNotificationCenter";
+import { canAccessDataEntry, canAccessShellNav, getUserRole } from "@/lib/rbac";
 
 // Lazy-load Map (Leaflet, layers) for faster initial paint
 const Map = lazy(() => import("./components/Map").then((m) => ({ default: m.default })));
@@ -118,11 +124,15 @@ function App() {
     dataEntryPageOpen,
     setProfilePageOpen,
     primaryWorkspace,
+    shellNavId,
     setShellNavId,
     setPrimaryWorkspace,
   } = useUiStore();
   const { isLocked } = useLockStore();
   const isTimeSeriesOpen = useUiStore((s) => s.isTimeSeriesOpen);
+  const { alertCount, alertPulse } = useAlertNotificationCenter();
+  const user = useAuthStore((s) => s.user);
+  const role = getUserRole(user);
   useUrlSync();
   useSmartDefaults();
   useSessionSave();
@@ -151,8 +161,18 @@ function App() {
     return <ProfilePage />;
   }
   if (dataEntryPageOpen) {
+    if (!canAccessDataEntry(role)) {
+      return (
+        <AccessDeniedView
+          title="No permission for Data Entry"
+          message="Your role does not allow access to the Data Entry workflow."
+        />
+      );
+    }
     return <AreaDataEntryPage />;
   }
+
+  const navAllowed = canAccessShellNav(role, shellNavId);
   return (
     <>
       {isLocked && <LockScreen />}
@@ -160,11 +180,19 @@ function App() {
       <LayerAnnouncer />
       <AppShell
         mainPadding={primaryWorkspace === "command-centre"}
-        alertCount={2}
+        alertCount={alertCount}
+        alertPulse={alertPulse}
         onAvatarClick={() => setProfilePageOpen(true)}
       >
         {primaryWorkspace === "command-centre" ? (
-          <CommandCentre />
+          navAllowed ? (
+            shellNavId === "datasets" ? <DatasetsPage /> : shellNavId === "exports" ? <ExportsPage /> : shellNavId === "audit" ? <AuditLogPage /> : shellNavId === "settings" ? <SettingsPage /> : <CommandCentre />
+          ) : (
+            <AccessDeniedView
+              title="You don't have permission"
+              message="Your current role cannot access this section. Contact an administrator if you need expanded access."
+            />
+          )
         ) : (
           <div className="flex min-h-0 flex-1 flex-col">
             <Header hideBrand hideUserMenu />
@@ -234,3 +262,12 @@ function App() {
 }
 
 export default App;
+
+function AccessDeniedView({ title, message }: { title: string; message: string }) {
+  return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card p-6 text-center">
+      <p className="text-lg font-semibold text-foreground">{title}</p>
+      <p className="max-w-xl text-sm text-muted-foreground">{message}</p>
+    </div>
+  );
+}

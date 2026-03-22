@@ -11,6 +11,16 @@
 - [x] **Admin/operator boundary refresh** — `/admin/` redesigned for operator pipeline ownership (RAP queue, pending approvals, MFA gap, backup age, system status, recent audit activity) and incident-focused widgets removed from backend dashboard
 - [x] **Cross-linking between `/admin/` and `/app/`** — admin change forms now include `Open in Live Map →` deep links; frontend now exposes `Edit ↗` and `Manage dataset ↗` links to admin plus a staff-only `Admin Panel ↗` entry in sidebar
 - [x] **Staff-only pipeline status API** — added `GET /api/v1/admin/pipeline-status/` returning RAP pending, approvals pending, users missing MFA, backup age/status, celery status, and recent audit payload for operator dashboards
+- [x] **Command Centre shell pages** — Datasets, Exports, Audit Log, and Settings pages fully implemented and routed; nav items no longer show "Coming soon" toasts
+- [x] **Live Alerts panel — external feeds** — new `vbos.alerts` Django app; `GET /api/v1/alerts/live/` merges USGS (M4.0+ earthquakes, Vanuatu bbox), VMGD (active warnings + volcano alert levels scraped from public pages), GDACS, and internal DRMIS alerts; `LiveAlertsPanel.tsx` rewritten to use real data with source attribution footer, severity dots, type badges, time-ago labels, and graceful empty/error states; polls every 2 minutes
+- [x] **Incidents table connected to real API** — `IncidentsTable.tsx` replaced placeholder rows with live `AreaDataSubmission` data via `useRecentSubmissions` hook; Edit ↗ links use real database IDs; loading skeletons and empty states added
+- [x] **Command Centre KPI cards partially live** — "Pending submissions" and "Live alerts" cards now show real counts from API; "Field teams" and "System uptime" remain as stubs pending future models
+- [x] **System name corrected everywhere** — "Disaster Risk Management Information System" (capital S on System) applied consistently across `Topbar.tsx`, `index.html`, `vite.config.ts` PWA manifest, and all other occurrences
+- [x] **Audit Log page** — `GET /api/v1/audit/` endpoint scoped to `datasets` app only; accessible to any authenticated user (not just staff); `AuditLogPage.tsx` with search, action-type filter, date range, paginated table, human-readable model names
+- [x] **Exports page** — multi-format download UI: XLSX, GeoJSON, GeoTIFF, VRT, PMTiles; cluster selector, dataset picker with format checkboxes, export queue with job status; Download Data removed from Live Map sidebar
+- [x] **Settings page** — full-page Settings replacing the ProfilePage overlay; 3 tabs: Profile (avatar, name, email), Security (password, 2FA, session PIN), Appearance (light/dark/system theme picker); "Profile & security" removed from Live Map header dropdown
+- [x] **Version string visible** — `v1.0.0 · Build 2026.03.21` shown as tooltip on DRMIS logo (frontend topbar) and in admin footer (replacing "Powered by Django")
+- [x] **VMGD live volcano + warning alerts** — HTML scraper replaces broken RSS approach; parses `/warnings` (active advisories with date + body) and `/geohazards/volcanoes` (Level 2+ volcano alert levels); 6 real VMGD alerts confirmed live (Ambae Level 3, Yasur/Lopevi/Ambrym/Gaua Level 2)
 
 ---
 
@@ -37,12 +47,13 @@
   - [ ] Test with MoCCA, MOET, NDMO sample user accounts
   - [ ] Document permission matrix per role
 
-- [ ] **Audit logging (field-level diff)** `10%` — who changed what, from → to; exportable
+- [~] **Audit logging** `40%` — dataset change history accessible to all authenticated users
   - [x] Django `LogEntry` registered in admin (basic action log)
-  - [ ] Custom `AuditLog` model: model, pk, field, old_value, new_value, user, timestamp
+  - [x] `GET /api/v1/audit/` endpoint scoped to `datasets` app, accessible to all users
+  - [x] `AuditLogPage.tsx` — searchable, filterable by action/date, paginated, human-readable model names
+  - [ ] Custom `AuditLog` model: model, pk, field, old_value, new_value, user, timestamp (field-level diff)
   - [ ] Signal or mixin to capture field-level diffs on save
   - [ ] Cover key models: TabularItem, VectorItem, FieldCheckRecord, Dataset
-  - [ ] Admin view: filterable by user, date, model, field
   - [ ] Export as CSV and PDF
   - [ ] Retention policy: auto-archive audit logs older than 2 years
 
@@ -53,23 +64,39 @@
   - [ ] Run `django-check-deploy` and fix all warnings
   - [ ] Test with securityheaders.com / OWASP ZAP
 
+- [ ] **Rate limiting on auth endpoints** `0%` — brute-force and OTP exhaustion currently unprotected
+  - [ ] Add `django-ratelimit` to `requirements.txt`
+  - [ ] Apply `@ratelimit(key='ip', rate='10/m', block=True)` to `/api-token-auth/`
+  - [ ] Apply `@ratelimit(key='user_or_ip', rate='5/m', block=True)` to verify-2fa, resend-email-otp
+  - [ ] Return 429 with clear error message
+
+- [ ] **Encrypt SMTP password at rest** `0%` — `SMTPSettings.password` is plaintext in DB
+  - [ ] Add `django-encrypted-fields` to `requirements.txt`
+  - [ ] Change `password` to `EncryptedCharField`; set `FIELD_ENCRYPTION_KEY` from env
+  - [ ] Generate and apply migration
+
+- [ ] **Token expiry** `0%` — DRF tokens currently never expire
+  - [ ] Replace DRF `Token` with `django-rest-knox` (per-device tokens, configurable expiry)
+  - [ ] Set 8-hour expiry for standard sessions; 30-day for "remember me"
+  - [ ] Frontend: handle 401 → clear token → redirect to login with "session expired" message
+
 ---
 
 ### Background Tasks
 
-- [ ] **Celery + Redis** `0%` — async/background processing
-  - [ ] Add `celery`, `redis`, `django-celery-beat`, `django-celery-results` to `requirements.txt`
-  - [ ] Configure Celery app in `vbos/celery.py`
-  - [ ] Add `celery` and `celery-beat` services to `docker-compose.yml`
-  - [ ] Add Redis service to `docker-compose.yml` (replace `LocMemCache`)
+- [x] **Celery + Redis** `100%` — async/background processing fully operational
+  - [x] `celery`, `redis`, `django-celery-beat`, `django-celery-results` in `requirements.txt`
+  - [x] Celery app configured in `vbos/celery.py`
+  - [x] `celery` and `celery-beat` services in `docker-compose.yml`
+  - [x] Redis service in `docker-compose.yml`
   - [ ] Move large raster ingestion to async task
-  - [ ] Move scheduled backups to Celery beat (daily/weekly)
   - [ ] Move XLSX/PDF exports to async task
   - [ ] Move departmental data sync (`sync_external_data`) to scheduled task
   - [ ] Add task retry logic and dead-letter queue
 
-- [ ] **Job status in UI** `0%` — progress bar + toast when backup/export completes
-  - [ ] Expose `/api/v1/tasks/<task_id>/status/` endpoint (Celery result backend)
+- [~] **Job status in UI** `50%`
+  - [x] `/api/v1/tasks/<task_id>/status/` endpoint exists
+  - [ ] Add `IsAuthenticated` to task status endpoint (currently unauthenticated — security gap)
   - [ ] Frontend: polling hook `useTaskStatus(taskId)`
   - [ ] Show progress bar for long-running tasks (backup, import)
   - [ ] Toast notification on completion or failure
@@ -107,7 +134,6 @@
   - [x] `CACHES` configurable via env (`DJANGO_CACHE_BACKEND`)
   - [x] `cache_page` on cluster, province, area council list endpoints
   - [x] Cache invalidation on dataset save/delete
-  - [ ] Add Redis service to Docker Compose
   - [ ] Set `DJANGO_CACHE_BACKEND=django.core.cache.backends.redis.RedisCache` in production
   - [ ] Cache tabular aggregation endpoint
   - [ ] Cache tile metadata responses
@@ -129,6 +155,33 @@
   - [ ] Workflow: `deploy-staging.yml` — build + push image, deploy on merge to `main`
   - [ ] Add branch protection: require CI pass before merge
   - [ ] Add `.github/PULL_REQUEST_TEMPLATE.md`
+
+---
+
+### Data Governance
+
+- [ ] **Dataset status / publication workflow** `0%`
+  - [ ] Add `status` field to `TabularDataset`, `VectorDataset`, `RasterDataset`, `PMTilesDataset` (Draft / Published / Archived)
+  - [ ] Add `published_by` FK and `published_at` DateTimeField
+  - [ ] Default new datasets to `draft`; existing data defaults to `published`
+  - [ ] Bulk "Publish selected" and "Archive selected" admin actions
+  - [ ] Filter API to only return `published` datasets by default
+  - [ ] Admin action creates audit trail entry on status change
+
+- [ ] **`created_by` / `updated_by` on all dataset models** `0%`
+  - [ ] Add FK to `AUTH_USER_MODEL` on all four dataset models
+  - [ ] Set `created_by` on `save_model` in admin; expose as readonly field
+  - [ ] Add to serializers as `read_only=True`
+
+- [ ] **`DISASTER_DATASET_NAMES` admin-configurable** `0%`
+  - [ ] Create `DisasterDatasetTag(name unique)` model
+  - [ ] Replace hardcoded list in `views.py` with DB query
+  - [ ] Data migration seeds existing values; admins can add new types (e.g. "Storm Surge")
+
+- [ ] **Password reset by email** `0%`
+  - [ ] Wire Django's built-in `password_reset/` views in `urls.py`
+  - [ ] Create branded email + confirmation templates in `templates/registration/`
+  - [ ] Add "Forgot password?" link to `Login.tsx`
 
 ---
 
@@ -212,6 +265,16 @@
   - [ ] Return `429 Too Many Requests` with `Retry-After` header
   - [ ] Log rate-limit hits in audit log
 
+- [x] **VMGD live hazard alerts** `100%`
+  - [x] HTML scraper for `/warnings` (active advisories with date, title, body)
+  - [x] HTML scraper for `/geohazards/volcanoes` (Level 2+ volcano alert levels)
+  - [x] USGS earthquake feed (M4.0+, Vanuatu bbox, GeoJSON API)
+  - [x] GDACS disaster feed (Vanuatu-filtered RSS)
+  - [x] `GET /api/v1/alerts/live/` — merged feed with concurrent fetching
+  - [x] Individual endpoints: `/earthquakes/`, `/vmgd/`, `/gdacs/`
+  - [x] Internal `Alert` model for DRMIS-authored operational alerts
+  - [x] `vbos.alerts` app registered in admin with `Alert` CRUD
+
 - [ ] **Webhooks** `0%`
   - [ ] `WebhookSubscription` model: URL, event types, secret
   - [ ] Event types: `dataset.created`, `dataset.updated`, `fieldcheck.approved`
@@ -227,22 +290,25 @@
 
 ---
 
-### Data Governance
+### Ministry / Organisational Model
 
-- [ ] **Dataset approval workflow** `0%`
-  - [ ] Add `status` field to datasets: Draft → Submitted → Under Review → Approved/Rejected
-  - [ ] Status transition buttons in admin (with permission check)
-  - [ ] Email notification to reviewers on submission
-  - [ ] Email notification to submitter on approval/rejection
-  - [ ] Field-check confidence % threshold gate (e.g. must be ≥ 70% to approve)
-  - [ ] Audit trail for each status change
+- [ ] **Ministry/Organisation model** `0%`
+  - [ ] Create `Organisation(name, short_name, type, country)` model
+  - [ ] Add `organisation FK` to `User` and all four dataset models
+  - [ ] Register in admin; add to Unfold sidebar under Settings
+  - [ ] Data migration seeds: NDMO, MoCCA, MOET, Health, MIPU, MFAT, SPC, UNICEF, WHO, WFP, UNDP
+  - [ ] Add organisation filter to dataset admin lists and API
 
-- [ ] **Versioned datasets** `0%`
+- [ ] **Dataset versioning** `0%`
   - [ ] Add `DatasetVersion` model: snapshot of dataset + items at a point in time
   - [ ] "Save version" button in admin before bulk edits
   - [ ] Version history list with diff viewer
   - [ ] "Restore to version" action
-  - [ ] Auto-version on approval step
+
+- [ ] **Email notifications on approval/rejection** `0%`
+  - [ ] HTML templates for `submission_approved.html`, `submission_rejected.html`
+  - [ ] Send email to submitter on status change in `AreaDataSubmission` workflow
+  - [ ] Include dataset name, province, year, and rejection reason if applicable
 
 ---
 
@@ -259,6 +325,34 @@
 
 ---
 
+### Incident Management
+
+- [ ] **Incident model and CRUD API** `0%`
+  - [ ] Create `vbos.incidents` Django app
+  - [ ] `Incident` model: `title`, `type`, `severity`, `province FK`, `status`, `created_by`, `notes`
+  - [ ] `GET/POST /api/v1/incidents/` — paginated, filterable by status/type/province/severity
+  - [ ] Admin: list display, filters, search
+  - [ ] Connect Command Centre "Active incidents" KPI to real count
+  - [ ] "+ New Incident" button opens a creation dialog
+  - [ ] Risk Exposure panel connected to real province scoring data
+
+---
+
+### Reporting
+
+- [ ] **PDF situation report** `0%`
+  - [ ] Add `weasyprint` to `requirements.txt`
+  - [ ] `GET /api/v1/reports/situation-summary/` endpoint
+  - [ ] Template: active incidents, province risk, cluster submission status, key stats
+  - [ ] Wire "Export Report" button in Command Centre to download
+
+- [ ] **Executive morning briefing (Cabinet PDF)** `0%`
+  - [ ] Celery Beat task at 07:00 VST daily
+  - [ ] Email to configurable recipients list in `SMTPSettings`
+  - [ ] 1–2 page PDF: incidents, risk heat map, weather outlook from VMGD
+
+---
+
 ### Advanced Analysis
 
 - [ ] **Risk calculator** `0%` — exposure × vulnerability scoring
@@ -271,16 +365,6 @@
   - [ ] API: population within X km of hazard zone
   - [ ] API: infrastructure (schools, hospitals) within flood extent
   - [ ] Results shown in stats panel and downloadable
-
-- [ ] **Scenario comparison** `0%`
-  - [ ] Side-by-side map split view (before/after cyclone)
-  - [ ] Difference layer: areas where damage increased between events
-  - [ ] Compare two datasets across years
-
-- [ ] **Automated hotspot detection** `0%`
-  - [ ] Weekly Celery task: flag areas with rising damage estimates over 3+ events
-  - [ ] Admin alert panel: "New hotspots detected"
-  - [ ] Email digest to NDMO coordinators
 
 ---
 
@@ -337,20 +421,27 @@
 
 | Feature | Effort | Impact | Progress | Phase |
 |---|---|---|---|---|
-| Celery + Redis (background tasks) | Medium | Very High | 0% | A |
+| Add `IsAuthenticated` to task status endpoint | XS | High | 0% | A |
+| Rate limiting on auth endpoints | Low | Very High | 0% | A |
+| Encrypt SMTP password at rest | Low | High | 0% | A |
+| Token expiry (Knox) | Low | High | 0% | A |
+| Password reset by email | Low | High | 0% | A |
+| Dataset `status` field (draft/published/archived) | Low | High | 0% | A |
+| `created_by` on all dataset models | Low | Medium | 0% | A |
+| `DISASTER_DATASET_NAMES` admin-configurable | Low | Medium | 0% | A |
 | Scheduled backups to S3 | Low | Very High | 0% | A |
 | Sentry error tracking | Low | High | 0% | A |
 | MFA mandatory enforcement | Low | High | 40% | A |
 | RBAC per dataset/module | Medium | Very High | 0% | A |
-| Audit log (field-level diff) | Medium | High | 10% | A |
 | Redis caching hot paths | Low | High | 30% | A |
 | Prometheus + Grafana | Medium | High | 0% | B |
 | OAuth2 / SSO (Keycloak) | High | Very High | 0% | B |
 | Dataset approval workflow | Medium | Very High | 0% | B |
 | OGC WMS/WFS output | Medium | High | 0% | B |
-| Versioned datasets | Medium | High | 0% | B |
+| Ministry/Organisation model | Medium | Very High | 0% | B |
 | Full S3 migration | Medium | High | 40% | B |
-| Rate limiting per department | Low | High | 50% | B |
+| Rate limiting per department API key | Low | High | 50% | B |
+| Incident model + Command Centre live data | XL | Very High | 0% | C |
 | Offline PWA (field teams) | High | Very High | 0% | C |
 | Multi-tenancy | High | High | 0% | C |
 | Risk calculator | High | Very High | 0% | C |
@@ -361,8 +452,10 @@
 
 Given the NDMO handover timeline and multi-ministry adoption goals, the highest-leverage sequence is:
 
-1. **Celery + Redis** — unlocks scheduled backups, async imports, email alerts in one go
-2. **RBAC + Audit log** — needed before opening to MoCCA/MOET/MIPU users
-3. **Scheduled backups to S3** — non-negotiable before NDMO takes ownership
-4. **Sentry + `/health/` endpoint** — fast to add, immediately improves operational confidence
-5. **MFA enforcement** — 40% done; finish the last mile (mandatory on first login)
+1. **Security hardening** — rate limiting on auth, token expiry (Knox), encrypt SMTP password; small effort, high risk if missed
+2. **Dataset status + created_by fields** — prerequisite for the approval workflow and data governance
+3. **RBAC + Audit log (field-level)** — needed before opening to MoCCA/MOET/MIPU users
+4. **Scheduled backups to S3** — non-negotiable before NDMO takes ownership
+5. **Incident model** — the Command Centre is the primary screen; it needs real data
+6. **Sentry + `/health/` endpoint** — fast to add, immediately improves operational confidence
+7. **MFA enforcement** — 40% done; finish the last mile (mandatory on first login)

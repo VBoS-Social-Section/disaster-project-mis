@@ -49,6 +49,7 @@ class Common(Configuration):
         "vbos.maintenance",
         "vbos.rap_import",
         "vbos.compare",
+        "vbos.alerts",
     )
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
