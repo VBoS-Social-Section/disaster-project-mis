@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import aggregate_views, pmtiles_serve, views
+from . import aggregate_views, audit_views, pmtiles_serve, views
 
 app_name = "datasets"
 
@@ -10,6 +10,7 @@ urlpatterns = [
         pmtiles_serve.serve_pmtiles,
         name="pmtiles-serve",
     ),
+    path("audit/", audit_views.AuditLogView.as_view(), name="audit-log"),
     path("cluster/", views.ClusterListView.as_view(), name="cluster-list"),
     path(
         "datasets/",

@@ -40,8 +40,8 @@ BAD_BADGE = ("#FEECEA", "#A32D2D", "#F7C1C1")
 
 def _format_age_label(dt) -> tuple[str, bool]:
     if dt is None:
-        # No backup record — treat as critical (same visual priority as >24h stale)
-        return "—", True
+        # No backup record yet — neutral (amber prompt), not red critical
+        return "—", False
     delta = timezone.now() - dt
     seconds = max(0, delta.total_seconds())
     stale = seconds > 24 * 3600

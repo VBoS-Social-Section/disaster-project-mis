@@ -11,6 +11,7 @@ export interface TopbarProps {
   className?: string;
   /** Alert count for the bell pill (demo default: 0). */
   alertCount?: number;
+  alertPulse?: boolean;
   onAvatarClick?: () => void;
   /** When false, hide `<UserAvatar />`. Default **true** (spec). */
   showUserAvatar?: boolean;
@@ -22,6 +23,7 @@ export interface TopbarProps {
 export function Topbar({
   className,
   alertCount = 0,
+  alertPulse = false,
   onAvatarClick,
   showUserAvatar = true,
 }: TopbarProps) {
@@ -75,12 +77,12 @@ export function Topbar({
         className="min-w-0 flex-1 truncate px-1 text-[10px] font-medium tracking-wide sm:text-[11px]"
         style={{ fontFamily: "'IBM Plex Mono', monospace", color: colors.text.muted }}
       >
-        Disaster Risk Management — Vanuatu
+        Disaster Risk Management Information System — Vanuatu
       </p>
 
       <div className="ml-auto flex shrink-0 items-center gap-2.5">
         <SystemStatusPill />
-        <AlertCountPill count={alertCount} />
+        <AlertCountPill count={alertCount} pulse={alertPulse} />
         <ColorModeButton
           aria-label="Toggle light or dark theme"
           className="size-8 shrink-0 text-[var(--drmis-text-muted)] hover:bg-[var(--drmis-bg-overlay)] hover:text-[var(--drmis-text-primary)]"

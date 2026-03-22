@@ -3,16 +3,20 @@ import { cn } from "@/lib/utils";
 import { useColorMode } from "@/components/ui/color-mode";
 import { colors } from "@/tokens";
 import { useUiStore } from "@/store/ui-store";
+import { useAuthStore } from "@/store/auth-store";
 import { toast } from "@/utils/toast";
 import { Topbar } from "./Topbar";
 import { Sidebar } from "./Sidebar";
 import { getShellNavPlaceholder } from "@/config/shellNavPlaceholders";
 import { ShellNavPlaceholderDescription } from "./ShellNavPlaceholderDescription";
+import { canAccessShellNav, getUserRole } from "@/lib/rbac";
 
 export interface AppShellProps {
   children: ReactNode;
   /** Alert count for `<AlertCountPill />`. */
   alertCount?: number;
+  /** Flash attention pulse when a new critical/high alert arrives. */
+  alertPulse?: boolean;
   /** Shell `<UserAvatar />` click handler (e.g. open profile). */
   onAvatarClick?: () => void;
   /** When true (default), main uses `overflow-auto` and **20px** padding per spec. */
@@ -30,6 +34,7 @@ export interface AppShellProps {
 export function AppShell({
   children,
   alertCount = 0,
+  alertPulse = false,
   onAvatarClick,
   mainPadding = true,
   topbarUserAvatar = true,
@@ -39,9 +44,15 @@ export function AppShell({
   const shellNavId = useUiStore((s) => s.shellNavId);
   const setShellNavId = useUiStore((s) => s.setShellNavId);
   const setPrimaryWorkspace = useUiStore((s) => s.setPrimaryWorkspace);
+  const user = useAuthStore((s) => s.user);
+  const role = getUserRole(user);
 
   const handleNavigate = useCallback(
     (id: string) => {
+      if (!canAccessShellNav(role, id)) {
+        toast.warning("No permission", "You do not have access to this section.");
+        return;
+      }
       if (id === "dashboard") {
         setShellNavId(id);
         setPrimaryWorkspace("command-centre");
@@ -52,13 +63,33 @@ export function AppShell({
         setPrimaryWorkspace("operations");
         return;
       }
+      if (id === "datasets") {
+        setShellNavId(id);
+        setPrimaryWorkspace("command-centre");
+        return;
+      }
+      if (id === "exports") {
+        setShellNavId(id);
+        setPrimaryWorkspace("command-centre");
+        return;
+      }
+      if (id === "audit") {
+        setShellNavId(id);
+        setPrimaryWorkspace("command-centre");
+        return;
+      }
+      if (id === "settings") {
+        setShellNavId(id);
+        setPrimaryWorkspace("command-centre");
+        return;
+      }
       const placeholder = getShellNavPlaceholder(id);
       toast.info(
         placeholder?.title ?? "On the roadmap",
         <ShellNavPlaceholderDescription navId={id} />,
       );
     },
-    [setShellNavId, setPrimaryWorkspace],
+    [role, setShellNavId, setPrimaryWorkspace],
   );
 
   return (
@@ -74,6 +105,7 @@ export function AppShell({
     >
       <Topbar
         alertCount={alertCount}
+        alertPulse={alertPulse}
         onAvatarClick={onAvatarClick}
         showUserAvatar={topbarUserAvatar}
       />

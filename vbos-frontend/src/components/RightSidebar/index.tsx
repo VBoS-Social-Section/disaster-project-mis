@@ -7,17 +7,12 @@
  * When expanded: dashboard layout with compact filters and modern styling.
  */
 import { Sidebar } from "../Sidebar";
-import { Button } from "@/components/ui/button";
-import { Tooltip } from "@/components/ui";
-import { LuDownload } from "react-icons/lu";
 import { AreaSelect } from "./AreaSelect";
 import { CycloneSummaryBanner } from "./CycloneSummaryBanner";
 import { AttributeFilterSelect } from "./AttributeFilterSelect";
 import { TabularDatasetSelect } from "./TabularDatasetSelect";
 import { YearSelect } from "./YearSelect";
 import { ContextPanelContent } from "../ContextPanel/ContextPanelContent";
-import { DownloadDataDialog } from "./DownloadDataDialog";
-import { useState } from "react";
 import { usePanelContext } from "@/hooks/usePanelContext";
 import { useViewStore } from "@/store/view-store";
 import { useUiStore } from "@/store/ui-store";
@@ -29,8 +24,7 @@ const FloatingKpiCards = lazy(() =>
 );
 
 const RightSidebar = () => {
-  const [downloadDialogIsOpen, setDownloadDialogIsOpen] = useState(false);
-  const { context, hasActiveLayers, hasTabularInSelectedCluster } = usePanelContext();
+  const { context, hasTabularInSelectedCluster } = usePanelContext();
   const scenarioId = useViewStore((s) => s.scenarioId);
   const selectedCluster = useUiStore((s) => s.selectedCluster);
   const selectedClimateModule = useUiStore((s) => s.selectedClimateModule);
@@ -107,35 +101,6 @@ const RightSidebar = () => {
           </>
         )}
       </div>
-      <div
-        className={cn(
-          "sticky bottom-0 mt-auto border-t border-border bg-card",
-          rightSidebarExpanded ? "px-6 py-4" : "px-5 py-4 md:px-6 md:py-4",
-        )}
-      >
-        <Tooltip
-          content={
-            !hasActiveLayers
-              ? "Enable a data layer to download"
-              : "Download active datasets (respects province, area council, and year filters)"
-          }
-          positioning={{ placement: "top" }}
-        >
-          <Button
-            data-tour="download"
-            className="download-accent-pill hover-lift w-full rounded-full font-semibold min-h-11 touch-manipulation max-md:min-h-11"
-            onClick={() => setDownloadDialogIsOpen(true)}
-            disabled={!hasActiveLayers}
-          >
-            <LuDownload className="size-4" />
-            Download Data
-          </Button>
-        </Tooltip>
-      </div>
-      <DownloadDataDialog
-        isOpen={downloadDialogIsOpen}
-        setIsOpen={setDownloadDialogIsOpen}
-      />
     </Sidebar>
   );
 };

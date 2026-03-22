@@ -10,6 +10,7 @@ export interface AuthUser {
   last_name: string;
   email: string;
   avatar: string | null;
+  role?: "admin" | "analyst" | "field_officer" | "read_only";
   is_staff: boolean;
   is_superuser: boolean;
   mfa_enabled?: boolean;

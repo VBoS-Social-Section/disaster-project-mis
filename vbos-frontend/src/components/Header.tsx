@@ -27,7 +27,6 @@ import {
   LuLockKeyhole,
   LuLock,
   LuLogOut,
-  LuSettings,
   LuShare2,
   LuUser,
   LuCopy,
@@ -38,7 +37,6 @@ import {
   LuClipboardList,
   LuGauge,
   LuBookOpen,
-  LuMenu,
 } from "react-icons/lu";
 import { useAuthStore } from "@/store/auth-store";
 import { useViewStore } from "@/store/view-store";
@@ -72,7 +70,6 @@ export type HeaderProps = {
 export function Header({ hideBrand = false, hideUserMenu = false }: HeaderProps) {
   const [shareDialogIsOpen, setShareDialogIsOpen] = useState(false);
   const [helpOverlayOpen, setHelpOverlayOpen] = useState(false);
-  const setProfilePageOpen = useUiStore((s) => s.setProfilePageOpen);
   const setDataEntryPageOpen = useUiStore((s) => s.setDataEntryPageOpen);
   const [scrolled, setScrolled] = useState(false);
   const { user, clearAuth } = useAuthStore();
@@ -291,89 +288,80 @@ export function Header({ hideBrand = false, hideUserMenu = false }: HeaderProps)
             <span className="hidden md:inline">Simulate</span>
           </Button>
         </Tooltip>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className={cn(
-              "min-h-11 min-w-11 shrink-0 touch-manipulation hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 inline-flex items-center justify-center md:size-8",
-              hideUserMenu
-                ? "size-11 rounded-md md:size-8"
-                : "size-11 overflow-hidden rounded-full md:size-8",
-            )}
-            aria-label="Open menu"
-          >
-            {hideUserMenu ? (
-              <LuMenu className="size-4 md:size-4" />
-            ) : avatarUrl(user?.avatar) ? (
-              <img
-                src={avatarUrl(user?.avatar)!}
-                alt=""
-                className="size-8 rounded-full object-cover"
-              />
-            ) : (
-              <span className="flex size-8 items-center justify-center rounded-full bg-primary/20 text-primary">
-                <LuUser className="size-4 icon-interactive" />
-              </span>
-            )}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-[11rem]">
-            <DropdownMenuLabel className="font-normal text-muted-foreground">
-              {user?.username}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => setHelpOverlayOpen(true)}>
-              <LuCircleHelp className="size-4" />
-              Help
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <a
-                href="https://vbos-social-section.github.io/disaster-mis-user-manual/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-inherit no-underline"
-              >
-                <LuBookOpen className="size-4" />
-                User manual
-              </a>
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setDataEntryPageOpen(true)}>
-              <LuClipboardList className="size-4" />
-              Data Entry
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setProfilePageOpen(true)}>
-              <LuSettings className="size-4" />
-              Profile & security
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setShareDialogIsOpen(true)}>
-              <LuShare2 className="size-4" />
-              Share
-            </DropdownMenuItem>
-            {pinHash && (
-              <DropdownMenuItem onSelect={() => lock()}>
-                <LuLock className="size-4" />
-                Lock screen
+        {!hideUserMenu && (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="min-h-11 min-w-11 size-11 shrink-0 touch-manipulation overflow-hidden rounded-full hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 inline-flex items-center justify-center md:size-8"
+              aria-label="Open menu"
+            >
+              {avatarUrl(user?.avatar) ? (
+                <img
+                  src={avatarUrl(user?.avatar)!}
+                  alt=""
+                  className="size-8 rounded-full object-cover"
+                />
+              ) : (
+                <span className="flex size-8 items-center justify-center rounded-full bg-primary/20 text-primary">
+                  <LuUser className="size-4 icon-interactive" />
+                </span>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[11rem]">
+              <DropdownMenuLabel className="font-normal text-muted-foreground">
+                {user?.username}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setHelpOverlayOpen(true)}>
+                <LuCircleHelp className="size-4" />
+                Help
               </DropdownMenuItem>
-            )}
-            {user?.is_staff && (
               <DropdownMenuItem asChild>
                 <a
-                  href={`${import.meta.env.VITE_API_HOST ?? ""}/admin/`}
+                  href="https://vbos-social-section.github.io/disaster-mis-user-manual/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center gap-2 text-inherit no-underline"
                 >
-                  <LuLockKeyhole className="size-4" />
-                  Admin
+                  <LuBookOpen className="size-4" />
+                  User manual
                 </a>
               </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onSelect={handleLogout}
-              className="text-destructive focus:text-destructive"
-            >
-              <LuLogOut className="size-4" />
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuItem onSelect={() => setDataEntryPageOpen(true)}>
+                <LuClipboardList className="size-4" />
+                Data Entry
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setShareDialogIsOpen(true)}>
+                <LuShare2 className="size-4" />
+                Share
+              </DropdownMenuItem>
+              {pinHash && (
+                <DropdownMenuItem onSelect={() => lock()}>
+                  <LuLock className="size-4" />
+                  Lock screen
+                </DropdownMenuItem>
+              )}
+              {user?.is_staff && (
+                <DropdownMenuItem asChild>
+                  <a
+                    href={`${import.meta.env.VITE_API_HOST ?? ""}/admin/`}
+                    className="flex items-center gap-2 text-inherit no-underline"
+                  >
+                    <LuLockKeyhole className="size-4" />
+                    Admin
+                  </a>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={handleLogout}
+                className="text-destructive focus:text-destructive"
+              >
+                <LuLogOut className="size-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <ShareDialog

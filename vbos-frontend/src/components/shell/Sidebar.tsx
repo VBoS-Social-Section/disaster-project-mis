@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { colors } from "@/tokens";
 import { useAuthStore } from "@/store/auth-store";
+import { canAccessShellNav, getUserRole } from "@/lib/rbac";
 import { NavItem } from "./NavItem";
 import {
   LuLayoutDashboard,
@@ -33,6 +34,7 @@ function SectionTitle({ children }: { children: string }) {
  */
 export function Sidebar({ activeId, onNavigate, className }: SidebarProps) {
   const user = useAuthStore((s) => s.user);
+  const role = getUserRole(user);
 
   return (
     <aside
@@ -48,50 +50,66 @@ export function Sidebar({ activeId, onNavigate, className }: SidebarProps) {
     >
       <nav className="flex flex-col gap-0.5">
         <SectionTitle>Operations</SectionTitle>
-        <NavItem
-          label="Dashboard"
-          icon={<LuLayoutDashboard />}
-          active={activeId === "dashboard"}
-          onClick={() => onNavigate("dashboard")}
-        />
-        <NavItem
-          label="Live map"
-          icon={<LuMap />}
-          active={activeId === "live-map"}
-          badge={2}
-          badgeVariant="red"
-          onClick={() => onNavigate("live-map")}
-        />
+        {canAccessShellNav(role, "dashboard") && (
+          <NavItem
+            label="Dashboard"
+            icon={<LuLayoutDashboard />}
+            active={activeId === "dashboard"}
+            onClick={() => onNavigate("dashboard")}
+          />
+        )}
+        {canAccessShellNav(role, "live-map") && (
+          <NavItem
+            label="Live map"
+            icon={<LuMap />}
+            active={activeId === "live-map"}
+            badge={2}
+            badgeVariant="red"
+            onClick={() => onNavigate("live-map")}
+          />
+        )}
 
-        <SectionTitle>Data</SectionTitle>
-        <NavItem
-          label="Datasets"
-          icon={<LuDatabase />}
-          active={activeId === "datasets"}
-          onClick={() => onNavigate("datasets")}
-        />
-        <NavItem
-          label="Exports"
-          icon={<LuDownload />}
-          active={activeId === "exports"}
-          badge="New"
-          badgeVariant="blue"
-          onClick={() => onNavigate("exports")}
-        />
+        {(canAccessShellNav(role, "datasets") || canAccessShellNav(role, "exports")) && (
+          <SectionTitle>Data</SectionTitle>
+        )}
+        {canAccessShellNav(role, "datasets") && (
+          <NavItem
+            label="Datasets"
+            icon={<LuDatabase />}
+            active={activeId === "datasets"}
+            onClick={() => onNavigate("datasets")}
+          />
+        )}
+        {canAccessShellNav(role, "exports") && (
+          <NavItem
+            label="Exports"
+            icon={<LuDownload />}
+            active={activeId === "exports"}
+            badge="New"
+            badgeVariant="blue"
+            onClick={() => onNavigate("exports")}
+          />
+        )}
 
-        <SectionTitle>Governance</SectionTitle>
-        <NavItem
-          label="Audit log"
-          icon={<LuClipboardCheck />}
-          active={activeId === "audit"}
-          onClick={() => onNavigate("audit")}
-        />
-        <NavItem
-          label="Settings"
-          icon={<LuSettings2 />}
-          active={activeId === "settings"}
-          onClick={() => onNavigate("settings")}
-        />
+        {(canAccessShellNav(role, "audit") || canAccessShellNav(role, "settings")) && (
+          <SectionTitle>Governance</SectionTitle>
+        )}
+        {canAccessShellNav(role, "audit") && (
+          <NavItem
+            label="Audit log"
+            icon={<LuClipboardCheck />}
+            active={activeId === "audit"}
+            onClick={() => onNavigate("audit")}
+          />
+        )}
+        {canAccessShellNav(role, "settings") && (
+          <NavItem
+            label="Settings"
+            icon={<LuSettings2 />}
+            active={activeId === "settings"}
+            onClick={() => onNavigate("settings")}
+          />
+        )}
       </nav>
 
       {user?.is_staff && (

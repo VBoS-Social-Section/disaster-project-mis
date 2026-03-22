@@ -23,6 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField()
     avatar = serializers.ImageField(read_only=True)
     otp_required_for_all_logins = serializers.SerializerMethodField()
+    role = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -38,6 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
             "mfa_enabled",
             "mfa_method",
             "otp_required_for_all_logins",
+            "role",
             "groups",
             "permissions",
         )
@@ -50,6 +52,23 @@ class UserSerializer(serializers.ModelSerializer):
     def get_otp_required_for_all_logins(self, obj):
         smtp = SMTPSettings.get_solo()
         return getattr(smtp, "otp_required_for_all_logins", True)
+
+    def get_role(self, obj):
+        """
+        Canonical frontend role.
+        Priority: staff/superuser -> admin; then group name mapping.
+        """
+        if obj.is_superuser or obj.is_staff:
+            return "admin"
+
+        group_names = {g.name.strip().lower() for g in obj.groups.all()}
+        if any(name in group_names for name in {"field_officer", "field officer", "field-officer"}):
+            return "field_officer"
+        if any(name in group_names for name in {"analyst", "data_analyst", "data analyst"}):
+            return "analyst"
+        if any(name in group_names for name in {"read_only", "readonly", "read only", "viewer"}):
+            return "read_only"
+        return "analyst"
 
 
 class CreateUserSerializer(serializers.ModelSerializer):

@@ -28,9 +28,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["DRMISLogo.svg", "favicon.ico"],
       manifest: {
-        name: "Disaster Risk Management Information system",
+        name: "Disaster Risk Management Information System",
         short_name: "DRMIS",
-        description: "Disaster Risk Management Information system",
+        description: "Disaster Risk Management Information System",
         theme_color: "#2563EB",
         background_color: "#ffffff",
         display: "standalone",

@@ -18,15 +18,62 @@ import { useLayerStore } from "@/store/layer-store";
 import { useUiStore } from "@/store/ui-store";
 import { useViewStore } from "@/store/view-store";
 import { useScenario } from "@/hooks/useScenario";
-
-/** Shorter labels for tab buttons */
-const VIEW_TYPE_LABELS: Record<DatasetType, string> = {
-  baseline: "Baseline",
-  estimated_damage: "Damage",
-  aid_resources_needed: "Resources",
-  estimate_financial_damage: "Financial",
-};
+import { cn } from "@/lib/utils";
+import {
+  LuDatabase,
+  LuTriangleAlert,
+  LuPackage,
+  LuBanknote,
+} from "react-icons/lu";
 import type { DatasetType } from "@/types/api";
+
+interface ViewTypeConfig {
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  activeTabClass: string;
+  activeIconClass: string;
+  idleIconClass: string;
+}
+
+const VIEW_TYPE_CONFIG: Record<DatasetType, ViewTypeConfig> = {
+  baseline: {
+    label: "Baseline",
+    description: "Pre-disaster reference data",
+    icon: LuDatabase,
+    activeTabClass:
+      "data-[state=active]:bg-blue-500/10 data-[state=active]:text-blue-700 data-[state=active]:border-blue-400/40 dark:data-[state=active]:text-blue-400 dark:data-[state=active]:border-blue-500/40",
+    activeIconClass: "text-blue-600 dark:text-blue-400",
+    idleIconClass: "text-muted-foreground/50",
+  },
+  estimated_damage: {
+    label: "Damage",
+    description: "Estimated damage from hazard event",
+    icon: LuTriangleAlert,
+    activeTabClass:
+      "data-[state=active]:bg-red-500/10 data-[state=active]:text-red-700 data-[state=active]:border-red-400/40 dark:data-[state=active]:text-red-400 dark:data-[state=active]:border-red-500/40",
+    activeIconClass: "text-red-600 dark:text-red-400",
+    idleIconClass: "text-muted-foreground/50",
+  },
+  aid_resources_needed: {
+    label: "Resources",
+    description: "Aid and resources required",
+    icon: LuPackage,
+    activeTabClass:
+      "data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-700 data-[state=active]:border-amber-400/40 dark:data-[state=active]:text-amber-400 dark:data-[state=active]:border-amber-500/40",
+    activeIconClass: "text-amber-600 dark:text-amber-400",
+    idleIconClass: "text-muted-foreground/50",
+  },
+  estimate_financial_damage: {
+    label: "Financial",
+    description: "Financial loss estimate",
+    icon: LuBanknote,
+    activeTabClass:
+      "data-[state=active]:bg-green-500/10 data-[state=active]:text-green-700 data-[state=active]:border-green-400/40 dark:data-[state=active]:text-green-400 dark:data-[state=active]:border-green-500/40",
+    activeIconClass: "text-green-600 dark:text-green-400",
+    idleIconClass: "text-muted-foreground/50",
+  },
+};
 
 const VIEW_TYPE_ORDER: DatasetType[] = [
   "baseline",
@@ -34,6 +81,7 @@ const VIEW_TYPE_ORDER: DatasetType[] = [
   "aid_resources_needed",
   "estimate_financial_damage",
 ];
+
 
 function clusterMatches(datasetCluster: string | null | undefined, selected: string): boolean {
   if (!selected) return true;
@@ -141,6 +189,8 @@ export function TabularDatasetSelect() {
     if (v) startTransition(() => switchLayer(v));
   };
 
+  const activeDescription = currentType ? VIEW_TYPE_CONFIG[currentType].description : null;
+
   return (
     <div className="w-full space-y-3">
       <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -151,17 +201,39 @@ export function TabularDatasetSelect() {
         onValueChange={handleTypeChange}
         className="w-full"
       >
-        <TabsList className="h-auto w-full flex-wrap bg-muted/50 p-1">
-          {typesWithData.map((type) => (
-            <TabsTrigger
-              key={type}
-              value={type}
-              className="flex-1 text-xs"
-            >
-              {VIEW_TYPE_LABELS[type]}
-            </TabsTrigger>
-          ))}
+        <TabsList className="grid !h-auto w-full gap-0.5 rounded-lg border border-border/50 bg-muted/40 p-1 group-data-[orientation=horizontal]/tabs:!h-auto"
+          style={{ gridTemplateColumns: `repeat(${typesWithData.length}, minmax(0, 1fr))` }}
+        >
+          {typesWithData.map((type) => {
+            const cfg = VIEW_TYPE_CONFIG[type];
+            const Icon = cfg.icon;
+            const isActive = currentType === type;
+            return (
+              <TabsTrigger
+                key={type}
+                value={type}
+                className={cn(
+                  "flex !h-auto min-h-12 flex-col items-center gap-1 rounded-md border border-transparent px-1 py-2 text-xs font-medium leading-tight transition-all",
+                  cfg.activeTabClass,
+                )}
+              >
+                <Icon
+                  className={cn(
+                    "size-4 shrink-0 transition-colors",
+                    isActive ? cfg.activeIconClass : cfg.idleIconClass,
+                  )}
+                />
+                {cfg.label}
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
+
+        {activeDescription && currentType !== "baseline" && (
+          <p className="mt-1.5 text-[11px] text-muted-foreground leading-snug px-0.5">
+            {activeDescription}
+          </p>
+        )}
         {datasetsInType.length > 1 && (
           <div className="mt-3 space-y-2">
             <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -190,6 +262,7 @@ export function TabularDatasetSelect() {
             href={`/admin/datasets/tabulardataset/${currentDataset.id}/change/`}
             target="_blank"
             rel="noopener noreferrer"
+            className="mt-2 inline-flex"
             style={{
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: "10px",

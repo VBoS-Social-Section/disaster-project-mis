@@ -12,15 +12,51 @@ import { CycloneIntensityCard } from "@/components/RightSidebar/CycloneIntensity
 import { FeatureInsights } from "./FeatureInsights";
 import { cn } from "@/lib/utils";
 
-function EmptyState() {
+function EmptyState({ isClimate }: { isClimate: boolean }) {
+  if (isClimate) {
+    return (
+      <div className="mt-6 flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 p-8 text-center">
+        <LuLayers className="mb-3 size-8 text-muted-foreground/60" />
+        <p className="mb-1 text-sm font-semibold text-foreground">
+          Select a climate layer
+        </p>
+        <p className="max-w-[220px] text-xs leading-relaxed text-muted-foreground">
+          Choose a climate module and year to load map layers, trends, and analysis.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="mt-6 flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 p-8 text-center">
-      <LuLayers className="mb-3 size-8 text-muted-foreground/60" />
-      <p className="mb-1 text-sm font-semibold text-foreground">
-        Select a layer
-      </p>
-      <p className="max-w-[200px] text-xs leading-relaxed text-muted-foreground">
-        Enable a data layer from the left panel to see charts, legend, and analysis here.
+    <div className="mt-4 rounded-xl border border-border bg-muted/20 p-4">
+      <div className="mb-3 flex items-start gap-2">
+        <LuLayers className="mt-0.5 size-4 text-muted-foreground" />
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            Start with these 3 steps
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Build your map workflow in order to view analysis.
+          </p>
+        </div>
+      </div>
+      <ol className="space-y-2 text-xs">
+        <li className="rounded-md border border-border/70 bg-card/60 px-3 py-2 text-foreground">
+          <span className="mr-2 font-semibold text-muted-foreground">1.</span>
+          Pick a cluster in the left panel.
+        </li>
+        <li className="rounded-md border border-border/70 bg-card/60 px-3 py-2 text-foreground">
+          <span className="mr-2 font-semibold text-muted-foreground">2.</span>
+          Choose a data view: Baseline, Damage, Resources, or Financial.
+        </li>
+        <li className="rounded-md border border-border/70 bg-card/60 px-3 py-2 text-foreground">
+          <span className="mr-2 font-semibold text-muted-foreground">3.</span>
+          Toggle a layer on in the left panel to unlock charts and insights here.
+        </li>
+      </ol>
+      <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+        Once a layer is active, this panel shows key metrics, distribution charts, and contextual
+        analysis.
       </p>
     </div>
   );
@@ -33,7 +69,7 @@ export function ContextPanelContent() {
   const rightSidebarExpanded = useUiStore((s) => s.rightSidebarExpanded);
 
   if (context === "empty") {
-    return <EmptyState />;
+    return <EmptyState isClimate={scenario.id === "climate"} />;
   }
 
   if (context === "feature") {
@@ -86,5 +122,5 @@ export function ContextPanelContent() {
     );
   }
 
-  return <EmptyState />;
+  return <EmptyState isClimate={scenario.id === "climate"} />;
 }

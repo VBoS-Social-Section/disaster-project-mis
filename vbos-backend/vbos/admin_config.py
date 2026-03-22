@@ -42,6 +42,11 @@ def get_navigation(request) -> list[dict[str, Any]]:
             "collapsible": True,
             "items": [
                 {
+                    "title": "Live Alerts",
+                    "link": "/admin/alerts/alert/",
+                    "icon": "notifications_active",
+                },
+                {
                     "title": "Incidents",
                     "link": "/admin/area_submissions/areadatasubmission/?status__exact=approved",
                     "icon": "report",

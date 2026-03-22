@@ -22,6 +22,7 @@ import qrcode.image.svg
 import io
 
 from .models import User, MFA_EMAIL, MFA_TOTP, SMTPSettings
+from .serializers import UserSerializer
 
 TEMP_TOKEN_MAX_AGE = 300  # 5 minutes
 OTP_CACHE_PREFIX = "mfa_otp:"
@@ -374,3 +375,10 @@ def disable_2fa(request):
         "mfa_enabled": False,
         "mfa_method": None,
     })
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def auth_me(request):
+    """Return authenticated user with canonical role and permissions."""
+    return Response(UserSerializer(request.user).data)

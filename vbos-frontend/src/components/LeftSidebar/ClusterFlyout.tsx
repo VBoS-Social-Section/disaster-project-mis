@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useClusterDatasets } from "@/hooks/useClusters";
 import { DATASET_TYPES } from "@/utils/datasetTypes";
 import type { DatasetType } from "@/types/api";
+import { LuSearch } from "react-icons/lu";
 
 type ClusterFlyoutProps = {
   clusterName: string;
@@ -24,11 +25,43 @@ type ClusterFlyoutProps = {
 
 export function ClusterFlyout({ clusterName, onExpand }: ClusterFlyoutProps) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const { data: clusterDatasets, isPending, error } = useClusterDatasets(
     clusterName,
     { enabled: open },
   );
   const ClusterIcon = getClusterIcon(clusterName);
+  const searchLower = search.trim().toLowerCase();
+
+  const filteredGroups = useMemo(() => {
+    if (!clusterDatasets) return [];
+    if (!searchLower) return clusterDatasets;
+    return clusterDatasets
+      .map((group) => ({
+        ...group,
+        datasets: group.datasets.filter((d) => d.name.toLowerCase().includes(searchLower)),
+      }))
+      .filter((group) => group.datasets.length > 0);
+  }, [clusterDatasets, searchLower]);
+
+  const highlightText = (text: string) => {
+    if (!searchLower) return text;
+    const lower = text.toLowerCase();
+    const idx = lower.indexOf(searchLower);
+    if (idx === -1) return text;
+    const before = text.slice(0, idx);
+    const match = text.slice(idx, idx + searchLower.length);
+    const after = text.slice(idx + searchLower.length);
+    return (
+      <>
+        {before}
+        <mark className="rounded bg-yellow-200/70 px-0.5 text-foreground dark:bg-yellow-500/30">
+          {match}
+        </mark>
+        {after}
+      </>
+    );
+  };
 
   return (
     <HoverCard
@@ -53,8 +86,19 @@ export function ClusterFlyout({ clusterName, onExpand }: ClusterFlyoutProps) {
         sideOffset={8}
         className="w-72 max-h-[min(70vh,420px)] overflow-y-auto border border-border bg-popover p-0"
       >
-        <div className="sticky top-0 z-10 border-b border-border bg-popover px-3 py-2">
+        <div className="sticky top-0 z-10 space-y-2 border-b border-border bg-popover px-3 py-2">
           <h3 className="text-sm font-semibold">{clusterName}</h3>
+          <div className="relative">
+            <LuSearch className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search datasets..."
+              className="h-8 w-full rounded-md border border-border bg-background pl-8 pr-2 text-xs outline-none focus:ring-2 focus:ring-blue-500/40"
+              aria-label="Search datasets in cluster"
+            />
+          </div>
         </div>
         <div className="flex flex-col gap-1 p-2">
           {error ? (
@@ -68,8 +112,13 @@ export function ClusterFlyout({ clusterName, onExpand }: ClusterFlyoutProps) {
               <Skeleton className="h-4 w-5/6" />
             </div>
           ) : (
+            filteredGroups.length === 0 ? (
+              <div className="px-2 py-3 text-xs text-muted-foreground">
+                No datasets matching "{search}".
+              </div>
+            ) : (
             <Accordion type="multiple" className="space-y-0.5">
-              {clusterDatasets?.map((typeGroup) => (
+              {filteredGroups.map((typeGroup) => (
                 <AccordionItem
                   key={typeGroup.type}
                   value={typeGroup.type}
@@ -81,18 +130,20 @@ export function ClusterFlyout({ clusterName, onExpand }: ClusterFlyoutProps) {
                   <AccordionContent>
                     <div className="flex flex-col gap-1 px-3 pb-2 pt-0">
                       {typeGroup.datasets.map((dataset) => (
-                        <LayerSwitch
-                          key={`${dataset.dataType}-${dataset.id}`}
-                          dataType={dataset.dataType}
-                          id={dataset.id}
-                          title={dataset.name}
-                        />
+                        <div key={`${dataset.dataType}-${dataset.id}`} className="flex items-center">
+                          <LayerSwitch
+                            dataType={dataset.dataType}
+                            id={dataset.id}
+                            title={highlightText(dataset.name)}
+                          />
+                        </div>
                       ))}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>
+            )
           )}
         </div>
       </HoverCardContent>
