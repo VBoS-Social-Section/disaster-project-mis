@@ -225,7 +225,7 @@ function CycloneBannerInline() {
 /* Main component                                                      */
 /* ------------------------------------------------------------------ */
 
-export function FloatingLayerControl() {
+export function FloatingLayerControl({ chrome = false }: { chrome?: boolean } = {}) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -291,20 +291,24 @@ export function FloatingLayerControl() {
     <div
       ref={rootRef}
       id="drmis-mode-panel"
-      className="absolute left-4 top-4 z-[1040]"
-      style={{ width: PANEL_WIDTH }}
+      className={cn(
+        chrome ? "relative z-[1] w-auto min-w-0 max-w-[min(15rem,calc(100vw-10rem))]" : "absolute left-4 top-4 z-[1040]",
+      )}
+      style={chrome ? undefined : { width: PANEL_WIDTH }}
       aria-label="Layers and datasets for the current view mode"
     >
       {/* ---- Trigger pill ---- */}
       <button
         type="button"
+        data-drmis-layer-trigger
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "flex w-full items-center gap-2 border border-border bg-card px-3.5 py-2 shadow-md",
-          "text-sm font-medium transition-colors hover:bg-muted/50",
-          open
-            ? "rounded-t-xl rounded-b-none border-b-0"
-            : "rounded-xl",
+          "flex items-center gap-2 px-3 text-sm font-medium transition-colors hover:bg-muted/50",
+          chrome
+            ? "drmis-touch-target h-11 min-h-11 w-full min-w-11 justify-start rounded-none border-0 bg-transparent py-0 shadow-none"
+            : "w-full border border-border bg-card px-3.5 py-2 shadow-md",
+          !chrome && open ? "rounded-t-xl rounded-b-none border-b-0" : !chrome && "rounded-xl",
+          chrome && open && "bg-muted/25",
         )}
         aria-expanded={open}
       >
@@ -325,9 +329,12 @@ export function FloatingLayerControl() {
       {open && (
         <div
           className={cn(
-            "w-full rounded-b-xl border border-t-0 border-border bg-card shadow-xl",
-            "animate-in fade-in-0 slide-in-from-top-1 duration-150",
+            "w-full border border-border bg-card",
+            chrome
+              ? "animate-in fade-in-0 slide-in-from-top-1 absolute left-0 top-[calc(100%+6px)] z-[1060] max-h-[min(500px,70vh)] overflow-hidden rounded-[var(--drmis-radius-card)] shadow-[var(--drmis-shadow-md)] duration-200"
+              : "animate-in fade-in-0 slide-in-from-top-1 rounded-b-xl border-t-0 shadow-xl duration-150",
           )}
+          style={{ width: chrome ? PANEL_WIDTH : undefined }}
         >
           <div
             key={scenarioId}

@@ -40,7 +40,7 @@ export function MapControlsCluster({ map }: MapControlsClusterProps) {
   };
 
   return (
-    <div className="absolute right-3 top-3 z-[1000] flex flex-col gap-0.5 overflow-hidden rounded-lg border border-border p-1 shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface max-md:right-3 max-md:top-3 max-md:bottom-auto md:right-6 md:top-6">
+    <div className="absolute right-3 top-[4.5rem] z-[1000] flex flex-col gap-0.5 overflow-hidden rounded-[var(--drmis-radius-card)] border border-border p-1 shadow-[var(--drmis-shadow-sm)] glass-surface max-md:right-3 max-md:top-[4.5rem] md:right-6 md:top-[5.25rem]">
       <DropdownMenu>
         <Tooltip content="Basemap (Light, Dark, Satellite…)" positioning={{ placement: "left" }}>
           <DropdownMenuTrigger asChild>

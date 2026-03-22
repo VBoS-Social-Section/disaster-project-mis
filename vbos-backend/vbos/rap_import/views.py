@@ -46,7 +46,14 @@ class RAPUploadView(TemplateView):
         if not files:
             errors.append("At least one CSV file is required")
         if errors:
-            return JsonResponse({"ok": False, "errors": errors}, status=400)
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "detail": errors[0] if errors else "Validation failed",
+                    "errors": {"non_field_errors": errors},
+                },
+                status=400,
+            )
 
         year_int = int(event_year)
 
@@ -61,14 +68,16 @@ class RAPUploadView(TemplateView):
             )
             if not created:
                 if batch.cyclone_name != cyclone_name or batch.event_year != year_int:
+                    msg = (
+                        "A batch with this batch_ref already exists with "
+                        "different cyclone_name or event_year. Use matching "
+                        "metadata or choose another batch_ref."
+                    )
                     return JsonResponse(
                         {
                             "ok": False,
-                            "errors": [
-                                "A batch with this batch_ref already exists with "
-                                "different cyclone_name or event_year. Use matching "
-                                "metadata or choose another batch_ref."
-                            ],
+                            "detail": msg,
+                            "errors": {"non_field_errors": [msg]},
                         },
                         status=409,
                     )
