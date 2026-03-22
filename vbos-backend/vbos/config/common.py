@@ -100,9 +100,13 @@ class Common(Configuration):
         }
     }
 
-    # General
-    # Shown in admin sidebar footer; keep in sync with frontend `src/config/version.ts`
-    DRMIS_VERSION_DISPLAY = "v1.0.0 · Build 2026.03.21"
+    # General — release metadata (keep in sync with frontend `src/config/version.ts`)
+    DRMIS_API_VERSION = os.getenv("DRMIS_API_VERSION", "1.0.0")
+    DRMIS_BUILD_ID = os.getenv("DRMIS_BUILD", "2026.03.21")
+    DRMIS_VERSION_DISPLAY = os.getenv(
+        "DRMIS_VERSION_DISPLAY",
+        f"v{DRMIS_API_VERSION} · Build {DRMIS_BUILD_ID}",
+    )
     APPEND_SLASH = False
     # Allow bulk delete and changelist edits for many items (TabularItems, VectorItems)
     DATA_UPLOAD_MAX_NUMBER_FIELDS = int(os.getenv("DATA_UPLOAD_MAX_NUMBER_FIELDS", 200000))
@@ -249,8 +253,9 @@ class Common(Configuration):
 
     # Django Rest Framework
     REST_FRAMEWORK = {
-        "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+        "DEFAULT_PAGINATION_CLASS": "vbos.pagination.VbosPageNumberPagination",
         "PAGE_SIZE": int(os.getenv("DJANGO_PAGINATION_LIMIT", 20)),
+        "EXCEPTION_HANDLER": "vbos.drf_exception_handler.vbos_exception_handler",
         "DATETIME_FORMAT": "%Y-%m-%dT%H:%M:%S%z",
         "DEFAULT_RENDERER_CLASSES": (
             "rest_framework.renderers.JSONRenderer",
@@ -281,10 +286,7 @@ class Common(Configuration):
         "SHOW_VIEW_ON_SITE": True,
         "THEME": "light",
         "ENVIRONMENT": "vbos.admin_env.environment_callback",
-        # GeoDjango map widget; full light theme loads after Unfold via admin/base_site.html extrastyle
-        "STYLES": [
-            lambda request: static("admin/css/gis_fix.css"),
-        ],
+        # GeoDjango map widget + Unfold spacing/typography tweaks
         "DASHBOARD_CALLBACK": "vbos.admin_dashboard.dashboard_callback",
         "COLORS": {
             "primary": {
@@ -327,13 +329,47 @@ class Common(Configuration):
             "show_all_applications": False,
             "navigation": "vbos.admin_config.get_navigation",
         },
+        "STYLES": [
+            lambda request: static("admin/css/gis_fix.css"),
+            lambda request: static("admin/css/drmis_unfold_overrides.css"),
+        ],
     }
 
+    # OpenAPI / Swagger — product-facing docs
+    _spectacular_description = """\
+**Disaster Risk Management Information System (DRMIS)** — Vanuatu NDMO.
+
+### Authentication
+- Obtain a token: `POST /api-token-auth/` with JSON `{"username":"…","password":"…"}`.
+- Send `Authorization: Token <your-token>` on API requests.
+- Some flows require email OTP or TOTP after password verification (`/api/v1/auth/…`).
+
+### Conventions
+- **Pagination** (list endpoints): `count`, `next`, `previous`, `results`. Use `?page=` and `?page_size=` where supported.
+- **Errors**: validation → `{"errors": {"field_name": ["message"]}}`; other 4xx/5xx → `{"detail": "message"}`.
+
+### Metadata
+- `GET /api/v1/meta/` — API name, version, build, doc links.
+- `GET /api/v1/health/` or `GET /health/` — liveness and dependency checks.
+"""
+
     SPECTACULAR_SETTINGS = {
-        "TITLE": "VBoS MIS API",
-        "DESCRIPTION": "VBoS Management Information System API. Built with Django.",
-        "VERSION": "1.0.0",
+        "TITLE": "DRMIS API",
+        "DESCRIPTION": _spectacular_description,
+        "VERSION": DRMIS_API_VERSION,
         "SERVE_INCLUDE_SCHEMA": False,
+        "CONTACT": {
+            "name": "NDMO / DRMIS operators",
+            "email": "info@developmentseed.org",
+        },
+        "LICENSE": {"name": "Proprietary"},
+        "TAGS": [
+            {"name": "metadata", "description": "API info, health, and discovery"},
+            {"name": "datasets", "description": "Clusters, rasters, vectors, tabular data, provinces"},
+            {"name": "auth", "description": "Tokens, 2FA, current user"},
+            {"name": "alerts", "description": "Live hazard feeds (USGS, VMGD, GDACS, DRMIS)"},
+            {"name": "maintenance", "description": "Tasks, backups, operator tools"},
+        ],
         "APPEND_COMPONENTS": {
             "securitySchemes": {
                 "TokenAuth": {
@@ -341,8 +377,8 @@ class Common(Configuration):
                     "in": "header",
                     "name": "Authorization",
                     "description": (
-                        "Token authentication. Obtain a token via POST /api-token-auth/ "
-                        "with username and password. Use: 'Token <your-token>'"
+                        "Obtain a token with `POST /api-token-auth/` (username + password). "
+                        "Header value: `Token <your-token>`"
                     ),
                 },
             },
@@ -351,5 +387,10 @@ class Common(Configuration):
         "SWAGGER_UI_SETTINGS": {
             "deepLinking": True,
             "persistAuthorization": True,
+            "displayRequestDuration": True,
+            "filter": True,
+            "tryItOutEnabled": True,
         },
+        "COMPONENT_SPLIT_REQUEST": True,
+        "SORT_OPERATIONS": True,
     }

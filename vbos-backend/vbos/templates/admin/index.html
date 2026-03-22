@@ -9,169 +9,147 @@
 
 {% block content %}
     {# items-start + no flex-grow: avoids a tall empty band below the last panel (Unfold main is a flex column) #}
-    <div class="flex flex-col lg:flex-row lg:gap-8 lg:items-start">
+    <div class="drmis-admin-dashboard flex flex-col lg:flex-row lg:gap-8 lg:items-start">
         <div class="w-full min-w-0 max-w-full">
 
-            {# ── Mode banner + switcher (unified card) ── #}
-            <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;overflow:hidden;margin-bottom:20px;">
+            {# Mode banner + switcher #}
+            <div class="drmis-dash-card drmis-dash-card--flush-bottom mb-5">
 
-                {# Banner row #}
                 {% if admin_mode == "climate" %}
-                    <div style="padding:10px 16px;border-left:3px solid #1D9E75;background:#EAF6EE;display:flex;align-items:center;justify-content:space-between;">
+                    <div class="drmis-dash-banner drmis-dash-banner--climate">
                         <div>
-                            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#085041;">{% trans "Climate Operator" %}</div>
-                            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#9AA5B8;margin-top:2px;">{% trans "Raster · PMTiles · Vector · Deployment controls" %}</div>
+                            <div class="drmis-dash-title">{% trans "Climate Operator" %}</div>
+                            <div class="drmis-dash-eyebrow">{% trans "Raster · PMTiles · Vector · Deployment controls" %}</div>
                         </div>
-                        <a href="{% url 'admin_climate_dashboard' %}" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#378ADD;text-decoration:none;white-space:nowrap;">{% trans "Climate dashboard →" %}</a>
+                        <a href="{% url 'admin_climate_dashboard' %}" class="drmis-dash-link">{% trans "Climate dashboard →" %}</a>
                     </div>
                 {% elif admin_mode == "compare" %}
-                    <div style="padding:10px 16px;border-left:3px solid #7F77DD;background:#EEEDFE;display:flex;align-items:center;justify-content:space-between;">
+                    <div class="drmis-dash-banner drmis-dash-banner--compare">
                         <div>
-                            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#3C3489;">{% trans "Compare Operator" %}</div>
-                            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#9AA5B8;margin-top:2px;">{% trans "RAP batch diffs · Provinces · Sectors · Intensity" %}</div>
+                            <div class="drmis-dash-title">{% trans "Compare Operator" %}</div>
+                            <div class="drmis-dash-eyebrow">{% trans "RAP batch diffs · Provinces · Sectors · Intensity" %}</div>
                         </div>
-                        <a href="{% url 'admin_compare_event' %}" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#378ADD;text-decoration:none;white-space:nowrap;">{% trans "Open compare →" %}</a>
+                        <a href="{% url 'admin_compare_event' %}" class="drmis-dash-link">{% trans "Open compare →" %}</a>
                     </div>
                 {% else %}
-                    <div style="padding:10px 16px;border-left:3px solid #FF4B2B;background:#FFF8F7;display:flex;align-items:center;justify-content:space-between;">
+                    <div class="drmis-dash-banner drmis-dash-banner--disaster">
                         <div>
-                            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#C03010;">{% trans "Operator Pipeline" %}</div>
-                            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#9AA5B8;margin-top:2px;">{% trans "RAP queue · Approvals · MFA · Backups" %}</div>
+                            <div class="drmis-dash-title">{% trans "Operator Pipeline" %}</div>
+                            <div class="drmis-dash-eyebrow">{% trans "RAP queue · Approvals · MFA · Backups" %}</div>
                         </div>
-                        <a href="{% url 'admin_rap_import_upload' %}" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#378ADD;text-decoration:none;white-space:nowrap;">{% trans "Upload RAP CSVs →" %}</a>
+                        <a href="{% url 'admin_rap_import_upload' %}" class="drmis-dash-link">{% trans "Upload RAP CSVs →" %}</a>
                     </div>
                 {% endif %}
 
-                {# Mode switcher row — separated by a thin rule #}
-                <div style="padding:8px 16px;border-top:1px solid #F1F3F7;display:flex;align-items:center;gap:10px;">
-                    <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#B0BAD0;white-space:nowrap;">{% trans "Switch view" %}</span>
-                    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+                <div class="drmis-dash-switcher">
+                    <span class="drmis-dash-switcher-label">{% trans "Switch view" %}</span>
+                    <div class="drmis-dash-mode-pills">
                         <a href="?mode=disaster"
-                           {% if admin_mode == "disaster" %}aria-current="page"{% endif %}
-                           style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;text-decoration:none;padding:4px 12px;border-radius:999px;border:1px solid {% if admin_mode == "disaster" %}#FF4B2B{% else %}#E2E6EE{% endif %};background:{% if admin_mode == "disaster" %}#FFF1EE{% else %}transparent{% endif %};color:{% if admin_mode == "disaster" %}#C03010{% else %}#9AA5B8{% endif %};">
-                            {% trans "Disaster" %}
-                        </a>
+                           class="drmis-dash-mode-pill drmis-dash-mode-pill--disaster{% if admin_mode == 'disaster' %} drmis-dash-mode-pill--active{% endif %}"
+                           {% if admin_mode == "disaster" %}aria-current="page"{% endif %}>{% trans "Disaster" %}</a>
                         <a href="?mode=climate"
-                           {% if admin_mode == "climate" %}aria-current="page"{% endif %}
-                           style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;text-decoration:none;padding:4px 12px;border-radius:999px;border:1px solid {% if admin_mode == "climate" %}#1D9E75{% else %}#E2E6EE{% endif %};background:{% if admin_mode == "climate" %}#EAF6EE{% else %}transparent{% endif %};color:{% if admin_mode == "climate" %}#085041{% else %}#9AA5B8{% endif %};">
-                            {% trans "Climate" %}
-                        </a>
+                           class="drmis-dash-mode-pill drmis-dash-mode-pill--climate{% if admin_mode == 'climate' %} drmis-dash-mode-pill--active{% endif %}"
+                           {% if admin_mode == "climate" %}aria-current="page"{% endif %}>{% trans "Climate" %}</a>
                         <a href="?mode=compare"
-                           {% if admin_mode == "compare" %}aria-current="page"{% endif %}
-                           style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;text-decoration:none;padding:4px 12px;border-radius:999px;border:1px solid {% if admin_mode == "compare" %}#7F77DD{% else %}#E2E6EE{% endif %};background:{% if admin_mode == "compare" %}#EEEDFE{% else %}transparent{% endif %};color:{% if admin_mode == "compare" %}#3C3489{% else %}#9AA5B8{% endif %};">
-                            {% trans "Compare" %}
-                        </a>
+                           class="drmis-dash-mode-pill drmis-dash-mode-pill--compare{% if admin_mode == 'compare' %} drmis-dash-mode-pill--active{% endif %}"
+                           {% if admin_mode == "compare" %}aria-current="page"{% endif %}>{% trans "Compare" %}</a>
                     </div>
                 </div>
             </div>
 
-            {# ── KPI row (operator pipeline) ── #}
-            {# last_backup_created_at is None when no backup has ever run (amber prompt, not red alert) #}
-            <div class="mb-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
-                    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#FF4B2B;"></div>
-                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "RAP Batches Pending" %}</div>
+            {# KPI row #}
+            <div class="drmis-dash-kpi-grid mb-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div class="drmis-dash-kpi">
+                    <div class="drmis-dash-kpi-label">{% trans "RAP Batches Pending" %}</div>
                     <div class="drmis-admin-kpi-value">{{ kpi_rap_pending }}</div>
                 </div>
-                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
-                    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#F5A623;"></div>
-                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Datasets Awaiting Approval" %}</div>
+                <div class="drmis-dash-kpi drmis-dash-kpi--accent-amber">
+                    <div class="drmis-dash-kpi-label">{% trans "Datasets Awaiting Approval" %}</div>
                     <div class="drmis-admin-kpi-value">{{ kpi_approvals_pending }}</div>
                 </div>
-                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
-                    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#FF4B2B;"></div>
-                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Users Without MFA" %}</div>
+                <div class="drmis-dash-kpi">
+                    <div class="drmis-dash-kpi-label">{% trans "Users Without MFA" %}</div>
                     <div class="drmis-admin-kpi-value">{{ kpi_mfa_missing }}</div>
                 </div>
-                {# Three states: never backed up (amber), stale >24h (red), recent (green) #}
                 {% if not last_backup_created_at %}
-                    <div style="background:#FFFDF5;border:1px solid #F5C875;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
-                        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#F5A623;"></div>
-                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Last Backup" %}</div>
+                    <div class="drmis-dash-kpi drmis-dash-kpi--warn">
+                        <div class="drmis-dash-kpi-label">{% trans "Last Backup" %}</div>
                         <div class="drmis-admin-kpi-value" style="color:#633806;font-size:16px;">{% trans "None yet" %}</div>
                     </div>
                 {% elif kpi_last_backup_stale %}
-                    <div style="background:#FFFBFA;border:1px solid #F7C1C1;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
-                        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#FF4B2B;"></div>
-                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Last Backup" %}</div>
+                    <div class="drmis-dash-kpi drmis-dash-kpi--alert">
+                        <div class="drmis-dash-kpi-label">{% trans "Last Backup" %}</div>
                         <div class="drmis-admin-kpi-value drmis-admin-kpi-value--alert">{{ kpi_last_backup_age_label }}</div>
                     </div>
                 {% else %}
-                    <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;">
-                        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#1D9E75;"></div>
-                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Last Backup" %}</div>
+                    <div class="drmis-dash-kpi drmis-dash-kpi--accent-green">
+                        <div class="drmis-dash-kpi-label">{% trans "Last Backup" %}</div>
                         <div class="drmis-admin-kpi-value">{{ kpi_last_backup_age_label }}</div>
                     </div>
                 {% endif %}
             </div>
 
-            {# ── Lower panels: consistent vertical rhythm via space-y-4 ── #}
             <div class="space-y-4">
 
-            {# ── RAP queue + pending approvals ── #}
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;overflow:hidden;">
-                    <div style="padding:10px 14px;border-bottom:1px solid #F1F3F7;display:flex;align-items:center;justify-content:space-between;">
-                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#9AA5B8;">{% trans "RAP Import Queue" %}</span>
-                        <a href="{% url 'admin_rap_import_upload' %}" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#378ADD;letter-spacing:.04em;text-decoration:none;">{% trans "Upload new batch →" %}</a>
+                <div class="drmis-dash-card drmis-dash-card--flush-bottom">
+                    <div class="drmis-dash-card__header">
+                        <span class="drmis-dash-section-label">{% trans "RAP Import Queue" %}</span>
+                        <a href="{% url 'admin_rap_import_upload' %}" class="drmis-dash-link">{% trans "Upload new batch →" %}</a>
                     </div>
-                    <div style="padding:0 14px 14px;">
+                    <div class="drmis-dash-card__body--table">
                         {% if rap_batches_recent and rap_batches_recent|length > 0 %}
-                            <table style="width:100%;border-collapse:collapse;">
+                            <table class="drmis-dash-table">
                                 <thead>
                                     <tr>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Batch" %}</th>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Cyclone" %}</th>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Max Cat" %}</th>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Status" %}</th>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:right;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Files" %}</th>
+                                        <th>{% trans "Batch" %}</th>
+                                        <th>{% trans "Cyclone" %}</th>
+                                        <th>{% trans "Max Cat" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th class="drmis-dash-table__num">{% trans "Files" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for batch in rap_batches_recent %}
                                         <tr>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{{ batch.batch_ref }}</td>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{{ batch.cyclone_name }}</td>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;">{{ batch.max_intensity_badge }}</td>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;">{{ batch.status_badge }}</td>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA5B8;">{{ batch.file_count }}</td>
+                                            <td class="drmis-dash-table__mono">{{ batch.batch_ref }}</td>
+                                            <td class="drmis-dash-table__mono">{{ batch.cyclone_name }}</td>
+                                            <td>{{ batch.max_intensity_badge }}</td>
+                                            <td>{{ batch.status_badge }}</td>
+                                            <td class="drmis-dash-table__num drmis-dash-table__muted">{{ batch.file_count }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         {% else %}
-                            <div style="padding:14px 0;color:#9AA5B8;font-family:'IBM Plex Mono',monospace;font-size:11px;">
-                                {% trans "No batches yet. Upload RAP CSVs to begin." %}
-                            </div>
+                            <div class="drmis-dash-empty">{% trans "No batches yet. Upload RAP CSVs to begin." %}</div>
                         {% endif %}
                     </div>
                 </div>
 
-                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;overflow:hidden;">
-                    <div style="padding:10px 14px;border-bottom:1px solid #F1F3F7;display:flex;align-items:center;justify-content:space-between;">
-                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#9AA5B8;">{% trans "Pending Approvals" %}</span>
-                        <a href="/admin/area_submissions/areadatasubmission/?status=submitted" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#378ADD;letter-spacing:.04em;text-decoration:none;">{% trans "Review all →" %}</a>
+                <div class="drmis-dash-card drmis-dash-card--flush-bottom">
+                    <div class="drmis-dash-card__header">
+                        <span class="drmis-dash-section-label">{% trans "Pending Approvals" %}</span>
+                        <a href="/admin/area_submissions/areadatasubmission/?status=submitted" class="drmis-dash-link">{% trans "Review all →" %}</a>
                     </div>
-                    <div style="padding:0 14px 14px;">
+                    <div class="drmis-dash-card__body--table">
                         {% if approvals_recent and approvals_recent|length > 0 %}
-                            <table style="width:100%;border-collapse:collapse;">
+                            <table class="drmis-dash-table">
                                 <thead>
                                     <tr>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Dataset" %}</th>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Type" %}</th>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Ministry" %}</th>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:right;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Submitted" %}</th>
+                                        <th>{% trans "Dataset" %}</th>
+                                        <th>{% trans "Type" %}</th>
+                                        <th>{% trans "Ministry" %}</th>
+                                        <th class="drmis-dash-table__num">{% trans "Submitted" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for item in approvals_recent %}
                                         <tr>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{{ item.dataset_name }}</td>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;">
-                                                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;background:#F8F9FB;color:#4A5568;border:1px solid #E2E6EE;display:inline-block;">{{ item.type }}</span>
-                                            </td>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA5B8;">{{ item.ministry }}</td>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA5B8;">
+                                            <td class="drmis-dash-table__mono">{{ item.dataset_name }}</td>
+                                            <td><span class="drmis-dash-pill-tag">{{ item.type }}</span></td>
+                                            <td class="drmis-dash-table__muted">{{ item.ministry }}</td>
+                                            <td class="drmis-dash-table__num drmis-dash-table__muted">
                                                 {% if item.submitted_at %}{{ item.submitted_at|date:"d M Y" }}{% else %}—{% endif %}
                                             </td>
                                         </tr>
@@ -179,64 +157,53 @@
                                 </tbody>
                             </table>
                         {% else %}
-                            <div style="padding:14px 0;color:#9AA5B8;font-family:'IBM Plex Mono',monospace;font-size:11px;">
-                                {% trans "No items pending approval." %}
-                            </div>
+                            <div class="drmis-dash-empty">{% trans "No items pending approval." %}</div>
                         {% endif %}
                     </div>
                 </div>
             </div>
 
-            {# ── System status ── #}
-            <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;overflow:hidden;">
-                <div style="padding:10px 14px;border-bottom:1px solid #F1F3F7;display:flex;align-items:center;justify-content:space-between;">
-                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#9AA5B8;">{% trans "System Status" %}</span>
-                    <a href="/api/v1/health/" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#378ADD;letter-spacing:.04em;text-decoration:none;">{% trans "Full health check →" %}</a>
+            <div class="drmis-dash-card drmis-dash-card--flush-bottom">
+                <div class="drmis-dash-card__header">
+                    <span class="drmis-dash-section-label">{% trans "System Status" %}</span>
+                    <a href="/api/v1/health/" class="drmis-dash-link">{% trans "Full health check →" %}</a>
                 </div>
-                <div style="padding:14px;">
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="drmis-dash-card__body">
+                    <div class="drmis-dash-status-grid">
                         <div>
-                            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Celery workers" %}</div>
+                            <div class="drmis-dash-micro-label">{% trans "Celery workers" %}</div>
                             {% if system_status.celery_online %}
-                                <div style="display:inline-flex;align-items:center;gap:8px;">
-                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;background:#EAF6EE;color:#27500A;border:1px solid #9FE1CB;">Online</span>
-                                </div>
+                                <span class="drmis-dash-badge drmis-dash-badge--ok">Online</span>
                             {% else %}
-                                <div style="display:inline-flex;align-items:center;gap:8px;">
-                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;background:#FEECEA;color:#A32D2D;border:1px solid #F7C1C1;">Offline</span>
-                                </div>
+                                <span class="drmis-dash-badge drmis-dash-badge--bad">Offline</span>
                             {% endif %}
                         </div>
                         <div>
-                            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Redis" %}</div>
+                            <div class="drmis-dash-micro-label">{% trans "Redis" %}</div>
                             {% if system_status.redis_connected %}
-                                <div style="display:inline-flex;align-items:center;gap:8px;">
-                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;background:#EAF6EE;color:#27500A;border:1px solid #9FE1CB;">Connected</span>
-                                </div>
+                                <span class="drmis-dash-badge drmis-dash-badge--ok">Connected</span>
                             {% else %}
-                                <div style="display:inline-flex;align-items:center;gap:8px;">
-                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;background:#FEECEA;color:#A32D2D;border:1px solid #F7C1C1;">Disconnected</span>
-                                </div>
+                                <span class="drmis-dash-badge drmis-dash-badge--bad">Disconnected</span>
                             {% endif %}
                         </div>
                     </div>
-                    <div style="margin-top:14px;">
-                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;margin-bottom:6px;">{% trans "Last backup" %}</div>
-                        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#0D1018;line-height:1.5;">
+                    <div class="drmis-dash-note">
+                        <div class="drmis-dash-micro-label">{% trans "Last backup" %}</div>
+                        <div class="drmis-dash-note__line">
                             {% if system_status.last_backup_created_at %}
-                                <span style="color:#0D1018;">{{ system_status.last_backup_created_at|date:"d M Y H:i" }}</span>
-                                <span style="color:{% if system_status.last_backup_stale %}#A32D2D{% else %}#9AA5B8{% endif %};"> · {{ system_status.last_backup_age_label }}</span>
+                                <span>{{ system_status.last_backup_created_at|date:"d M Y H:i" }}</span>
+                                <span class="{% if system_status.last_backup_stale %}text-red-700{% else %}text-gray-500{% endif %}"> · {{ system_status.last_backup_age_label }}</span>
                                 {% if system_status.last_backup_status == "success" %}
-                                    <span style="color:#27500A;"> · {% trans "success" %}</span>
+                                    <span class="text-green-800"> · {% trans "success" %}</span>
                                 {% endif %}
                                 {% if system_status.last_backup_stale %}
-                                    <span style="margin-left:10px;background:#FEECEA;color:#A32D2D;border:1px solid #F7C1C1;border-radius:4px;padding:2px 8px;font-size:10px;display:inline-block;">{% trans "Stale" %}</span>
+                                    <span class="drmis-dash-badge drmis-dash-badge--bad" style="margin-left:10px;">{% trans "Stale" %}</span>
                                 {% endif %}
                             {% else %}
                                 <span style="color:#633806;">{% trans "No backups yet" %}</span>
-                                <span style="color:#9AA5B8;"> — {% trans "run your first backup to create a restore point." %}</span>
+                                <span class="text-gray-500"> — {% trans "run your first backup to create a restore point." %}</span>
                                 <div style="margin-top:8px;">
-                                    <a href="/admin/maintenance/" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#378ADD;text-decoration:none;font-weight:600;">{% trans "Backup & Restore" %} →</a>
+                                    <a href="/admin/maintenance/" class="drmis-dash-link" style="font-weight:600;">{% trans "Backup & Restore" %} →</a>
                                 </div>
                             {% endif %}
                         </div>
@@ -244,105 +211,97 @@
                 </div>
             </div>
 
-            {# ── Recent audit activity ── #}
-            <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;overflow:hidden;">
-                <div style="padding:10px 14px;border-bottom:1px solid #F1F3F7;display:flex;align-items:center;justify-content:space-between;">
-                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#9AA5B8;">{% trans "Recent Audit Activity" %}</span>
-                    <a href="/admin/core/auditlog/" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#378ADD;letter-spacing:.04em;text-decoration:none;">{% trans "Full audit log →" %}</a>
+            <div class="drmis-dash-card drmis-dash-card--flush-bottom">
+                <div class="drmis-dash-card__header">
+                    <span class="drmis-dash-section-label">{% trans "Recent Audit Activity" %}</span>
+                    <a href="/admin/core/auditlog/" class="drmis-dash-link">{% trans "Full audit log →" %}</a>
                 </div>
-                <div style="padding:14px;">
+                <div class="drmis-dash-card__body">
                     {% if audit_logging_active %}
                         {% if recent_audit and recent_audit|length > 0 %}
-                            <table style="width:100%;border-collapse:collapse;">
+                            <table class="drmis-dash-table">
                                 <thead>
                                     <tr>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Timestamp" %}</th>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "User" %}</th>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Action" %}</th>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Model" %}</th>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0;border-bottom:1px solid #F1F3F7;">{% trans "Object" %}</th>
+                                        <th>{% trans "Timestamp" %}</th>
+                                        <th>{% trans "User" %}</th>
+                                        <th>{% trans "Action" %}</th>
+                                        <th>{% trans "Model" %}</th>
+                                        <th>{% trans "Object" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for a in recent_audit %}
                                         <tr>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA5B8;">{{ a.timestamp|date:"d M Y H:i" }}</td>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{% if a.user %}{{ a.user }}{% else %}—{% endif %}</td>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{{ a.action|default:"—" }}</td>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;">{{ a.model|default:"—" }}</td>
-                                            <td style="padding:10px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA5B8;">{{ a.object|default:"—" }}</td>
+                                            <td class="drmis-dash-table__muted">{{ a.timestamp|date:"d M Y H:i" }}</td>
+                                            <td class="drmis-dash-table__mono">{% if a.user %}{{ a.user }}{% else %}—{% endif %}</td>
+                                            <td class="drmis-dash-table__mono">{{ a.action|default:"—" }}</td>
+                                            <td class="drmis-dash-table__mono">{{ a.model|default:"—" }}</td>
+                                            <td class="drmis-dash-table__muted">{{ a.object|default:"—" }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         {% else %}
-                            <div style="color:#9AA5B8;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:14px 0;">
-                                {% trans "No audit entries yet." %}
-                            </div>
+                            <div class="drmis-dash-empty">{% trans "No audit entries yet." %}</div>
                         {% endif %}
                     {% else %}
-                        <div style="padding:12px 14px;border-radius:8px;border:1px solid #E2E6EE;background:#FAFBFC;">
-                            <p style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.5;color:#4A5568;">
-                                {% trans "Audit log is being set up. Once active, all data changes will appear here." %}
-                            </p>
-                            <p style="margin:10px 0 0 0;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;">
-                                <a href="{{ admin_logentry_changelist_url }}" style="color:#378ADD;text-decoration:none;font-weight:600;">{% trans "Learn more" %} →</a>
-                                <span style="color:#9AA5B8;"> — {% trans "review changes in the admin action log until then." %}</span>
+                        <div class="drmis-dash-callout">
+                            <p>{% trans "Audit log is being set up. Once active, all data changes will appear here." %}</p>
+                            <p style="margin-top:10px;font-size:10px;">
+                                <a href="{{ admin_logentry_changelist_url }}" class="drmis-dash-link" style="font-weight:600;">{% trans "Learn more" %} →</a>
+                                <span class="text-gray-500"> — {% trans "review changes in the admin action log until then." %}</span>
                             </p>
                         </div>
                     {% endif %}
                 </div>
             </div>
 
-            {# ── Quick links + recent admin actions ── #}
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-4">
-                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;overflow:hidden;">
-                    <div style="padding:10px 14px;border-bottom:1px solid #F1F3F7;">
-                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#9AA5B8;">{% trans "Quick links" %}</span>
+                <div class="drmis-dash-card drmis-dash-card--flush-bottom">
+                    <div class="drmis-dash-card__header">
+                        <span class="drmis-dash-section-label">{% trans "Quick links" %}</span>
                     </div>
-                    <ul style="margin:0;padding:12px 14px 14px 18px;list-style:disc;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5568;line-height:1.7;">
+                    <ul class="drmis-dash-quicklinks">
                         {% for item in dashboard_quick_links %}
-                            <li><a href="{{ item.url }}" style="color:#378ADD;text-decoration:none;">{{ item.title }}</a></li>
+                            <li><a href="{{ item.url }}">{{ item.title }}</a></li>
                         {% endfor %}
                     </ul>
                 </div>
-                <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;overflow:hidden;">
-                    <div style="padding:10px 14px;border-bottom:1px solid #F1F3F7;display:flex;align-items:center;justify-content:space-between;">
-                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#9AA5B8;">{% trans "Recent admin actions" %}</span>
-                        <a href="{{ admin_logentry_changelist_url }}" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#378ADD;letter-spacing:.04em;text-decoration:none;">{% trans "Full log →" %}</a>
+                <div class="drmis-dash-card drmis-dash-card--flush-bottom">
+                    <div class="drmis-dash-card__header">
+                        <span class="drmis-dash-section-label">{% trans "Recent admin actions" %}</span>
+                        <a href="{{ admin_logentry_changelist_url }}" class="drmis-dash-link">{% trans "Full log →" %}</a>
                     </div>
-                    <div style="padding:0 14px 14px;">
+                    <div class="drmis-dash-card__body--table">
                         {% if recent_admin_actions and recent_admin_actions|length > 0 %}
-                            <table style="width:100%;border-collapse:collapse;">
+                            <table class="drmis-dash-table">
                                 <thead>
                                     <tr>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0 6px 0;border-bottom:1px solid #F1F3F7;">{% trans "When" %}</th>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0 6px 0;border-bottom:1px solid #F1F3F7;">{% trans "User" %}</th>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0 6px 0;border-bottom:1px solid #F1F3F7;">{% trans "Action" %}</th>
-                                        <th style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#B0BAD0;text-align:left;padding:10px 0 6px 0;border-bottom:1px solid #F1F3F7;">{% trans "Summary" %}</th>
+                                        <th>{% trans "When" %}</th>
+                                        <th>{% trans "User" %}</th>
+                                        <th>{% trans "Action" %}</th>
+                                        <th>{% trans "Summary" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for row in recent_admin_actions %}
                                         <tr>
-                                            <td style="padding:8px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA5B8;white-space:nowrap;">{{ row.when|date:"d M H:i" }}</td>
-                                            <td style="padding:8px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5568;">{{ row.user }}</td>
-                                            <td style="padding:8px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5568;">{{ row.action }}</td>
-                                            <td style="padding:8px 0;border-bottom:1px solid #F1F3F7;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA5B8;">{{ row.summary }}</td>
+                                            <td class="drmis-dash-table__muted" style="white-space:nowrap;">{{ row.when|date:"d M H:i" }}</td>
+                                            <td class="drmis-dash-table__mono">{{ row.user }}</td>
+                                            <td class="drmis-dash-table__mono">{{ row.action }}</td>
+                                            <td class="drmis-dash-table__muted">{{ row.summary }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         {% else %}
-                            <div style="padding:14px 0;color:#9AA5B8;font-family:'IBM Plex Mono',monospace;font-size:11px;">
-                                {% trans "No recent admin actions." %}
-                            </div>
+                            <div class="drmis-dash-empty">{% trans "No recent admin actions." %}</div>
                         {% endif %}
                     </div>
                 </div>
             </div>
 
-            </div>{# /space-y-4 lower panels #}
+            </div>
 
         </div>
     </div>

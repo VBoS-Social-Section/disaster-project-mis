@@ -44,7 +44,7 @@ export function LandCoverLegend() {
 
   return (
     <div
-      className="absolute left-2 bottom-4 z-[1000] w-[240px] overflow-hidden rounded-lg border border-border shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface max-md:left-2 max-md:bottom-20 max-md:w-[200px] max-md:max-h-[30vh]"
+      className="absolute left-2 bottom-4 z-[1000] w-[240px] overflow-hidden rounded-[var(--drmis-radius-card)] border border-border shadow-[var(--drmis-shadow-sm)] glass-surface max-md:left-2 max-md:bottom-20 max-md:w-[200px] max-md:max-h-[30vh]"
       role="list"
     >
       <h3 className="border-b border-border bg-muted/50 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">

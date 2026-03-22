@@ -65,9 +65,15 @@ export type HeaderProps = {
   hideBrand?: boolean;
   /** Use a menu icon instead of avatar trigger (when shell `<UserAvatar />` shows account). */
   hideUserMenu?: boolean;
+  /** Hide Simulate when the map toolbar already exposes it (operations / live map). */
+  hideSimulateButton?: boolean;
 };
 
-export function Header({ hideBrand = false, hideUserMenu = false }: HeaderProps) {
+export function Header({
+  hideBrand = false,
+  hideUserMenu = false,
+  hideSimulateButton = false,
+}: HeaderProps) {
   const [shareDialogIsOpen, setShareDialogIsOpen] = useState(false);
   const [helpOverlayOpen, setHelpOverlayOpen] = useState(false);
   const setDataEntryPageOpen = useUiStore((s) => s.setDataEntryPageOpen);
@@ -266,8 +272,9 @@ export function Header({ hideBrand = false, hideUserMenu = false }: HeaderProps)
         </DialogContent>
       </Dialog>
 
-      {/* Right: Simulation, Theme, Avatar - 44px touch targets on mobile */}
+      {/* Right: Simulation (optional), Theme, Avatar - 44px touch targets on mobile */}
       <div className="ml-auto flex shrink-0 items-center gap-1">
+        {!hideSimulateButton && (
         <Tooltip
           content="Run a scenario simulation using current layer settings"
           positioning={{ placement: "bottom" }}
@@ -288,6 +295,7 @@ export function Header({ hideBrand = false, hideUserMenu = false }: HeaderProps)
             <span className="hidden md:inline">Simulate</span>
           </Button>
         </Tooltip>
+        )}
         {!hideUserMenu && (
           <DropdownMenu>
             <DropdownMenuTrigger

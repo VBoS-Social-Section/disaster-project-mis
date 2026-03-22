@@ -31,6 +31,8 @@ from vbos.coastal_changes.admin_views import (
     list_coastal_changes,
 )
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+
+from vbos.api_meta import api_health, api_v1_meta
 from vbos.users.auth_2fa import (
     obtain_auth_token,
     verify_2fa,
@@ -54,6 +56,8 @@ def admin_append_slash_redirect(request, path):
 
 
 api_urls = [
+    path(f"{API_BASE_URL}/meta/", api_v1_meta, name="api_v1_meta"),
+    path(f"{API_BASE_URL}/health/", api_health, name="api_v1_health"),
     path(
         f"{API_BASE_URL}/",
         include(("vbos.users.urls", "vbos.users"), namespace="users"),
@@ -93,6 +97,8 @@ api_urls = [
 ]
 
 urlpatterns = [
+    path("health/", api_health, name="health"),
+    path("health", api_health),
     path(
         f"{API_BASE_URL}/tasks/<str:task_id>/status/",
         celery_task_status,

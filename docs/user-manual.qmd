@@ -12,7 +12,7 @@ format:
 
 ## Introduction
 
-This user manual guides you through the **DRMIS** (Disaster Risk Management Information System) web application. You will learn how to sign in, explore disaster and climate data on the map, apply filters, and download datasets.
+This user manual guides you through the **DRMIS** (Disaster Risk Management Information System) web application. You will learn how to sign in, use the Command Centre, explore map data, run simulations, review audit logs, export datasets, and manage your account.
 
 ## 1. Signing In
 
@@ -37,23 +37,44 @@ If you need access or have forgotten your password, contact your system administ
 
 ## 2. Main Dashboard
 
-After signing in, you will see the main dashboard:
+After signing in, you land in the **Command Centre**:
 
-- **Header:** Logo, title, and view mode (Disaster / Climate).
-- **Left sidebar:** Data layers — choose which datasets to display on the map.
-- **Center:** Interactive map showing geographic data.
-- **Right sidebar:** Context panel — filters, charts, and download options.
+- **Top bar:** System status, live alert counter, color mode toggle, account menu.
+- **KPI cards:** Pending submissions, live alerts, field teams deployed, and daily updates.
+- **Recent submissions table:** Latest data submissions and quick edit links.
+- **Live alerts and risk panels:** Operational awareness widgets.
 
 ![Main dashboard with map and sidebars](screenshots/02-dashboard_.png){fig-align="center"}
 
 ### View Modes
 
-- **Disaster:** Disaster risk data and related datasets.
-- **Climate:** Climate and land cover baseline datasets.
+- **Disaster:** Hazard and response datasets.
+- **Climate:** Climate and land cover datasets.
+- **Compare:** Side-by-side year comparison on the map.
 
 Switch between modes using the tabs in the header.
 
-## 3. Enabling Data Layers
+## 3. Command Centre Operations
+
+### Live alerts and notifications
+
+- DRMIS merges **USGS, VMGD, GDACS, and internal DRMIS alerts**.
+- When new critical/high alerts arrive:
+  - the top alert badge pulses,
+  - browser notifications can appear (if allowed),
+  - a short alert tone is played.
+
+### Creating a new incident
+
+Use **+ New Incident** in Command Centre:
+
+1. Select incident **type** and **severity**.
+2. Select **province** and optional **area council**.
+3. Enter title + summary, optionally attach a photo, then **Publish incident**.
+
+Published incidents are saved to DRMIS alerts and appear in the live alert feed.
+
+## 4. Enabling Data Layers
 
 The left sidebar shows available **Data Layers** grouped by cluster (e.g., Education, Health, Infrastructure).
 
@@ -64,7 +85,7 @@ The left sidebar shows available **Data Layers** grouped by cluster (e.g., Educa
 
 ![Left sidebar with datasets and clusters](screenshots/03-left-sidebar_.png){fig-align="center"}
 
-## 4. Filtering by Area and Year
+## 5. Filtering by Area and Year
 
 The right sidebar lets you filter data by location and time.
 
@@ -75,9 +96,14 @@ The right sidebar lets you filter data by location and time.
 
 ![Right sidebar with Province and Area Council dropdowns](screenshots/04-right-sidebar_.png){fig-align="center"}
 
-### Year
+### Data View and Year
 
-- **Year:** Select the year for tabular data (e.g., 2024). This filter is available in Disaster mode.
+- **Data View:** choose one of:
+  - Baseline
+  - Damage
+  - Resources
+  - Financial
+- **Year:** select the year for tabular analysis (Disaster mode).
 
 ### Attribute Filter
 
@@ -95,7 +121,39 @@ The right panel can be expanded to full width for a larger view of charts and st
 
 This is useful when you want to focus on data analysis without the map, or when viewing multiple charts side by side.
 
-## 5. Downloading Data
+## 6. Compare Mode (Side-by-Side Years)
+
+In **Compare** mode, map years can be adjusted directly on the map overlay:
+
+- Use `-` / `+` controls near the year labels to change left and right years.
+- Drag the center handle to compare areas visually.
+- Use context filters to refine province and dataset view.
+
+## 7. Simulation Wizard (Map)
+
+Click **Simulate** (top-right of map) to open the simulation panel.
+
+You can configure:
+
+- Hazard intensity parameters (cyclone, flood, earthquake, etc.),
+- Scenario assumptions,
+- Estimated impact indicators.
+
+Use **Run Simulation** to update outputs and **Reset** to return defaults.
+
+## 8. Exporting Data (Exports Page)
+
+Use the **Exports** menu in the left navigation for full export workflows.
+
+1. Select a cluster.
+2. Select datasets and formats (XLSX, GeoJSON, GeoTIFF, VRT, PMTiles).
+3. Click **Export**.
+4. Monitor status in-row and in the export queue:
+   - loading spinner while downloading,
+   - success/failure indicators,
+   - toast messages for start/success/error.
+
+## 9. Downloading Data from Context Panel
 
 You can download tabular (XLSX) or vector (GeoJSON) data for the layers you have enabled.
 
@@ -120,21 +178,43 @@ You can download tabular (XLSX) or vector (GeoJSON) data for the layers you have
 Downloads respect your current filters. If you select Province: Shefa and Year: 2024, the downloaded file will only include data for Shefa in 2024.
 :::
 
-## 6. Quick Reference
+## 10. Audit Log
+
+Open **Audit Log** from the left navigation:
+
+- Filter by action, date, and search terms.
+- Adjust page size (25/50/100).
+- Use **Export CSV** for compliance and handover reporting.
+
+## 11. Roles and Access
+
+DRMIS uses role-based UI visibility:
+
+- **Admin:** full access to all sections.
+- **Analyst:** all operational sections except Settings.
+- **Field officer:** Dashboard + Live Map + Data Entry.
+- **Read-only:** read-focused sections (no admin-only controls).
+
+If you try to open a restricted section, DRMIS shows a **You don't have permission** message.
+
+## 12. Quick Reference
 
 | Action | What to do |
 |--------|------------|
 | Sign in | Enter username and password, click Sign in |
-| Switch view | Use Disaster / Climate tabs in header |
+| Switch view | Use Disaster / Climate / Compare tabs in header |
 | Add data to map | Enable layers from left sidebar |
+| Choose analysis lens | Select Data View: Baseline / Damage / Resources / Financial |
 | Filter by area | Use Province and Area Council dropdowns (multi-select) |
 | Filter by year | Use Year dropdown in right sidebar |
 | Expand right panel | Click expand icon in right sidebar header for full-width view |
-| Download data | Click Download Data, then Download for each dataset |
+| Create incident | Command Centre → + New Incident (3-step wizard) |
+| Export datasets | Left menu → Exports, then run export queue |
+| Audit export | Left menu → Audit Log → Export CSV |
 
-## 7. Signing Out
+## 13. Signing Out
 
 Sign out from the user menu in the header:
 
-1. Click your **avatar** or **username** in the top-right.
-2. Select **Sign out**.
+1. Click your **avatar** in the top-right topbar.
+2. Select **Logout**.

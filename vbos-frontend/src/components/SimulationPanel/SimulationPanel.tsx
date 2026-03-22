@@ -136,11 +136,11 @@ export function SimulationPanel() {
 
   return (
     <TooltipProvider>
-      <div
+        <div
         className={cn(
-          "absolute right-4 top-4 z-[1050] flex w-[340px] flex-col overflow-hidden",
-          "rounded-xl border border-border bg-card shadow-lg",
-          "animate-in fade-in-0 slide-in-from-right-4 duration-300",
+          "absolute right-3 top-14 z-[1050] flex w-[min(340px,calc(100vw-1.5rem))] flex-col overflow-hidden md:right-4 md:top-16",
+          "rounded-[var(--drmis-radius-card)] border border-border bg-card shadow-[var(--drmis-shadow-md)]",
+          "animate-in fade-in-0 slide-in-from-right-4 duration-200",
         )}
       >
         {/* ---- Header ---- */}
