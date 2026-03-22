@@ -5,7 +5,7 @@ import { useLayerStore } from "@/store/layer-store";
 import { cn } from "@/lib/utils";
 
 type LayerSwitchProps = {
-  title: string;
+  title: React.ReactNode;
   id: number;
   dataType: "raster" | "vector" | "tabular" | "pmtiles";
   /** When true, switch is disabled and greyed out (e.g. hazard not yet uploaded by admin) */

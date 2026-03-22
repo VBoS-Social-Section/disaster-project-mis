@@ -302,14 +302,55 @@ class PMTilesIntensityView(APIView):
 @method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class AssetExposureView(APIView):
     """
-    Check which hazard (vector polygon) layers contain a given point.
-    Used for asset-level direct risk: overlay infrastructure points on hazard layers.
-    GET ?lat=<>&lng=<>&vector_layer_ids=1,2,3
-    Returns [{ layer_id, layer_name }] for layers whose polygon features contain the point.
+    Exposure endpoint supports two modes:
+
+    1) Asset-level exposure check by point:
+       GET ?lat=<>&lng=<>&vector_layer_ids=1,2,3
+       Returns [{ layer_id, layer_name }] for layers whose polygon features contain the point.
+
+    2) Province-level exposure summary for Command Centre:
+       GET ?group_by=province
+       Returns [{ province, score, raw_count }] where score is normalized 0-100.
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        group_by = (request.query_params.get("group_by") or "").strip().lower()
+        if group_by == "province":
+            from django.db.models import Count
+
+            province_counts_qs = (
+                VectorItem.objects.filter(
+                    dataset__name__in=DISASTER_DATASET_NAMES,
+                    province__isnull=False,
+                )
+                .values("province__name")
+                .annotate(raw_count=Count("id"))
+                .order_by("province__name")
+            )
+            counts_by_name = {
+                row["province__name"]: row["raw_count"]
+                for row in province_counts_qs
+                if row.get("province__name")
+            }
+
+            all_provinces = list(
+                Province.objects.values_list("name", flat=True).order_by("name")
+            )
+            max_count = max(counts_by_name.values(), default=0)
+            response = []
+            for province_name in all_provinces:
+                raw_count = counts_by_name.get(province_name, 0)
+                score = round((raw_count / max_count) * 100) if max_count > 0 else 0
+                response.append(
+                    {
+                        "province": province_name,
+                        "score": score,
+                        "raw_count": raw_count,
+                    }
+                )
+            return Response(response)
+
         try:
             lat = float(request.query_params.get("lat", 0))
             lng = float(request.query_params.get("lng", 0))

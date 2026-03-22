@@ -114,9 +114,7 @@ export async function disable2fa(password: string): Promise<void> {
 }
 
 export async function getCurrentUser(): Promise<AuthUser> {
-  console.log("Fetching current user...");
-  const response = await HTTP.get("/api/v1/users/me/");
-  console.log("Response status:", response.status);
+  const response = await HTTP.get("/api/v1/auth/me/");
 
   if (!response.ok) {
     if (response.status === 401) {
@@ -126,6 +124,5 @@ export async function getCurrentUser(): Promise<AuthUser> {
   }
 
   const data = await response.json();
-  console.log("User data fetched:", data.username);
   return data;
 }

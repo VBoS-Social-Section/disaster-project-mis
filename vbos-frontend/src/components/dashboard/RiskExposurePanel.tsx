@@ -1,5 +1,6 @@
 import { colors } from "@/tokens";
 import { cn } from "@/lib/utils";
+import { useRiskExposureByProvince } from "@/hooks/useRiskExposureByProvince";
 
 /** Six Vanuatu provinces (fixed order for dashboard). */
 export const RISK_PROVINCES = [
@@ -11,7 +12,7 @@ export const RISK_PROVINCES = [
   "Torba",
 ] as const;
 
-export type RiskProvince = (typeof RISK_PROVINCES)[number];
+export type RiskProvince = string;
 
 /** Fill colour from composite score (0–100): &gt;70 red, 40–70 amber, &lt;40 green. */
 export function riskScoreFillColor(score: number): string {
@@ -46,10 +47,28 @@ export interface RiskExposurePanelProps {
  * Per-province horizontal exposure bars: mono label, 4px track, score-coloured fill, numeric value.
  */
 export function RiskExposurePanel({
-  rows = PLACEHOLDER_SCORES,
+  rows,
   onByProvince,
   className,
 }: RiskExposurePanelProps) {
+  const exposureQuery = useRiskExposureByProvince();
+
+  const liveRows: ProvinceRiskRow[] = (exposureQuery.data ?? [])
+    .map((row) => ({
+      province: row.province,
+      score: row.score,
+    }))
+    .sort((a, b) => {
+      const ai = RISK_PROVINCES.indexOf(a.province as (typeof RISK_PROVINCES)[number]);
+      const bi = RISK_PROVINCES.indexOf(b.province as (typeof RISK_PROVINCES)[number]);
+      const aRank = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
+      const bRank = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
+      return aRank - bRank || a.province.localeCompare(b.province);
+    });
+  const displayRows =
+    rows ??
+    (liveRows.length > 0 ? liveRows : PLACEHOLDER_SCORES);
+
   return (
     <section
       className={cn("flex flex-col overflow-hidden rounded-lg border", className)}
@@ -84,7 +103,18 @@ export function RiskExposurePanel({
       </header>
 
       <div className="space-y-3 p-4">
-        {rows.map((row) => {
+        {exposureQuery.isLoading && !rows && (
+          <p
+            className="text-xs"
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              color: colors.text.muted,
+            }}
+          >
+            Loading exposure...
+          </p>
+        )}
+        {displayRows.map((row) => {
           const fill = riskScoreFillColor(row.score);
           const widthPct = Math.min(100, Math.max(0, row.score));
 
@@ -136,6 +166,17 @@ export function RiskExposurePanel({
             </div>
           );
         })}
+        {exposureQuery.isError && !rows && (
+          <p
+            className="pt-1 text-[10px]"
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              color: colors.text.muted,
+            }}
+          >
+            Live exposure unavailable. Showing fallback values.
+          </p>
+        )}
       </div>
     </section>
   );

@@ -3,17 +3,32 @@ import { MetricCard } from "@/components/dashboard/MetricCard";
 import { IncidentsTable } from "@/components/dashboard/IncidentsTable";
 import { LiveAlertsPanel } from "@/components/dashboard/LiveAlertsPanel";
 import { RiskExposurePanel } from "@/components/dashboard/RiskExposurePanel";
+import { NewIncidentDialog } from "@/components/dashboard/NewIncidentDialog";
 import { useCommandCentreSyncClock } from "@/hooks/useCommandCentreSyncClock";
+import { useRecentSubmissions } from "@/hooks/useRecentSubmissions";
+import { useLiveAlerts } from "@/hooks/useLiveAlerts";
+import { useFieldTeamsDeployed } from "@/hooks/useFieldTeamsDeployed";
+import { useDatasetsUpdatedToday } from "@/hooks/useDatasetsUpdatedToday";
 import { colors } from "@/tokens";
 import { toast } from "@/utils/toast";
 import { LuDownload } from "react-icons/lu";
+import { useState } from "react";
 
 /**
  * Command Centre — main landing view after login (dashboard).
- * Layout: title row → metric cards → incidents + alerts / risk column.
+ * Layout: title row → metric cards → submissions + alerts / risk column.
  */
 export function CommandCentre() {
+  const [incidentDialogOpen, setIncidentDialogOpen] = useState(false);
   const { relativeLabel } = useCommandCentreSyncClock(30_000);
+  const submissionsQuery = useRecentSubmissions();
+  const alertsQuery = useLiveAlerts();
+  const fieldTeamsQuery = useFieldTeamsDeployed();
+  const datasetsUpdatedTodayQuery = useDatasetsUpdatedToday();
+
+  const pendingCount =
+    submissionsQuery.data?.results.filter((s) => s.status === "submitted").length ?? 0;
+  const activeAlertCount = alertsQuery.data?.count ?? 0;
 
   return (
     <div
@@ -66,7 +81,7 @@ export function CommandCentre() {
             size="sm"
             className="font-semibold text-white"
             style={{ backgroundColor: colors.accent.red }}
-            onClick={() => toast.info("New incident", "Incident workflow will open here.")}
+            onClick={() => setIncidentDialogOpen(true)}
           >
             + New Incident
           </Button>
@@ -76,42 +91,46 @@ export function CommandCentre() {
       {/* Metric cards — 4 columns on xl */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
-          label="Active incidents"
-          value={12}
-          subtext=""
+          label="Pending submissions"
+          value={submissionsQuery.isLoading ? "…" : pendingCount}
+          subtext="awaiting review"
           accentColor="red"
-          delta={{ value: "+3 vs 24h", direction: "up" }}
         />
         <MetricCard
-          label="Field teams deployed"
-          value={28}
-          subtext="across 6 provinces"
+          label="Live alerts"
+          value={alertsQuery.isLoading ? "…" : activeAlertCount}
+          subtext="USGS · VMGD · GDACS · DRMIS"
           accentColor="amber"
         />
         <MetricCard
-          label="Assessment confidence"
-          value="87%"
-          subtext=""
+          label="Field teams deployed"
+          value={fieldTeamsQuery.isLoading ? "…" : (fieldTeamsQuery.data?.count ?? 0)}
+          subtext="active in last 24h"
           accentColor="green"
         />
         <MetricCard
-          label="System uptime"
-          value="99.94%"
-          subtext="30 day avg"
+          label="Datasets updated today"
+          value={datasetsUpdatedTodayQuery.isLoading ? "…" : (datasetsUpdatedTodayQuery.data ?? 0)}
+          subtext="from dataset audit log"
           accentColor="blue"
         />
       </div>
 
-      {/* Content: left incidents + right 300px stack */}
+      {/* Content: left submissions + right 300px stack */}
       <div className="grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-h-0 min-w-0">
-          <IncidentsTable />
+          <IncidentsTable
+            submissions={submissionsQuery.data?.results}
+            isLoading={submissionsQuery.isLoading}
+            isError={submissionsQuery.isError}
+          />
         </div>
         <div className="flex min-h-0 w-full min-w-0 flex-col gap-4 lg:w-[300px] lg:max-w-[300px]">
           <LiveAlertsPanel />
           <RiskExposurePanel />
         </div>
       </div>
+      <NewIncidentDialog open={incidentDialogOpen} onOpenChange={setIncidentDialogOpen} />
     </div>
   );
 }

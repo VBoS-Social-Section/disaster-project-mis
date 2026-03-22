@@ -1,5 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -233,3 +234,63 @@ class FieldCheckItemConfidenceView(APIView):
             "confidence": confidence_from_status(latest.status),
             "latest_record": FieldCheckRecordSerializer(latest).data,
         })
+
+
+class FieldTeamDeploymentStatsView(APIView):
+    """
+    Summary endpoint for Command Centre KPI.
+
+    GET /api/v1/field-checks/?status=active&count=true
+      - status=active: users who submitted field checks in last 24h
+      - count=true: returns compact {"count": <int>}
+
+    Supported statuses:
+      - active
+      - verified / adjusted / rejected
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        status_value = (request.query_params.get("status") or "").strip().lower()
+        count_only = (request.query_params.get("count") or "").strip().lower() == "true"
+        qs = FieldCheckRecord.objects.all()
+
+        if status_value == "active":
+            # "Deployed" approximated as users with field activity in the last 24 hours.
+            since = timezone.now() - timezone.timedelta(hours=24)
+            qs = qs.filter(verified_at__gte=since)
+            count_value = qs.values("verified_by").distinct().count()
+            if count_only:
+                return Response({"count": count_value})
+            return Response(
+                {
+                    "status": "active",
+                    "window_hours": 24,
+                    "count": count_value,
+                }
+            )
+
+        if status_value in {
+            FieldCheckRecord.STATUS_VERIFIED,
+            FieldCheckRecord.STATUS_ADJUSTED,
+            FieldCheckRecord.STATUS_REJECTED,
+        }:
+            qs = qs.filter(status=status_value)
+        elif status_value:
+            return Response(
+                {
+                    "detail": "Unsupported status. Use one of: active, verified, adjusted, rejected."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        count_value = qs.count()
+        if count_only:
+            return Response({"count": count_value})
+        return Response(
+            {
+                "status": status_value or "all",
+                "count": count_value,
+            }
+        )
