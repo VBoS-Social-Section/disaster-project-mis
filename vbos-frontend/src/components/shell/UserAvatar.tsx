@@ -33,13 +33,12 @@ function avatarUrl(avatar: string | null | undefined): string | null {
 
 export interface UserAvatarProps {
   className?: string;
-  onClick?: () => void;
 }
 
 /**
  * Circular user avatar — image from auth store or fallback glyph.
  */
-export function UserAvatar({ className, onClick }: UserAvatarProps) {
+export function UserAvatar({ className }: UserAvatarProps) {
   const user = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const setDataEntryPageOpen = useUiStore((s) => s.setDataEntryPageOpen);
@@ -55,7 +54,7 @@ export function UserAvatar({ className, onClick }: UserAvatarProps) {
       className="flex size-full items-center justify-center text-xs font-semibold"
       style={{
         color: colors.accent.blue,
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
       }}
     >
       {initial}
@@ -103,12 +102,6 @@ export function UserAvatar({ className, onClick }: UserAvatarProps) {
           {user?.username}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {onClick && (
-          <DropdownMenuItem onSelect={onClick}>
-            <LuUser className="size-4" />
-            Profile
-          </DropdownMenuItem>
-        )}
         <DropdownMenuItem asChild>
           <a
             href="https://vbos-social-section.github.io/disaster-mis-user-manual/"

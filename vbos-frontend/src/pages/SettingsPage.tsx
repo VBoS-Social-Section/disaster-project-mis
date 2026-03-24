@@ -648,7 +648,7 @@ function AppearanceTab() {
                 <span
                   className="text-[11px] font-semibold uppercase tracking-[0.08em]"
                   style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
                     color: active ? colors.accent.blue : colors.text.secondary,
                   }}
                 >
@@ -687,13 +687,13 @@ export function SettingsPage() {
       <header className="min-w-0">
         <h1
           className="text-[22px] font-bold leading-tight tracking-tight"
-          style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, color: colors.text.primary }}
+          style={{ fontFamily: "'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif", fontWeight: 700, color: colors.text.primary }}
         >
           Settings
         </h1>
         <p
           className="mt-1 text-xs"
-          style={{ color: colors.text.muted, fontFamily: "'IBM Plex Mono', monospace" }}
+          style={{ color: colors.text.muted, fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace" }}
         >
           Manage your profile, security, and appearance preferences
         </p>

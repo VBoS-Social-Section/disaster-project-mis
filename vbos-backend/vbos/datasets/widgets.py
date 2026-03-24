@@ -1,8 +1,25 @@
 """Custom widgets for icon/color selection with visual previews."""
+import json
+
 from django import forms
+from django.utils.html import escape
 from django.utils.safestring import mark_safe
 
 from .templatetags.vector_icons import ICON_SVGS
+
+# Quick presets next to the native color input (hex must match map marker expectations)
+VECTOR_COLOR_PRESETS = [
+    ("#3d4aff", "Blue"),
+    ("#10b981", "Emerald"),
+    ("#f09000", "Orange"),
+    ("#8b5cf6", "Violet"),
+    ("#e34a33", "Red"),
+    ("#06b6d4", "Cyan"),
+    ("#6366f1", "Indigo"),
+    ("#14b8a6", "Teal"),
+]
+
+_DEFAULT_FALLBACK_HEX = "#3d4aff"
 
 
 class IconGridWidget(forms.Widget):
@@ -62,3 +79,102 @@ class ColorGridWidget(forms.Widget):
 
     def value_from_datadict(self, data, files, name):
         return data.get(name)
+
+
+class VectorColorPickerWidget(forms.Widget):
+    """
+    Native <input type="color"> + hex text field + presets + Auto (empty).
+    """
+
+    def render(self, name, value, attrs=None, renderer=None):
+        if value is None:
+            value = ""
+        value = str(value).strip()
+        attrs = attrs.copy() if attrs else {}
+        wid = attrs.get("id", f"id_{name}")
+        display_hex = (
+            value if value.startswith("#") and len(value) == 7 else _DEFAULT_FALLBACK_HEX
+        )
+
+        presets_html = []
+        for hex_code, label in VECTOR_COLOR_PRESETS:
+            hex_esc = escape(hex_code)
+            lbl_esc = escape(label)
+            presets_html.append(
+                f'<button type="button" class="button vbos-color-preset" data-hex="{hex_esc}" '
+                f'title="{lbl_esc}" style="width:28px;height:28px;padding:0;border-radius:4px;'
+                f'background:{hex_esc};border:1px solid #ccc;cursor:pointer;"></button>'
+            )
+
+        hex_input = (
+            f'<input type="text" name="{escape(name)}" id="{escape(wid)}" value="{escape(value)}" '
+            f'maxlength="7" placeholder="Auto" class="vbos-vector-color-hex" '
+            'pattern="^#([0-9A-Fa-f]{6})$|^$" '
+            'style="width:8rem;font-family:monospace,Consolas,sans-serif;">'
+        )
+
+        native = (
+            f'<input type="color" id="{escape(wid)}_native" value="{escape(display_hex)}" '
+            'title="Color picker" aria-label="Pick marker color" '
+            'style="width:44px;height:32px;padding:0;border:1px solid #ccc;border-radius:4px;cursor:pointer;">'
+        )
+
+        clear_btn = (
+            f'<button type="button" class="button vbos-color-clear" id="{escape(wid)}_clear" '
+            'style="margin-left:4px;">Auto</button>'
+        )
+
+        wid_js = json.dumps(wid)
+        wid_native_js = json.dumps(f"{wid}_native")
+        wid_clear_js = json.dumps(f"{wid}_clear")
+        fallback_js = json.dumps(_DEFAULT_FALLBACK_HEX)
+
+        script = f"""
+<script>
+(function() {{
+  var hex = document.getElementById({wid_js});
+  var native = document.getElementById({wid_native_js});
+  var root = hex && hex.closest(".vbos-vector-color-widget");
+  if (!hex || !native || !root) return;
+  function syncNativeFromHex() {{
+    var v = (hex.value || "").trim();
+    if (/^#[0-9A-Fa-f]{{6}}$/.test(v)) native.value = v.toLowerCase();
+  }}
+  function syncHexFromNative() {{
+    hex.value = (native.value || "").toLowerCase();
+  }}
+  native.addEventListener("input", syncHexFromNative);
+  hex.addEventListener("input", syncNativeFromHex);
+  root.querySelectorAll(".vbos-color-preset").forEach(function(btn) {{
+    btn.addEventListener("click", function() {{
+      hex.value = (btn.getAttribute("data-hex") || "").toLowerCase();
+      syncNativeFromHex();
+    }});
+  }});
+  var clr = document.getElementById({wid_clear_js});
+  if (clr) clr.addEventListener("click", function() {{
+    hex.value = "";
+    native.value = {fallback_js};
+  }});
+  syncNativeFromHex();
+}})();
+</script>"""
+
+        inner = (
+            '<div class="vbos-vector-color-widget" style="margin:8px 0;">'
+            '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:8px;">'
+            f"{native}{hex_input}{clear_btn}"
+            "</div>"
+            '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">'
+            '<span style="font-size:11px;color:#666;margin-right:4px;">Presets:</span>'
+            f'{"".join(presets_html)}'
+            "</div></div>"
+            f"{script}"
+        )
+        return mark_safe(inner)
+
+    def value_from_datadict(self, data, files, name):
+        v = data.get(name, "")
+        if v is None:
+            return ""
+        return str(v).strip()

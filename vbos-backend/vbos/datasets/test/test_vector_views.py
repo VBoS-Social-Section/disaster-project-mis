@@ -3,7 +3,14 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ..models import AreaCouncil, Cluster, Province, VectorDataset, VectorItem
+from ..models import (
+    AreaCouncil,
+    Cluster,
+    DatasetPublicationStatus,
+    Province,
+    VectorDataset,
+    VectorItem,
+)
 
 
 class TestVectorDatasetListDetailViews(APITestCase):
@@ -55,10 +62,14 @@ class TestVectorDatasetListDetailViews(APITestCase):
 class TestVectorDatasetDataView(APITestCase):
     def setUp(self):
         self.dataset_1 = VectorDataset.objects.create(
-            name="Boundaries", cluster=Cluster.objects.create(name="Administrative")
+            name="Boundaries",
+            cluster=Cluster.objects.create(name="Administrative"),
+            publication_status=DatasetPublicationStatus.PUBLISHED,
         )
         self.dataset_2 = VectorDataset.objects.create(
-            name="Roads", cluster=Cluster.objects.create(name="Transportation")
+            name="Roads",
+            cluster=Cluster.objects.create(name="Transportation"),
+            publication_status=DatasetPublicationStatus.PUBLISHED,
         )
         VectorItem.objects.create(
             dataset=self.dataset_1,

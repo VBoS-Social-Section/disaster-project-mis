@@ -169,7 +169,7 @@ function AuditTableRow({ entry }: AuditTableRowProps) {
           </span>
           <span
             className="text-[11px] tabular-nums"
-            style={{ fontFamily: "'IBM Plex Mono', monospace", color: colors.text.muted }}
+            style={{ fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace", color: colors.text.muted }}
           >
             {time}
           </span>
@@ -424,13 +424,13 @@ export function AuditLogPage() {
         <div className="min-w-0">
           <h1
             className="text-[22px] font-bold leading-tight tracking-tight"
-            style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, color: colors.text.primary }}
+            style={{ fontFamily: "'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif", fontWeight: 700, color: colors.text.primary }}
           >
             Audit Log
           </h1>
           <p
             className="mt-1 text-xs"
-            style={{ color: colors.text.muted, fontFamily: "'IBM Plex Mono', monospace" }}
+            style={{ color: colors.text.muted, fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace" }}
           >
             Dataset change history — who added, edited, or removed datasets
           </p>
@@ -633,7 +633,7 @@ export function AuditLogPage() {
                       <th
                         key={h}
                         className="px-4 py-2.5 font-semibold"
-                        style={{ fontFamily: "'IBM Plex Mono', monospace", color: colors.text.muted }}
+                        style={{ fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace", color: colors.text.muted }}
                       >
                         {h}
                       </th>

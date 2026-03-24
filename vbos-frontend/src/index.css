@@ -1,5 +1,4 @@
-/* Design system: Syne (display), DM Sans (body), IBM Plex Mono (IDs, metrics, badges) */
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400;1,500&family=Syne:wght@700;800&display=swap");
+/* Design system: Segoe UI Variable (UI + display); Segoe UI Mono / system mono for metrics */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -7,10 +6,10 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ==========================================================================
-   Pro UI – World Bank / UN Dashboard Design System
-   - Institutional blues, clean typography, data-focused layout
-   - Light: crisp white/gray, high contrast
-   - Dark: charcoal with blue accents
+   Pro UI – Resilience Explorer palette (Vanuatu reference)
+   - Deep navy sidebar (#0D2B45), action blue (#1A73E8), cool gray surfaces
+   - Page bg #F4F7F9, section bars #CAD6E2, borders #D1D9E0, muted text #5F7D95
+   - Dark mode: navy-tinted charcoal + lighter blue accents
    ========================================================================== */
 
 @theme inline {
@@ -52,65 +51,86 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
-    --color-blue-700: #1d4ed8;
+    --color-blue-700: #1557c5; /* Resilience primary blue (darker) */
     --color-surface: var(--surface);
     --color-surface-foreground: var(--surface-foreground);
     --color-accent-interactive: var(--accent-interactive);
     --color-accent-viz: var(--accent-viz);
 }
 
-/* Light mode: institutional white, World Bank–style
-   Primary: UN/World Bank blue (#0066B3), clean data viz palette */
+/* Light mode: Resilience Explorer surfaces + primary action blue */
 :root {
+    --font-sans: "Segoe UI Variable", "Segoe UI", ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, sans-serif;
+    --font-display: var(--font-sans);
+    --font-mono: "Segoe UI Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
+    /* Legacy / chart / Leaflet popups */
+    --font-work-sans: var(--font-sans);
+    --chakra-fonts-body: var(--font-sans);
+
     --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
     --radius: 0.375rem;
-    --background: #f5f7fa;
-    --foreground: #1a2332;
+    /* Resilience Explorer core */
+    --re-navy: #0d2b45;
+    --re-blue: #1a73e8;
+    --re-bg-app: #f4f7f9;
+    --re-bg-section: #cad6e2;
+    --re-border: #d1d9e0;
+    --re-text: #1a1a1a;
+    --re-text-muted: #5f7d95;
+    --re-note-bg: #fff9e6;
+    --re-note-border: #ffb347;
+
+    --background: var(--re-bg-app);
+    --foreground: var(--re-text);
     --card: #ffffff;
-    --card-foreground: #1a2332;
+    --card-foreground: var(--re-text);
     --popover: #ffffff;
-    --popover-foreground: #1a2332;
-    --primary: #0066b3;
+    --popover-foreground: var(--re-text);
+    --primary: var(--re-blue);
     --primary-foreground: #ffffff;
-    --secondary: #e8ecf1;
-    --secondary-foreground: #1a2332;
-    --muted: #e8ecf1;
-    --muted-foreground: #5c6b7a;
-    --accent: #dce2e8;
-    --accent-foreground: #1a2332;
+    --secondary: #e8edf3;
+    --secondary-foreground: var(--re-text);
+    --muted: #e8edf3;
+    --muted-foreground: var(--re-text-muted);
+    --accent: #dce4ec;
+    --accent-foreground: var(--re-text);
     --destructive: #c53030;
-    --border: #d1d9e2;
-    --input: #d1d9e2;
-    --ring: #0066b3;
+    --border: var(--re-border);
+    --input: var(--re-border);
+    --ring: var(--re-blue);
     --surface: #ffffff;
-    --surface-foreground: #1a2332;
-    --accent-interactive: #0066b3;
-    --accent-viz: #0066b3;
-    --chart-1: #0066b3;
+    --surface-foreground: var(--re-text);
+    --accent-interactive: var(--re-blue);
+    --accent-viz: var(--re-blue);
+    --chart-1: #1a73e8;
     --chart-2: #00a3a3;
-    --chart-3: #5c6b7a;
+    --chart-3: #5f7d95;
     --chart-4: #2e7d32;
     --chart-5: #ed6c02;
     --sidebar: #ffffff;
-    --sidebar-foreground: #1a2332;
-    --sidebar-primary: #0066b3;
+    --sidebar-foreground: var(--re-text);
+    --sidebar-primary: var(--re-blue);
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #e8ecf1;
-    --sidebar-accent-foreground: #1a2332;
-    --sidebar-border: #d1d9e2;
-    --sidebar-ring: #0066b3;
+    --sidebar-accent: #e8edf3;
+    --sidebar-accent-foreground: var(--re-text);
+    --sidebar-border: var(--re-border);
+    --sidebar-ring: var(--re-blue);
 
     /* DRMIS shell — main content (Command Centre, topbar, cards; toggles with .dark) */
-    --drmis-bg-app: #f8f9fb;
+    --drmis-bg-app: var(--re-bg-app);
     --drmis-bg-surface: #ffffff;
-    --drmis-bg-elevated: #f1f3f7;
+    --drmis-bg-elevated: #eef2f6;
+    --drmis-bg-section: var(--re-bg-section);
+    --drmis-bg-note: var(--re-note-bg);
+    --drmis-border-note: var(--re-note-border);
     --drmis-bg-overlay: rgba(0, 0, 0, 0.04);
-    --drmis-border-default: rgba(0, 0, 0, 0.1);
-    --drmis-border-strong: rgba(0, 0, 0, 0.18);
-    --drmis-text-primary: #0d1018;
+    --drmis-border-default: rgba(13, 43, 69, 0.12);
+    --drmis-border-strong: rgba(13, 43, 69, 0.2);
+    --drmis-text-primary: var(--re-text);
     --drmis-text-secondary: #4a5568;
-    --drmis-text-muted: #8896b0;
+    --drmis-text-muted: var(--re-text-muted);
     --drmis-text-ghost: #6b7280;
     /* Amber ~800 — readable on light amber fills (banners, callouts) */
     --drmis-warning-text: #633806;
@@ -123,65 +143,68 @@
     --drmis-radius-card: var(--radius-lg);
     --drmis-duration-panel: 180ms;
     --drmis-ease-panel: cubic-bezier(0.4, 0, 0.2, 1);
-    /* DRMIS left nav — always dark in both modes (brand) */
-    --drmis-sidebar-bg: #111318;
-    --drmis-sidebar-border: rgba(255, 255, 255, 0.08);
-    --drmis-sidebar-text-muted: #8896b0;
-    --drmis-sidebar-text-hover: #8896b0;
-    --drmis-sidebar-text-active: #e8ebf0;
-    --drmis-sidebar-hover-bg: rgba(255, 255, 255, 0.06);
-    --drmis-sidebar-active-bg: #141824;
-    --drmis-sidebar-dot-inactive: #3a4255;
+    /* DRMIS left nav — Resilience deep navy (always dark in both modes) */
+    --drmis-sidebar-bg: var(--re-navy);
+    --drmis-sidebar-border: rgba(255, 255, 255, 0.1);
+    --drmis-sidebar-text-muted: #8fb3cc;
+    --drmis-sidebar-text-hover: #b8c9d9;
+    --drmis-sidebar-text-active: #ffffff;
+    --drmis-sidebar-hover-bg: rgba(255, 255, 255, 0.08);
+    --drmis-sidebar-active-bg: #163d5e;
+    --drmis-sidebar-dot-inactive: #4a6d8a;
 }
 
-/* Dark mode: charcoal, institutional blue accents */
+/* Dark mode: navy-tinted charcoal + Resilience blue accents */
 .dark {
-    --background: #0f1419;
-    --foreground: #e6edf3;
-    --card: #161b22;
-    --card-foreground: #e6edf3;
-    --popover: #161b22;
-    --popover-foreground: #e6edf3;
-    --primary: #58a6ff;
-    --primary-foreground: #0f1419;
-    --secondary: #21262d;
-    --secondary-foreground: #e6edf3;
-    --muted: #21262d;
-    --muted-foreground: #8b949e;
-    --accent: #30363d;
-    --accent-foreground: #e6edf3;
+    --background: #0a1520;
+    --foreground: #e8ecf0;
+    --card: #122536;
+    --card-foreground: #e8ecf0;
+    --popover: #122536;
+    --popover-foreground: #e8ecf0;
+    --primary: #5b9fff;
+    --primary-foreground: #0a1520;
+    --secondary: #1a2f45;
+    --secondary-foreground: #e8ecf0;
+    --muted: #1a2f45;
+    --muted-foreground: #8fb3cc;
+    --accent: #243b52;
+    --accent-foreground: #e8ecf0;
     --destructive: #f85149;
-    --border: #30363d;
-    --input: #30363d;
-    --ring: #58a6ff;
-    --surface: #161b22;
-    --surface-foreground: #e6edf3;
-    --accent-interactive: #58a6ff;
-    --accent-viz: #58a6ff;
-    --chart-1: #58a6ff;
+    --border: #2a4a5f;
+    --input: #2a4a5f;
+    --ring: #5b9fff;
+    --surface: #122536;
+    --surface-foreground: #e8ecf0;
+    --accent-interactive: #5b9fff;
+    --accent-viz: #5b9fff;
+    --chart-1: #5b9fff;
     --chart-2: #3fb950;
-    --chart-3: #8b949e;
+    --chart-3: #8fb3cc;
     --chart-4: #d29922;
     --chart-5: #f85149;
-    --sidebar: #161b22;
-    --sidebar-foreground: #e6edf3;
-    --sidebar-primary: #58a6ff;
-    --sidebar-primary-foreground: #0f1419;
-    --sidebar-accent: #21262d;
-    --sidebar-accent-foreground: #e6edf3;
-    --sidebar-border: #30363d;
-    --sidebar-ring: #58a6ff;
+    --sidebar: #122536;
+    --sidebar-foreground: #e8ecf0;
+    --sidebar-primary: #5b9fff;
+    --sidebar-primary-foreground: #0a1520;
+    --sidebar-accent: #1a2f45;
+    --sidebar-accent-foreground: #e8ecf0;
+    --sidebar-border: #2a4a5f;
+    --sidebar-ring: #5b9fff;
 
-    --drmis-bg-app: #0a0d14;
-    --drmis-bg-surface: #0d1018;
-    --drmis-bg-elevated: #141824;
+    --drmis-bg-app: #0a1520;
+    --drmis-bg-surface: #0d1b2a;
+    --drmis-bg-elevated: #132337;
+    --drmis-bg-section: #1a2f45;
+    --drmis-bg-note: rgba(255, 185, 71, 0.12);
+    --drmis-border-note: #ffb347;
     --drmis-bg-overlay: rgba(255, 255, 255, 0.03);
     --drmis-border-default: rgba(255, 255, 255, 0.08);
     --drmis-border-strong: rgba(255, 255, 255, 0.14);
     --drmis-text-primary: #e8ebf0;
-    --drmis-text-secondary: #8896b0;
-    --drmis-text-muted: #5a6375;
-    --drmis-text-ghost: #3a4255;
+    --drmis-text-secondary: #8fb3cc;
+    --drmis-text-muted: #6a8aa3;
+    --drmis-text-ghost: #4a6d8a;
     --drmis-warning-text: #fbbf24;
     --drmis-text-on-amber: #fde68a;
     --drmis-track-bg: rgba(255, 255, 255, 0.06);
@@ -222,8 +245,7 @@
     background: var(--drmis-bg-app);
     color: var(--drmis-text-primary);
     @apply antialiased;
-    font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-    font-feature-settings: "ss01" 1, "ss02" 1;
+    font-family: var(--font-sans);
   }
 
   /* React root inherits theme from <html class="dark|light"> — avoids a grey void below the shell */
@@ -234,20 +256,20 @@
   }
 }
 
-/* Body / UI text — DM Sans */
+/* Body / UI text */
 .font-sans {
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-family: var(--font-sans);
 }
 
-/* Display / marketing headings — Syne (weights 700–800) */
+/* Display / headings (same stack; variable font handles weight) */
 .font-display {
-  font-family: "Syne", sans-serif;
+  font-family: var(--font-display);
 }
 
-/* IDs, dates, metrics, labels, badges — IBM Plex Mono */
+/* IDs, dates, metrics — system mono companions to Segoe */
 .font-mono,
 .font-mono-num {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--font-mono);
 }
 
 /* Heading hierarchy: bolder in dark, lighter in light */
@@ -405,7 +427,7 @@
 .dark .ambient-gradient {
   background: radial-gradient(
     ellipse 80% 50% at 50% 0%,
-    rgba(0, 102, 179, 0.04) 0%,
+    rgba(26, 115, 232, 0.06) 0%,
     transparent 70%
   );
   pointer-events: none;
@@ -415,7 +437,7 @@
 :root:not(.dark) .ambient-gradient {
   background: radial-gradient(
     ellipse 80% 50% at 50% 0%,
-    rgba(0, 102, 179, 0.02) 0%,
+    rgba(26, 115, 232, 0.03) 0%,
     transparent 70%
   );
   pointer-events: none;
@@ -461,7 +483,7 @@
 }
 
 :root:not(.dark) .kpi-bento-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 102, 179, 0.12);
+  box-shadow: 0 4px 16px rgba(26, 115, 232, 0.14);
 }
 
 /* Sidebar: width spring animation */
@@ -582,11 +604,11 @@
 
 .download-accent-pill:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 102, 179, 0.35);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.35);
 }
 
 .dark .download-accent-pill:hover:not(:disabled) {
-  box-shadow: 0 4px 12px rgba(88, 166, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(91, 159, 255, 0.3);
 }
 
 /* Lock screen: shake on wrong PIN */
@@ -610,11 +632,11 @@
 
 /* Table zebra rows (exclude total row) */
 .table-zebra tbody tr:nth-child(even):not(.total-row) {
-  background: rgba(0, 102, 179, 0.04);
+  background: rgba(26, 115, 232, 0.05);
 }
 
 :root:not(.dark) .table-zebra tbody tr:nth-child(even):not(.total-row) {
-  background: rgba(0, 102, 179, 0.05);
+  background: rgba(26, 115, 232, 0.06);
 }
 
 /* ==========================================================================

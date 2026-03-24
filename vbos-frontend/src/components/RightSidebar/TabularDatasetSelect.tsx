@@ -264,7 +264,7 @@ export function TabularDatasetSelect() {
             rel="noopener noreferrer"
             className="mt-2 inline-flex"
             style={{
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
               fontSize: "10px",
               color: colors.text.muted,
               textDecoration: "none",

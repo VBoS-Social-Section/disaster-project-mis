@@ -5,7 +5,14 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from ...users.test.factories import UserFactory
-from ..models import AreaCouncil, Cluster, Province, TabularDataset, TabularItem
+from ..models import (
+    AreaCouncil,
+    Cluster,
+    DatasetPublicationStatus,
+    Province,
+    TabularDataset,
+    TabularItem,
+)
 
 
 class TestTabularDatasetListDetailViews(APITestCase):
@@ -16,6 +23,7 @@ class TestTabularDatasetListDetailViews(APITestCase):
             cluster=Cluster.objects.create(name="Administrative"),
             source="Government",
             description="Population statistics since 2020",
+            publication_status=DatasetPublicationStatus.PUBLISHED,
         )
         self.dataset_2 = TabularDataset.objects.create(
             name="Prices",
@@ -23,6 +31,7 @@ class TestTabularDatasetListDetailViews(APITestCase):
             source="Government",
             type="estimated_damage",
             unit="Vatu (VUV)",
+            publication_status=DatasetPublicationStatus.PUBLISHED,
         )
         self.url = reverse("datasets:tabular-list")
 
@@ -70,10 +79,14 @@ class TestTabularDatasetDataView(APITestCase):
         self.cluster = Cluster.objects.create(name="Other")
         self.user = UserFactory()
         self.dataset_1 = TabularDataset.objects.create(
-            name="Population", cluster=self.cluster
+            name="Population",
+            cluster=self.cluster,
+            publication_status=DatasetPublicationStatus.PUBLISHED,
         )
         self.dataset_2 = TabularDataset.objects.create(
-            name="Employment", cluster=self.cluster
+            name="Employment",
+            cluster=self.cluster,
+            publication_status=DatasetPublicationStatus.PUBLISHED,
         )
         self.item = TabularItem.objects.create(
             dataset=self.dataset_1,
@@ -216,7 +229,9 @@ class TestTabularAggregateView(APITestCase):
         self.client.force_authenticate(user=self.user)
         self.cluster = Cluster.objects.create(name="Demographics")
         self.dataset = TabularDataset.objects.create(
-            name="Population", cluster=self.cluster
+            name="Population",
+            cluster=self.cluster,
+            publication_status=DatasetPublicationStatus.PUBLISHED,
         )
         self.torba = Province.objects.get(name="TORBA")
         self.tafea = Province.objects.get(name="TAFEA")

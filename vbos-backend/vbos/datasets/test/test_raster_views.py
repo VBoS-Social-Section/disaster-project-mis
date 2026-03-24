@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ..models import RasterDataset, RasterFile
+from ..models import DatasetPublicationStatus, RasterDataset, RasterFile
 
 
 class TestRasterDatasetListDetailViews(APITestCase):
@@ -15,6 +15,7 @@ class TestRasterDatasetListDetailViews(APITestCase):
             filename_id="rainfall",
             source="WMO",
             titiler_url_params="rescale=-0.3,0.3",
+            publication_status=DatasetPublicationStatus.PUBLISHED,
         )
         self.dataset_2 = RasterDataset.objects.create(
             name="Coastline changes",
@@ -23,6 +24,7 @@ class TestRasterDatasetListDetailViews(APITestCase):
             cluster=None,
             type="estimated_damage",
             titiler_url_params="rescale=-0.5,0.5",
+            publication_status=DatasetPublicationStatus.PUBLISHED,
         )
         self.url = reverse("datasets:raster-list")
 

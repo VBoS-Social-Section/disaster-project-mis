@@ -263,6 +263,18 @@ docker compose exec web ./manage.py createsuperuser
 - Wait for Postgres to be ready before starting web
 - Verify `.env` has correct `DJANGO_DB_URL`
 
+### "Could not save workspace" / Internal Server Error when saving the map layout
+
+The Live Map **Save workspace** feature needs the `MapSavedWorkspace` table from Django migration **`0046_map_saved_workspace`** (and later `datasets` migrations). If the backend was updated but migrations were not applied, the API can return 500 or 503.
+
+**Fix:** run migrations inside the web container, then retry:
+
+```bash
+docker compose -f deploy/vm/docker-compose.yml exec web ./manage.py migrate datasets
+# or, from vbos-backend with local compose:
+docker compose exec web ./manage.py migrate datasets
+```
+
 ### Frontend shows blank or API errors
 
 - Confirm `VITE_API_HOST` and `VITE_TITILER_API` match your VM URL
