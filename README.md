@@ -2,9 +2,20 @@
 
 > **Progress key:** `[ ]` not started · `[~]` in progress · `[x]` done · `%` = estimated completion
 
+### In progress vs production migration
+
+| | |
+|---|---|
+| **In progress** | Features **actively developed in this repository** (local dev, staging VM, Docker). They can ship incrementally with PRs and migrations. |
+| **After production migration** | Features that realistically need DRMIS running on an **official production environment** (government-approved hosting, NDMO operations, production domain/TLS, ministry SLAs, live identity integration, ops runbooks). They are **not blocked by code alone**—they depend on **deployment, policy, and handover** that come only after go-live. Examples: production-only SSO cutover, CDN in front of live traffic, PgBouncer against the real DB pool, formal backup/restore drills on the NDMO VM. |
+
+Use this distinction when prioritising: build governance and app features **now**; defer “production-only” hardening until the target stack exists.
+
 ---
 
 ## Recent completions
+
+- [x] **Data governance (datasets)** — `publication_status` (Draft / Published / Archived), `published_by` / `published_at`, `created_by` / `updated_by` on all four dataset models; API defaults to published only (staff: `?publication=all`); bulk Publish/Archive admin actions with audit log entries; **`DisasterDatasetTag`** model + admin replaces hardcoded disaster overlay names (seeded + extensible, e.g. “Storm Surge”)
 
 - [x] **RAP CSV import pipeline (MVP)** — Django app `vbos.rap_import`: `RAPImportBatch` / `RAPImportFile` models, filename→sector detection, `validate_rap_csv` against RAP schemas, Unfold admin (batch list, inline files, validate/import actions), staff multi-file upload at `/admin/rap-import/upload/`, Celery task stub; `import_rap_batch_to_tabular` mapping to TabularDataset **TBD**
 - [x] **DRMIS app shell — light/dark theme** — `--drmis-*` CSS variables in `index.css` (main content toggles; **sidebar stays dark** in both modes), `tokens/colors.ts` uses `var(--drmis-…)` for surfaces/text/borders, Command Centre (KPI cards, incidents table, live alerts, risk exposure), topbar, and map workspace respond to `next-themes` (`class` on `<html>`); fixed hardcoded `html`/`body` backgrounds that blocked light mode
@@ -160,23 +171,23 @@
 
 ### Data Governance
 
-- [ ] **Dataset status / publication workflow** `0%`
-  - [ ] Add `status` field to `TabularDataset`, `VectorDataset`, `RasterDataset`, `PMTilesDataset` (Draft / Published / Archived)
-  - [ ] Add `published_by` FK and `published_at` DateTimeField
-  - [ ] Default new datasets to `draft`; existing data defaults to `published`
-  - [ ] Bulk "Publish selected" and "Archive selected" admin actions
-  - [ ] Filter API to only return `published` datasets by default
-  - [ ] Admin action creates audit trail entry on status change
+- [x] **Dataset status / publication workflow** `100%`
+  - [x] `publication_status` on `TabularDataset`, `VectorDataset`, `RasterDataset`, `PMTilesDataset` (Draft / Published / Archived)
+  - [x] `published_by` FK and `published_at` DateTimeField
+  - [x] Default new datasets to `draft`; migration sets existing rows to `published`
+  - [x] Bulk "Publish selected" and "Archive selected" admin actions
+  - [x] Filter API to only return `published` datasets by default (staff: `?publication=all`)
+  - [x] Admin actions create `AuditLog` entries on status change
 
-- [ ] **`created_by` / `updated_by` on all dataset models** `0%`
-  - [ ] Add FK to `AUTH_USER_MODEL` on all four dataset models
-  - [ ] Set `created_by` on `save_model` in admin; expose as readonly field
-  - [ ] Add to serializers as `read_only=True`
+- [x] **`created_by` / `updated_by` on all dataset models** `100%`
+  - [x] FKs to `AUTH_USER_MODEL` on all four dataset models
+  - [x] Set on admin `save_model` (`created_by` on add; `updated_by` on every save); readonly in admin
+  - [x] `created_by_id` / `updated_by_id` on dataset serializers (`read_only`)
 
-- [ ] **`DISASTER_DATASET_NAMES` admin-configurable** `0%`
-  - [ ] Create `DisasterDatasetTag(name unique)` model
-  - [ ] Replace hardcoded list in `views.py` with DB query
-  - [ ] Data migration seeds existing values; admins can add new types (e.g. "Storm Surge")
+- [x] **Disaster overlay tags (replaces `DISASTER_DATASET_NAMES`)** `100%`
+  - [x] `DisasterDatasetTag` model (`name` unique, `order`); registered in admin
+  - [x] `views.py` uses `get_disaster_dataset_tag_names()` (DB-backed)
+  - [x] Data migration seeds prior hardcoded values; admins can add tags (e.g. "Storm Surge")
 
 - [ ] **Password reset by email** `0%`
   - [ ] Wire Django's built-in `password_reset/` views in `urls.py`
@@ -426,9 +437,9 @@
 | Encrypt SMTP password at rest | Low | High | 0% | A |
 | Token expiry (Knox) | Low | High | 0% | A |
 | Password reset by email | Low | High | 0% | A |
-| Dataset `status` field (draft/published/archived) | Low | High | 0% | A |
-| `created_by` on all dataset models | Low | Medium | 0% | A |
-| `DISASTER_DATASET_NAMES` admin-configurable | Low | Medium | 0% | A |
+| Dataset publication + disaster tags + authorship | Low | High | 100% | A |
+| `created_by` / `updated_by` on all dataset models | Low | Medium | 100% | A |
+| Disaster overlay tags (`DisasterDatasetTag`) | Low | Medium | 100% | A |
 | Scheduled backups to S3 | Low | Very High | 0% | A |
 | Sentry error tracking | Low | High | 0% | A |
 | MFA mandatory enforcement | Low | High | 40% | A |
@@ -453,9 +464,9 @@
 Given the NDMO handover timeline and multi-ministry adoption goals, the highest-leverage sequence is:
 
 1. **Security hardening** — rate limiting on auth, token expiry (Knox), encrypt SMTP password; small effort, high risk if missed
-2. **Dataset status + created_by fields** — prerequisite for the approval workflow and data governance
-3. **RBAC + Audit log (field-level)** — needed before opening to MoCCA/MOET/MIPU users
-4. **Scheduled backups to S3** — non-negotiable before NDMO takes ownership
+2. **RBAC + Audit log (field-level)** — dataset publication/authorship is in place; tighten role-based access and field-level audit before opening to MoCCA/MOET/MIPU users
+3. **Approval workflow** — builds on published/draft datasets; align with NDMO process
+4. **Scheduled backups to S3** — non-negotiable before NDMO takes ownership (often **after production migration** when the live VM and bucket policy are fixed)
 5. **Incident model** — the Command Centre is the primary screen; it needs real data
-6. **Sentry + `/health/` endpoint** — fast to add, immediately improves operational confidence
+6. **Sentry + `/health/` endpoint** — fast to add; production DSN and monitors typically **after production migration**
 7. **MFA enforcement** — 40% done; finish the last mile (mandatory on first login)
