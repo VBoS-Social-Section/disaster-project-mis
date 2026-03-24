@@ -23,8 +23,8 @@
     border-color: #FF4B2B;
     background: #FFF8F7;
   }
-  .rap-dropzone p { margin: 0.5rem 0 0; color: #9AA5B8; font-size: 0.875rem; font-family: 'DM Sans', sans-serif; }
-  .rap-results { margin-top: 1.5rem; font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+  .rap-dropzone p { margin: 0.5rem 0 0; color: #9AA5B8; font-size: 0.875rem; font-family: 'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif; }
+  .rap-results { margin-top: 1.5rem; font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace; font-size: 12px; }
   .rap-results table { width: 100%; border-collapse: collapse; background: #FFFFFF; border: 1px solid #E2E6EE; border-radius: 8px; overflow: hidden; }
   .rap-results th { background: #F8F9FB; font-size: 8px; letter-spacing: .09em; text-transform: uppercase; color: #B0BAD0; }
   .rap-results th, .rap-results td { border: 1px solid #F1F3F7; padding: 0.5rem 0.65rem; text-align: left; color: #0D1018; }
@@ -35,7 +35,7 @@
   .rap-banner.success { background: #EAF6EE; border: 1px solid #9FE1CB; color: #27500A; }
   .rap-sector-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 0.5rem; }
   @media (max-width: 900px) { .rap-sector-grid { grid-template-columns: repeat(2, 1fr); } }
-  .rap-sector-pill { font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 4px 8px; border-radius: 4px; border: 1px solid #E2E6EE; }
+  .rap-sector-pill { font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace; font-size: 10px; padding: 4px 8px; border-radius: 4px; border: 1px solid #E2E6EE; }
   .rap-sector-pill.ok { background: #EAF6EE; border-color: #9FE1CB; color: #27500A; }
   .rap-sector-pill.warn { background: #FDF3E0; border-color: #F5C875; color: #633806; }
   .rap-sector-pill.miss { background: #F8F9FB; color: #9AA5B8; border-color: #E2E6EE; }
@@ -43,8 +43,8 @@
 {% endblock %}
 {% block content %}
 <div id="content-main">
-  <h1 style="font-family:'Syne',sans-serif;font-weight:700;font-size:20px;color:#0D1018;">{% trans "RAP batch upload" %}</h1>
-  <p class="help" style="color:#4A5568;font-family:'DM Sans',sans-serif;font-size:13px;">
+  <h1 style="font-family:'Segoe UI Variable','Segoe UI',ui-sans-serif,system-ui,sans-serif;font-weight:700;font-size:20px;color:#0D1018;">{% trans "RAP batch upload" %}</h1>
+  <p class="help" style="color:#4A5568;font-family:'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;font-size:13px;">
     {% trans "Upload all CSV files from one RAP export in a single batch. Filenames must match RAP conventions (e.g. ex_hazard_…, education_…)." %}
   </p>
 
@@ -52,22 +52,22 @@
     {% csrf_token %}
 
     <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:16px;margin-bottom:14px;">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9AA5B8;margin-bottom:12px;">{% trans "Batch Details" %}</div>
+      <div style="font-family:'Segoe UI Mono','Cascadia Mono',Consolas,ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9AA5B8;margin-bottom:12px;">{% trans "Batch Details" %}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 120px;gap:10px;">
         <div>
-          <label for="id_batch_ref" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA5B8;display:block;margin-bottom:4px;">{% trans "Batch Reference" %} <span class="required">*</span></label>
+          <label for="id_batch_ref" style="font-family:'Segoe UI Mono','Cascadia Mono',Consolas,ui-monospace,monospace;font-size:10px;color:#9AA5B8;display:block;margin-bottom:4px;">{% trans "Batch Reference" %} <span class="required">*</span></label>
           <input type="text" name="batch_ref" id="id_batch_ref" required maxlength="50" placeholder="TC-HAROLD-2026"
-            class="vTextField" style="width:100%;background:#F8F9FB;border:1px solid #E2E6EE;border-radius:5px;padding:7px 10px;font-size:12px;color:#0D1018;font-family:'DM Sans',sans-serif;" />
+            class="vTextField" style="width:100%;background:#F8F9FB;border:1px solid #E2E6EE;border-radius:5px;padding:7px 10px;font-size:12px;color:#0D1018;font-family:'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;" />
         </div>
         <div>
-          <label for="id_cyclone_name" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA5B8;display:block;margin-bottom:4px;">{% trans "Cyclone name" %} <span class="required">*</span></label>
+          <label for="id_cyclone_name" style="font-family:'Segoe UI Mono','Cascadia Mono',Consolas,ui-monospace,monospace;font-size:10px;color:#9AA5B8;display:block;margin-bottom:4px;">{% trans "Cyclone name" %} <span class="required">*</span></label>
           <input type="text" name="cyclone_name" id="id_cyclone_name" required maxlength="100" placeholder="TC Harold"
-            class="vTextField" style="width:100%;background:#F8F9FB;border:1px solid #E2E6EE;border-radius:5px;padding:7px 10px;font-size:12px;color:#0D1018;font-family:'DM Sans',sans-serif;" />
+            class="vTextField" style="width:100%;background:#F8F9FB;border:1px solid #E2E6EE;border-radius:5px;padding:7px 10px;font-size:12px;color:#0D1018;font-family:'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;" />
         </div>
         <div>
-          <label for="id_event_year" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA5B8;display:block;margin-bottom:4px;">{% trans "Year" %} <span class="required">*</span></label>
+          <label for="id_event_year" style="font-family:'Segoe UI Mono','Cascadia Mono',Consolas,ui-monospace,monospace;font-size:10px;color:#9AA5B8;display:block;margin-bottom:4px;">{% trans "Year" %} <span class="required">*</span></label>
           <input type="text" name="event_year" id="id_event_year" required inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="2026"
-            class="vTextField" style="width:100%;background:#F8F9FB;border:1px solid #E2E6EE;border-radius:5px;padding:7px 10px;font-size:12px;color:#0D1018;font-family:'DM Sans',sans-serif;" />
+            class="vTextField" style="width:100%;background:#F8F9FB;border:1px solid #E2E6EE;border-radius:5px;padding:7px 10px;font-size:12px;color:#0D1018;font-family:'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;" />
         </div>
       </div>
     </div>
@@ -75,14 +75,14 @@
     <div class="form-row">
       <input type="file" name="csv_files" id="id_csv_files" accept=".csv,text/csv" multiple hidden />
       <div id="rap-dropzone" class="rap-dropzone" tabindex="0" role="button" aria-label="{% trans 'Drop CSV files here or click to browse' %}">
-        <div style="font-size:13px;color:#4A5568;margin-bottom:6px;font-family:'DM Sans',sans-serif;">
+        <div style="font-size:13px;color:#4A5568;margin-bottom:6px;font-family:'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;">
           <strong>{% trans "Drop RAP CSV files here" %}</strong>
         </div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#B0BAD0;">
+        <div style="font-family:'Segoe UI Mono','Cascadia Mono',Consolas,ui-monospace,monospace;font-size:10px;color:#B0BAD0;">
           Education_* · Energy_* · FoodSecurity_* · Health_* · WASH_* · Hazard · …
         </div>
         <button type="button" onclick="document.getElementById('id_csv_files').click()"
-          style="margin-top:12px;background:#FFFFFF;border:1px solid #E2E6EE;border-radius:6px;padding:7px 16px;font-size:12px;color:#6B7A99;cursor:pointer;font-family:'DM Sans',sans-serif;">
+          style="margin-top:12px;background:#FFFFFF;border:1px solid #E2E6EE;border-radius:6px;padding:7px 16px;font-size:12px;color:#6B7A99;cursor:pointer;font-family:'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;">
           {% trans "Browse files" %}
         </button>
         <p>{% trans "or click the zone — multiple files allowed" %}</p>
@@ -90,7 +90,7 @@
     </div>
 
     <div class="submit-row">
-      <button type="submit" class="default" id="rap-submit" style="background:#FF4B2B;border:none;border-radius:6px;padding:8px 20px;font-size:13px;color:#fff;font-family:'DM Sans',sans-serif;font-weight:500;">
+      <button type="submit" class="default" id="rap-submit" style="background:#FF4B2B;border:none;border-radius:6px;padding:8px 20px;font-size:13px;color:#fff;font-family:'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;font-weight:500;">
         {% trans "Upload & validate" %}
       </button>
     </div>
@@ -101,7 +101,7 @@
 
   <div id="rap-sector-wrap" style="display:none;margin-top:1.25rem;">
     <div style="background:#FFFFFF;border:1px solid #E2E6EE;border-radius:8px;padding:14px;margin-bottom:14px;">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9AA5B8;margin-bottom:10px;">{% trans "Sector Coverage" %}</div>
+      <div style="font-family:'Segoe UI Mono','Cascadia Mono',Consolas,ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9AA5B8;margin-bottom:10px;">{% trans "Sector Coverage" %}</div>
       <div id="rap-sector-grid" class="rap-sector-grid" aria-live="polite"></div>
     </div>
     <p style="margin-top:1rem;">

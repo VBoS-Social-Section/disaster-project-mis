@@ -112,7 +112,7 @@ class AreaDataSubmissionAdmin(UnfoldModelAdmin):
         }
         s = styles.get(obj.status, styles["draft"])
         return format_html(
-            '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;'
+            '<span style="font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:10px;'
             'padding:2px 8px;border-radius:4px;{}">{}</span>',
             s,
             obj.get_status_display(),
@@ -129,7 +129,7 @@ class AreaDataSubmissionAdmin(UnfoldModelAdmin):
         if province is not None:
             url += f"&province={province.pk}"
         return format_html(
-            '<a href="{}" target="_blank" style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:#185FA5;text-decoration:none;">Open in Live Map →</a>',
+            '<a href="{}" target="_blank" style="font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:11px;color:#185FA5;text-decoration:none;">Open in Live Map →</a>',
             url,
         )
 

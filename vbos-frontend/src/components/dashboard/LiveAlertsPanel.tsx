@@ -57,7 +57,7 @@ function AlertRow({ alert }: { alert: LiveAlert }) {
           <span
             className="rounded px-1 py-0.5 text-[8px] font-semibold uppercase tracking-[0.04em]"
             style={{
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
               background: colors.bg.surface,
               color: colors.text.muted,
               border: `1px solid ${colors.border.default}`,
@@ -89,7 +89,7 @@ function AlertRow({ alert }: { alert: LiveAlert }) {
           className="mt-1 text-[10px] tabular-nums leading-none"
           style={{
             color: colors.text.muted,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
           }}
         >
           {formatTimeAgo(alert.issued_at)}
@@ -111,7 +111,7 @@ function SourceFooter({
     <div
       className="flex flex-wrap gap-2 px-4 py-2 text-[9px]"
       style={{
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
         borderTop: `0.5px solid ${colors.border.default}`,
         color: colors.text.muted,
       }}
@@ -141,7 +141,7 @@ function EmptyState({ updatedAt }: { updatedAt: string }) {
       <p
         className="mt-1 text-[10px]"
         style={{
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
           color: colors.text.muted,
         }}
       >
@@ -186,7 +186,7 @@ export function LiveAlertsPanel({ onSilence, className }: LiveAlertsPanelProps) 
           type="button"
           className="shrink-0 rounded-md px-2 py-1 text-xs font-semibold uppercase tracking-wide transition-colors hover:bg-muted/30 focus-visible:outline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--drmis-bg-surface)]"
           style={{
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
             color: colors.text.muted,
           }}
           onClick={() => onSilence?.()}
@@ -201,7 +201,7 @@ export function LiveAlertsPanel({ onSilence, className }: LiveAlertsPanelProps) 
           className="px-4 py-3 text-[11px]"
           style={{
             color: colors.text.muted,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
           }}
         >
           Loading alerts…

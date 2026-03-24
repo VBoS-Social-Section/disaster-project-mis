@@ -34,6 +34,13 @@ export interface BaseDataset {
   source_layer?: string;
   /** Name of cyclone/event (e.g. Cyclone Lola). Shown when layer is active. */
   cyclone_name?: string | null;
+  /** Catalog visibility; API lists published only unless staff uses ?publication=all */
+  publication_status?: "draft" | "published" | "archived";
+  published_at?: string | null;
+  published_by_id?: number | null;
+  /** Set when the dataset row is saved from Django admin */
+  created_by_id?: number | null;
+  updated_by_id?: number | null;
 }
 
 export interface TabularDataset extends BaseDataset {
@@ -50,7 +57,7 @@ export interface VectorDataset extends BaseDataset {
   dataType: "vector";
   /** Icon key for map display (e.g. mapPin, cross). Empty = auto from cluster/index. */
   icon?: string | null;
-  /** Hex color for map markers (e.g. #3d4aff). Empty = auto from cluster/index. */
+  /** Hex color for map markers (e.g. #1a73e8). Empty = auto from cluster/index. */
   color?: string | null;
 }
 

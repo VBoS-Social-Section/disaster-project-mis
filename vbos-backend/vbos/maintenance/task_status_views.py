@@ -6,7 +6,12 @@ from typing import Any
 
 from celery.result import AsyncResult
 from drf_spectacular.utils import extend_schema
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -53,9 +58,10 @@ def _progress_for_state(state: str, info: Any) -> int:
     },
 )
 @api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def celery_task_status(request: Request, task_id: str) -> Response:
-    """GET /api/v1/tasks/<task_id>/status/"""
+    """GET /api/v1/tasks/<task_id>/status/ — requires authenticated user (session or token)."""
     async_result = AsyncResult(task_id)
     state = async_result.state
     info = async_result.info

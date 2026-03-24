@@ -18,19 +18,31 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.data && e.data.type === 'icon-picker-select' && e.data.icon) {
       var input = document.querySelector('input[name="icon"]');
       if (input) input.value = e.data.icon;
+      if (Object.prototype.hasOwnProperty.call(e.data, 'color')) {
+        var colorHex = document.querySelector('input.vbos-vector-color-hex[name="color"]')
+          || document.querySelector('input[name="color"]');
+        if (colorHex) {
+          colorHex.value = (e.data.color || '').trim();
+          colorHex.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
     }
   });
 
   var datasetSelect = document.querySelector('select[name="dataset"]');
   var iconInput = document.querySelector('input[name="icon"]');
-  var colorSelect = document.querySelector('select[name="color"]');
+  var colorHexInput = document.querySelector('input.vbos-vector-color-hex[name="color"]')
+    || document.querySelector('input[name="color"]');
   if (datasetSelect && datasetMeta) {
     datasetSelect.addEventListener('change', function() {
       var id = this.value;
       var meta = datasetMeta[id];
       if (meta) {
         if (iconInput) iconInput.value = meta.icon || '';
-        if (colorSelect) colorSelect.value = meta.color || '';
+        if (colorHexInput) {
+          colorHexInput.value = (meta.color || '').trim();
+          colorHexInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
       }
     });
     if (datasetSelect.value) datasetSelect.dispatchEvent(new Event('change'));

@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap');
-
 /* ── Unfold / Tailwind: force light palette when .dark is toggled (OS dark mode) ── */
 :root,
 .dark,
@@ -24,11 +22,11 @@ html.dark,
   --color-font-important-dark: rgb(13, 16, 24) !important;
 }
 
-/* ── ROOT LIGHT MODE LOCK — one UI face for body copy (titles stay Syne) ── */
+/* ── ROOT LIGHT MODE LOCK — one UI face for body copy (titles use Segoe UI Variable) ── */
 html, body {
   background: #F5F6F8 !important;
   color: #0D1018 !important;
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  font-family: 'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif !important;
 }
 
 /* ── TOPBAR ── */
@@ -52,7 +50,7 @@ aside {
 /* Sidebar section labels */
 [class*="sidebar"] [class*="section"],
 [class*="nav-section"] {
-  font-family: 'IBM Plex Mono', monospace !important;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace !important;
   font-size: 10px !important;
   letter-spacing: .10em !important;
   text-transform: uppercase !important;
@@ -91,8 +89,8 @@ aside {
 
 /* Sidebar / header badges only.
    Do NOT use a global [class*="badge"] selector — it matches Unfold/Tailwind classes
-   in main content (e.g. stat/KPI wrappers) and overrides inline Syne numerals with
-   IBM Plex Mono via !important (especially visible when the KPI value is 0). */
+   in main content (e.g. stat/KPI wrappers) and overrides inline KPI numerals with
+   mono stack via !important (especially visible when the KPI value is 0). */
 #nav-sidebar-inner [class*="badge"],
 #nav-sidebar-inner [class*="nav-badge"],
 #nav-sidebar [class*="badge"],
@@ -101,7 +99,7 @@ aside {
 #header [class*="nav-badge"],
 [class*="topbar"] [class*="badge"],
 [class*="topbar"] [class*="nav-badge"] {
-  font-family: 'IBM Plex Mono', monospace !important;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace !important;
   font-size: 9px !important;
   padding: 1px 6px !important;
   border-radius: 3px !important;
@@ -111,7 +109,7 @@ aside {
 
 /* Admin dashboard KPI numerals — must win over any stray !important mono rules */
 .drmis-admin-kpi-value {
-  font-family: 'Syne', sans-serif !important;
+  font-family: 'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif !important;
   font-weight: 700 !important;
   font-size: 22px !important;
   color: #0D1018 !important;
@@ -134,7 +132,7 @@ main {
 [class*="page-title"],
 h1.page-title,
 .content-title h1 {
-  font-family: 'Syne', sans-serif !important;
+  font-family: 'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif !important;
   font-weight: 700 !important;
   font-size: 20px !important;
   color: #0D1018 !important;
@@ -156,7 +154,7 @@ fieldset {
 .module h2,
 fieldset h2,
 legend {
-  font-family: 'IBM Plex Mono', monospace !important;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace !important;
   font-size: 10px !important;
   letter-spacing: .09em !important;
   text-transform: uppercase !important;
@@ -178,7 +176,7 @@ table {
 #result_list thead th,
 table thead th {
   background: #F8F9FB !important;
-  font-family: 'IBM Plex Mono', monospace !important;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace !important;
   font-size: 10px !important;
   letter-spacing: .09em !important;
   text-transform: uppercase !important;
@@ -226,7 +224,7 @@ input[type="text"][id*="search"] {
   padding: 7px 12px !important;
   font-size: 12px !important;
   color: #0D1018 !important;
-  font-family: 'DM Sans', sans-serif !important;
+  font-family: 'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif !important;
 }
 
 #searchbar:focus,
@@ -243,7 +241,7 @@ select,
   border: 1px solid #E2E6EE !important;
   border-radius: 6px !important;
   color: #6B7A99 !important;
-  font-family: 'IBM Plex Mono', monospace !important;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace !important;
   font-size: 11px !important;
 }
 
@@ -259,7 +257,7 @@ textarea,
   border: 1px solid #E2E6EE !important;
   border-radius: 5px !important;
   color: #0D1018 !important;
-  font-family: 'DM Sans', sans-serif !important;
+  font-family: 'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif !important;
   font-size: 12px !important;
 }
 
@@ -275,7 +273,7 @@ textarea:focus {
 .form-row label,
 .field-label,
 th.column-label {
-  font-family: 'IBM Plex Mono', monospace !important;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace !important;
   font-size: 11px !important;
   color: #9AA5B8 !important;
   letter-spacing: .04em !important;
@@ -290,7 +288,7 @@ button[type="submit"],
   border: none !important;
   border-radius: 6px !important;
   color: #FFFFFF !important;
-  font-family: 'DM Sans', sans-serif !important;
+  font-family: 'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif !important;
   font-size: 12px !important;
   font-weight: 500 !important;
   padding: 7px 16px !important;
@@ -334,7 +332,7 @@ a.deletelink {
 td[class*="date"],
 td[class*="_id"],
 td[class*="ref"] {
-  font-family: 'IBM Plex Mono', monospace !important;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace !important;
   font-size: 11px !important;
   color: #9AA5B8 !important;
   letter-spacing: .03em !important;
@@ -344,7 +342,7 @@ td[class*="ref"] {
 #breadcrumbs,
 [class*="breadcrumb"] {
   background: transparent !important;
-  font-family: 'IBM Plex Mono', monospace !important;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace !important;
   font-size: 10px !important;
   color: #B0BAD0 !important;
   letter-spacing: .04em !important;
@@ -390,7 +388,7 @@ ul.messagelist li.warning,
 /* ── PAGINATION ── */
 .paginator,
 [class*="pagination"] {
-  font-family: 'IBM Plex Mono', monospace !important;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace !important;
   font-size: 10px !important;
   color: #B0BAD0 !important;
 }
@@ -419,7 +417,7 @@ ul.messagelist li.warning,
 }
 
 .inline-related h3 {
-  font-family: 'IBM Plex Mono', monospace !important;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace !important;
   font-size: 10px !important;
   letter-spacing: .09em !important;
   text-transform: uppercase !important;
@@ -440,7 +438,7 @@ ul.messagelist li.warning,
 
 [class*="filter"] h3,
 [class*="sidebar-filter"] h3 {
-  font-family: 'IBM Plex Mono', monospace !important;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace !important;
   font-size: 10px !important;
   text-transform: uppercase !important;
   color: #9AA5B8 !important;
@@ -461,7 +459,7 @@ ul.messagelist li.warning,
 /* ── Unfold change-form action buttons ── */
 [class*="action-detail"] button,
 [class*="actions-detail"] button {
-  font-family: 'IBM Plex Mono', monospace !important;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace !important;
   font-size: 9px !important;
   padding: 4px 10px !important;
   border-radius: 4px !important;
@@ -530,14 +528,14 @@ ul.messagelist li.warning,
 }
 
 .drmis-dash-title {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
   font-weight: 700;
   font-size: 13px;
   line-height: 1.25;
 }
 
 .drmis-dash-eyebrow {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -546,7 +544,7 @@ ul.messagelist li.warning,
 }
 
 .drmis-dash-section-label {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -554,7 +552,7 @@ ul.messagelist li.warning,
 }
 
 .drmis-dash-micro-label {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -562,7 +560,7 @@ ul.messagelist li.warning,
 }
 
 .drmis-dash-link {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 10px;
   color: var(--dash-link);
   letter-spacing: 0.04em;
@@ -617,7 +615,7 @@ ul.messagelist li.warning,
 }
 
 .drmis-dash-switcher-label {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -634,7 +632,7 @@ ul.messagelist li.warning,
 
 .drmis-dash-mode-pill {
   display: inline-block;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 10px;
   font-weight: 600;
   text-decoration: none;
@@ -709,7 +707,7 @@ ul.messagelist li.warning,
 }
 
 .drmis-dash-kpi-label {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -723,7 +721,7 @@ ul.messagelist li.warning,
 }
 
 .drmis-dash-table th {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -746,13 +744,13 @@ ul.messagelist li.warning,
 }
 
 .drmis-dash-table td.drmis-dash-table__mono {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 11px;
   color: #4a5568;
 }
 
 .drmis-dash-table td.drmis-dash-table__muted {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 11px;
   color: var(--dash-muted);
 }
@@ -764,12 +762,12 @@ ul.messagelist li.warning,
 .drmis-dash-empty {
   padding: 16px 0;
   color: var(--dash-muted);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 11px;
 }
 
 .drmis-dash-pill-tag {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 10px;
   padding: 2px 8px;
   border-radius: 4px;
@@ -780,7 +778,7 @@ ul.messagelist li.warning,
 }
 
 .drmis-dash-badge {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 10px;
   padding: 2px 8px;
   border-radius: 4px;
@@ -810,7 +808,7 @@ ul.messagelist li.warning,
 }
 
 .drmis-dash-note__line {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 12px;
   color: #0d1018;
   line-height: 1.5;
@@ -825,7 +823,7 @@ ul.messagelist li.warning,
 
 .drmis-dash-callout p {
   margin: 0;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 11px;
   line-height: 1.5;
   color: #4a5568;
@@ -835,7 +833,7 @@ ul.messagelist li.warning,
   margin: 0;
   padding: 12px 16px 16px 18px;
   list-style: disc;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   font-size: 11px;
   color: #4a5568;
   line-height: 1.7;

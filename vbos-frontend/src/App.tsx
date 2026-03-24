@@ -1,4 +1,3 @@
-import { Header } from "./components/Header";
 import { AppShell } from "@/components/shell";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import type { MapRef } from "./components/Map";
@@ -31,11 +30,11 @@ import { OfflineIndicator } from "./components/OfflineIndicator";
 import { LayerAnnouncer } from "./components/LayerAnnouncer";
 import { LockScreen } from "./components/LockScreen";
 import { Login } from "./components/Login";
-import { ProfilePage } from "./components/ProfilePage";
 import { AreaDataEntryPage } from "./components/AreaDataEntry/AreaDataEntryPage";
 import { FeedbackButton } from "./components/Feedback/FeedbackButton";
 import { SimulationPanel } from "./components/SimulationPanel";
 import { MapFloatingChrome } from "./components/Map/MapFloatingChrome";
+import { MapQueryChat } from "./components/Map/MapQueryChat";
 import { CommandCentre } from "./pages/CommandCentre";
 import { DatasetsPage } from "./pages/DatasetsPage";
 import { ExportsPage } from "./pages/ExportsPage";
@@ -126,9 +125,7 @@ function App() {
     mobileOpenPanel,
     setMobileOpenPanel,
     rightSidebarIconMode,
-    profilePageOpen,
     dataEntryPageOpen,
-    setProfilePageOpen,
     primaryWorkspace,
     shellNavId,
     setShellNavId,
@@ -163,9 +160,6 @@ function App() {
   if (!isAuthenticated) {
     return <Login />;
   }
-  if (profilePageOpen) {
-    return <ProfilePage />;
-  }
   if (dataEntryPageOpen) {
     if (!canAccessDataEntry(role)) {
       return (
@@ -188,7 +182,6 @@ function App() {
         mainPadding={primaryWorkspace === "command-centre"}
         alertCount={alertCount}
         alertPulse={alertPulse}
-        onAvatarClick={() => setProfilePageOpen(true)}
       >
         {primaryWorkspace === "command-centre" ? (
           navAllowed ? (
@@ -201,7 +194,6 @@ function App() {
           )
         ) : (
           <div className="flex min-h-0 flex-1 flex-col">
-            <Header hideBrand hideUserMenu hideSimulateButton />
             <div
               id="main"
               className={cn(
@@ -233,6 +225,7 @@ function App() {
                     <ClimateKeyIndicators />
                     <MapEmptyState />
                     <MapFloatingChrome />
+                    <MapQueryChat />
                     <SimulationPanel />
                     <MobilePanelFAB />
                     <MapModeBadge />

@@ -47,7 +47,7 @@ class RAPImportFileInline(TabularInline):
         }
         s = styles.get(obj.status, styles["pending"])
         return format_html(
-            '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;'
+            '<span style="font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:9px;'
             "padding:2px 7px;border-radius:3px;text-transform:uppercase;"
             'letter-spacing:.04em;{}">{}</span>',
             s,
@@ -150,7 +150,7 @@ class RAPImportBatchAdmin(ModelAdmin):
         }
         s = styles.get(obj.status, styles["pending"])
         return format_html(
-            '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;'
+            '<span style="font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:9px;'
             "padding:2px 7px;border-radius:3px;text-transform:uppercase;"
             'letter-spacing:.04em;{}">{}</span>',
             s,
@@ -169,7 +169,7 @@ class RAPImportBatchAdmin(ModelAdmin):
         }
         color, bg, border = badge.get(obj.max_intensity, ("#9AA5B8", "#F8F9FB", "#E2E6EE"))
         return format_html(
-            '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;'
+            '<span style="font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:11px;'
             'font-weight:500;color:{};background:{};padding:2px 8px;border-radius:3px;'
             'border:1px solid {};">Cat {}</span>',
             color,
@@ -198,14 +198,14 @@ class RAPImportBatchAdmin(ModelAdmin):
         err = obj.files.filter(status="error").count()
         if err:
             return format_html(
-                '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;">'
+                '<span style="font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:10px;">'
                 '<span style="color:#27500A">{}</span>/<span style="color:#A32D2D">{} err</span>/{}</span>',
                 ok,
                 err,
                 total,
             )
         return format_html(
-            '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;">'
+            '<span style="font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:10px;">'
             "{}/{}</span>",
             ok,
             total,
@@ -245,7 +245,7 @@ class RAPImportBatchAdmin(ModelAdmin):
                 "<tr>"
                 f'<td style="padding:4px 8px;font-size:11px;color:#4A5568;">{province}</td>'
                 f'<td style="padding:4px 8px;font-size:11px;color:#9AA5B8;">{council}</td>'
-                '<td style="padding:4px 8px;font-family:\'IBM Plex Mono\',monospace;'
+                '<td style="padding:4px 8px;font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;'
                 f'font-size:11px;font-weight:500;color:{color}">Cat {escape(intensity)}</td>'
                 "</tr>"
             )
@@ -257,13 +257,13 @@ class RAPImportBatchAdmin(ModelAdmin):
 
         thead = (
             "<thead><tr>"
-            '<th style="padding:4px 8px;font-family:\'IBM Plex Mono\',monospace;font-size:9px;'
+            '<th style="padding:4px 8px;font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:9px;'
             'letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;text-align:left;">'
             "Province</th>"
-            '<th style="padding:4px 8px;font-family:\'IBM Plex Mono\',monospace;font-size:9px;'
+            '<th style="padding:4px 8px;font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:9px;'
             'letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;text-align:left;">'
             "Area Council</th>"
-            '<th style="padding:4px 8px;font-family:\'IBM Plex Mono\',monospace;font-size:9px;'
+            '<th style="padding:4px 8px;font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:9px;'
             'letter-spacing:.08em;text-transform:uppercase;color:#9AA5B8;text-align:left;">'
             "Intensity</th>"
             "</tr></thead>"
@@ -281,7 +281,7 @@ class RAPImportBatchAdmin(ModelAdmin):
         if not obj.imported_at:
             return "—"
         return format_html(
-            '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:#9AA5B8">{}</span>',
+            '<span style="font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:10px;color:#9AA5B8">{}</span>',
             obj.imported_at.strftime("%d %b %Y %H:%M"),
         )
 

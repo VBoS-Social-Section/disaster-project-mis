@@ -22,7 +22,7 @@ const severityBadge: Record<
   Medium: {
     border: colors.accent.blue,
     background: "rgba(77, 144, 255, 0.12)",
-    color: "#185FA5",
+    color: "#1a73e8",
   },
   Low: {
     border: colors.accent.green,
@@ -53,7 +53,7 @@ export function SeverityBadge({ level, className }: SeverityBadgeProps) {
         borderColor: s.border,
         backgroundColor: s.background,
         color: s.color,
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
       }}
     >
       {level}
@@ -118,7 +118,7 @@ function SkeletonRow() {
 
 // ── Header ─────────────────────────────────────────────────────────
 const headerMono = {
-  fontFamily: "'IBM Plex Mono', monospace",
+  fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
   color: colors.text.ghost,
 } as const;
 
@@ -163,7 +163,7 @@ export function IncidentsTable({
           id="recent-incidents-heading"
           className="text-[11px] font-semibold uppercase tracking-[0.08em]"
           style={{
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
             color: colors.text.muted,
           }}
         >
@@ -173,7 +173,7 @@ export function IncidentsTable({
           type="button"
           className="text-[11px] font-semibold uppercase tracking-wide underline-offset-2 transition-opacity hover:opacity-90 focus-visible:outline focus-visible:ring-2 focus-visible:ring-[#4D90FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--drmis-bg-surface)]"
           style={{
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
             color: colors.accent.blue,
           }}
           onClick={() => onViewAll?.()}
@@ -260,7 +260,7 @@ export function IncidentsTable({
                   <td
                     className="px-4 py-3 align-middle text-sm tabular-nums"
                     style={{
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
                       color: colors.text.secondary,
                     }}
                   >
@@ -284,7 +284,7 @@ export function IncidentsTable({
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
-                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
                         fontSize: "10px",
                         color: colors.text.muted,
                         textDecoration: "none",

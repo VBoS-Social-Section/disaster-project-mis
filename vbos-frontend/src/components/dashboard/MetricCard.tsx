@@ -21,7 +21,7 @@ const accentBar: Record<MetricAccentColor, string> = {
 };
 
 /**
- * Dashboard metric tile: **2px top accent**, label (mono uppercase), value (Syne 700 26px), optional delta badge.
+ * Dashboard metric tile: **2px top accent**, label (mono uppercase), value (Segoe UI Variable 700 26px), optional delta badge.
  */
 export function MetricCard({
   label,
@@ -55,7 +55,7 @@ export function MetricCard({
         <p
           className="text-[10px] font-semibold uppercase tracking-[0.08em]"
           style={{
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
             color: colors.text.muted,
           }}
         >
@@ -66,7 +66,7 @@ export function MetricCard({
           <span
             className="min-w-0 truncate text-[26px] font-bold leading-none tracking-tight tabular-nums"
             style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif",
               fontWeight: 700,
               color: colors.text.primary,
             }}
@@ -77,7 +77,7 @@ export function MetricCard({
             <span
               className="inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums"
               style={{
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
                 color:
                   delta.direction === "up" ? colors.accent.green : colors.accent.red,
                 backgroundColor:

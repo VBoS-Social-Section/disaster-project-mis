@@ -43,7 +43,7 @@ export function CommandCentre() {
           <h1
             className="text-[22px] font-bold leading-tight tracking-tight"
             style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif",
               fontWeight: 700,
               color: colors.text.primary,
             }}
@@ -54,7 +54,7 @@ export function CommandCentre() {
             className="mt-1 text-xs"
             style={{
               color: colors.text.muted,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
             }}
           >
             {relativeLabel}

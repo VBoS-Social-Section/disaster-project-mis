@@ -108,7 +108,7 @@ class ClimateVectorDatasetForm(forms.ModelForm):
 @admin.register(ClimatePMTilesDataset)
 class ClimatePMTilesDatasetAdmin(PMTilesDatasetAdmin):
     form = ClimatePMTilesDatasetForm
-    list_display = ["id", "name", "type", "display_modules", "updated"]
+    list_display = ["id", "name", "type", "publication_status", "display_modules", "updated"]
     list_editable = []
 
     def get_queryset(self, request):
@@ -166,8 +166,18 @@ class ClimatePMTilesDatasetAdmin(PMTilesDatasetAdmin):
 @admin.register(ClimateVectorDataset)
 class ClimateVectorDatasetAdmin(VectorDatasetAdmin):
     form = ClimateVectorDatasetForm
-    list_display = ["id", "name", "type", "display_modules", "icon", "color", "updated"]
-    list_editable = ["icon", "color"]
+    list_display = [
+        "id",
+        "name",
+        "type",
+        "publication_status",
+        "display_modules",
+        "icon",
+        "color",
+        "updated",
+    ]
+    # color uses VectorColorPickerWidget (inherited); not list-editable
+    list_editable = ["icon"]
 
     def get_queryset(self, request):
         qs = super(VectorDatasetAdmin, self).get_queryset(request)

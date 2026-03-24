@@ -1,19 +1,21 @@
 /**
- * Font stacks — load via Google Fonts in `index.css` / `index.html`.
+ * Font stacks — Segoe UI Variable (Windows / Fluent); fall back to system UI fonts.
  * Use **mono** for IDs, dates, metrics, labels, badges.
  */
 export const typography = {
   display: {
-    family: "'Syne', sans-serif",
-    weights: [700, 800] as const,
+    family:
+      "'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+    weights: [600, 700] as const,
   },
   body: {
-    family: "'DM Sans', sans-serif",
-    weights: [300, 400, 500] as const,
+    family:
+      "'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+    weights: [400, 500, 600] as const,
   },
   mono: {
-    family: "'IBM Plex Mono', monospace",
-    weights: [400, 500] as const,
+    family: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
+    weights: [400, 500, 600] as const,
   },
 } as const;
 

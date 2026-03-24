@@ -37,7 +37,7 @@ export function StatusPill({ status, label, className }: StatusPillProps) {
       />
       <span
         className="truncate text-[11px] font-medium tracking-tight"
-        style={{ color: colors.text.secondary, fontFamily: "'IBM Plex Mono', monospace" }}
+        style={{ color: colors.text.secondary, fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace" }}
       >
         {label}
       </span>

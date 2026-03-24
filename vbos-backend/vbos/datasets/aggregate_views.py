@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import TabularDataset, TabularItem
+from .publication import get_dataset_for_read_or_404
 
 
 class TabularAggregateView(APIView):
@@ -24,12 +25,7 @@ class TabularAggregateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        dataset = TabularDataset.objects.filter(pk=pk).first()
-        if not dataset:
-            return Response(
-                {"detail": "Not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        dataset = get_dataset_for_read_or_404(TabularDataset, request, pk)
 
         group_by = request.query_params.get("group_by", "province")
         year = request.query_params.get("year")

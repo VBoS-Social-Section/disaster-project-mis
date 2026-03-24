@@ -17,8 +17,6 @@ export interface AppShellProps {
   alertCount?: number;
   /** Flash attention pulse when a new critical/high alert arrives. */
   alertPulse?: boolean;
-  /** Shell `<UserAvatar />` click handler (e.g. open profile). */
-  onAvatarClick?: () => void;
   /** When true (default), main uses `overflow-auto` and **20px** padding per spec. */
   mainPadding?: boolean;
   /** Show `<UserAvatar />` in topbar (default **true** per spec). */
@@ -35,7 +33,6 @@ export function AppShell({
   children,
   alertCount = 0,
   alertPulse = false,
-  onAvatarClick,
   mainPadding = true,
   topbarUserAvatar = true,
   mainClassName,
@@ -106,7 +103,6 @@ export function AppShell({
       <Topbar
         alertCount={alertCount}
         alertPulse={alertPulse}
-        onAvatarClick={onAvatarClick}
         showUserAvatar={topbarUserAvatar}
       />
       <Sidebar activeId={shellNavId} onNavigate={handleNavigate} />

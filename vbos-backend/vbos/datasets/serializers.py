@@ -36,6 +36,8 @@ class AreaCouncilSerializer(GeoFeatureModelSerializer):
 
 class RasterDatasetSerializer(serializers.ModelSerializer):
     cluster = serializers.SerializerMethodField()
+    created_by_id = serializers.IntegerField(read_only=True, allow_null=True)
+    updated_by_id = serializers.IntegerField(read_only=True, allow_null=True)
 
     def get_cluster(self, obj):
         return obj.cluster.name if obj.cluster else None
@@ -55,11 +57,18 @@ class RasterDatasetSerializer(serializers.ModelSerializer):
             "titiler_url_params",
             "is_land_cover",
             "precomputed_tile_url",
+            "publication_status",
+            "published_at",
+            "published_by_id",
+            "created_by_id",
+            "updated_by_id",
         ]
 
 
 class VectorDatasetSerializer(serializers.ModelSerializer):
     cluster = serializers.ReadOnlyField(source="cluster.name")
+    created_by_id = serializers.IntegerField(read_only=True, allow_null=True)
+    updated_by_id = serializers.IntegerField(read_only=True, allow_null=True)
 
     class Meta:
         model = VectorDataset
@@ -77,11 +86,18 @@ class VectorDatasetSerializer(serializers.ModelSerializer):
             "cyclone_name",
             "climate_module",
             "climate_modules",
+            "publication_status",
+            "published_at",
+            "published_by_id",
+            "created_by_id",
+            "updated_by_id",
         ]
 
 
 class PMTilesDatasetSerializer(serializers.ModelSerializer):
     cluster = serializers.ReadOnlyField(source="cluster.name")
+    created_by_id = serializers.IntegerField(read_only=True, allow_null=True)
+    updated_by_id = serializers.IntegerField(read_only=True, allow_null=True)
 
     class Meta:
         model = PMTilesDataset
@@ -99,6 +115,11 @@ class PMTilesDatasetSerializer(serializers.ModelSerializer):
             "cyclone_name",
             "climate_module",
             "climate_modules",
+            "publication_status",
+            "published_at",
+            "published_by_id",
+            "created_by_id",
+            "updated_by_id",
         ]
 
 
@@ -136,6 +157,8 @@ class VectorItemSerializer(GeoFeatureModelSerializer):
 
 class TabularDatasetSerializer(serializers.ModelSerializer):
     cluster = serializers.ReadOnlyField(source="cluster.name")
+    created_by_id = serializers.IntegerField(read_only=True, allow_null=True)
+    updated_by_id = serializers.IntegerField(read_only=True, allow_null=True)
 
     class Meta:
         model = TabularDataset
@@ -149,6 +172,11 @@ class TabularDatasetSerializer(serializers.ModelSerializer):
             "type",
             "source",
             "unit",
+            "publication_status",
+            "published_at",
+            "published_by_id",
+            "created_by_id",
+            "updated_by_id",
         ]
 
 

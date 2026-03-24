@@ -3,6 +3,7 @@ from django_filters import (
     DateFromToRangeFilter,
     FilterSet,
     ModelChoiceFilter,
+    NumberFilter,
     OrderingFilter,
 )
 
@@ -25,6 +26,11 @@ class DatasetFilter(FilterSet):
     name = CharFilter(field_name="name", lookup_expr="icontains")
     source = CharFilter(field_name="source", lookup_expr="icontains")
     type = CharFilter(field_name="type", lookup_expr="iexact")
+    publication_status = CharFilter(
+        field_name="publication_status",
+        lookup_expr="iexact",
+        help_text="draft | published | archived (use with staff + publication=all to list non-published).",
+    )
     cluster = ModelChoiceFilter(
         field_name="cluster__name",
         to_field_name="name__iexact",
@@ -40,25 +46,25 @@ class DatasetFilter(FilterSet):
 class RasterDatasetFilter(DatasetFilter):
     class Meta:
         model = RasterDataset
-        fields = ["name", "source", "created", "updated"]
+        fields = ["name", "source", "publication_status", "created", "updated"]
 
 
 class PMTilesDatasetFilter(DatasetFilter):
     class Meta:
         model = PMTilesDataset
-        fields = ["name", "source", "cluster", "created", "updated"]
+        fields = ["name", "source", "cluster", "publication_status", "created", "updated"]
 
 
 class VectorDatasetFilter(DatasetFilter):
     class Meta:
         model = VectorDataset
-        fields = ["name", "source", "cluster", "created", "updated"]
+        fields = ["name", "source", "cluster", "publication_status", "created", "updated"]
 
 
 class TabularDatasetFilter(DatasetFilter):
     class Meta:
         model = TabularDataset
-        fields = ["name", "source", "cluster", "created", "updated"]
+        fields = ["name", "source", "cluster", "publication_status", "created", "updated"]
 
 
 class DataItemsBaseFilter(FilterSet):
@@ -126,6 +132,8 @@ class DataItemsBaseFilter(FilterSet):
 
 class TabularItemFilter(DataItemsBaseFilter):
     date = DateFromToRangeFilter()
+    value_gte = NumberFilter(field_name="value", lookup_expr="gte")
+    value_lte = NumberFilter(field_name="value", lookup_expr="lte")
 
     class Meta:
         model = TabularItem

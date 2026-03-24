@@ -262,13 +262,13 @@ function StatCard({
       <div className="flex flex-1 flex-col justify-center px-4 py-3">
         <p
           className="text-[10px] font-semibold uppercase tracking-[0.08em]"
-          style={{ fontFamily: "'IBM Plex Mono', monospace", color: colors.text.muted }}
+          style={{ fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace", color: colors.text.muted }}
         >
           {label}
         </p>
         <p
           className="mt-1 text-[22px] font-bold leading-none tabular-nums"
-          style={{ fontFamily: "'Syne', sans-serif", color: colors.text.primary }}
+          style={{ fontFamily: "'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif", color: colors.text.primary }}
         >
           {value}
         </p>
@@ -481,7 +481,7 @@ export function DatasetsPage() {
           <h1
             className="text-[22px] font-bold leading-tight tracking-tight"
             style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif",
               fontWeight: 700,
               color: colors.text.primary,
             }}
@@ -492,7 +492,7 @@ export function DatasetsPage() {
             className="mt-1 text-xs"
             style={{
               color: colors.text.muted,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
             }}
           >
             Browse and inspect registered datasets · select a cluster to begin
@@ -573,7 +573,7 @@ export function DatasetsPage() {
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <span
               className="text-[10px] font-semibold uppercase tracking-[0.08em]"
-              style={{ fontFamily: "'IBM Plex Mono', monospace", color: colors.text.muted }}
+              style={{ fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace", color: colors.text.muted }}
             >
               Format
             </span>
@@ -594,7 +594,7 @@ export function DatasetsPage() {
 
             <span
               className="ml-3 text-[10px] font-semibold uppercase tracking-[0.08em]"
-              style={{ fontFamily: "'IBM Plex Mono', monospace", color: colors.text.muted }}
+              style={{ fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace", color: colors.text.muted }}
             >
               Type
             </span>
@@ -715,7 +715,7 @@ export function DatasetsPage() {
               <>
                 <p
                   className="mb-4 text-xs"
-                  style={{ color: colors.text.muted, fontFamily: "'IBM Plex Mono', monospace" }}
+                  style={{ color: colors.text.muted, fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace" }}
                 >
                   {filtered.length === allDatasets.length
                     ? `${allDatasets.length} dataset${allDatasets.length !== 1 ? "s" : ""}`

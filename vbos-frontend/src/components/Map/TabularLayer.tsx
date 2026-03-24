@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useDataset } from "@/hooks/useDataset";
 import { useLayerStore } from "@/store/layer-store";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { TabularApiParams } from "@/types/mapQuery";
 
 export function TabularLayers() {
   const { layers } = useLayerStore();
@@ -20,9 +21,26 @@ type TabularDatasetMapLayerProps = {
   id: number;
 };
 
+function tabularParamsToSearchParams(p: TabularApiParams | null) {
+  const f = new URLSearchParams();
+  if (!p) return f;
+  p.provinces?.forEach((pr) => f.append("province", pr));
+  p.area_councils?.forEach((ac) => f.append("area_council", ac));
+  if (p.attribute) f.set("attribute", p.attribute);
+  if (p.value_gte != null && p.value_gte !== "")
+    f.set("value_gte", String(p.value_gte));
+  if (p.value_lte != null && p.value_lte !== "")
+    f.set("value_lte", String(p.value_lte));
+  return f;
+}
+
 function TabularDatasetMapLayer({ id }: TabularDatasetMapLayerProps) {
   const { setTabularLayerData } = useLayerStore();
-  const filters = new URLSearchParams();
+  const tabularApiParams = useLayerStore((s) => s.tabularApiParams);
+  const filters = useMemo(
+    () => tabularParamsToSearchParams(tabularApiParams),
+    [tabularApiParams],
+  );
 
   const { data, isPending } = useDataset("tabular", id, filters);
 

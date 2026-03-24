@@ -116,12 +116,19 @@ class FieldCheckCoverageView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        from vbos.datasets.models import TabularItem, TabularDataset
+        from vbos.datasets.models import (
+            DatasetPublicationStatus,
+            TabularItem,
+            TabularDataset,
+        )
 
         # Damage estimate datasets only
         damage_types = ["estimated_damage", "estimate_financial_damage"]
         tabular_ct = ContentType.objects.get_for_model(TabularItem)
-        damage_datasets = TabularDataset.objects.filter(type__in=damage_types)
+        damage_datasets = TabularDataset.objects.filter(
+            type__in=damage_types,
+            publication_status=DatasetPublicationStatus.PUBLISHED,
+        )
         item_ids = list(
             TabularItem.objects.filter(dataset__in=damage_datasets).values_list("id", flat=True)
         )

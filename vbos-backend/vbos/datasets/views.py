@@ -3,6 +3,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_excel.mixins import XLSXFileMixin
 from drf_excel.renderers import XLSXRenderer
+from django.conf import settings
 from django.contrib.gis.geos import Point
 from rest_framework import status
 from rest_framework.generics import DestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveAPIView
@@ -30,6 +31,7 @@ from .models import (
     TabularItem,
     VectorDataset,
     VectorItem,
+    get_disaster_dataset_tag_names,
 )
 from .pagination import (
     DataResultsSetPagination,
@@ -37,6 +39,12 @@ from .pagination import (
     GeoJsonPagination,
     StandardResultsSetPagination,
 )
+from vbos.datasets.map_query import run_map_query
+from vbos.datasets.publication import (
+    filter_queryset_for_public_api,
+    get_dataset_for_read_or_404,
+)
+
 from .serializers import (
     AreaCouncilSerializer,
     ClusterSerializer,
@@ -53,19 +61,6 @@ from .serializers import (
 
 # Driver overlay names: fetched by name across all clusters (e.g. Roads in Logistics)
 DRIVER_DATASET_NAMES = ["Population growth", "Roads", "Urban expansion"]
-
-# Disaster overlay names: fetched by name across all clusters.
-# Frontend lists all; disabled until admin uploads matching dataset.
-DISASTER_DATASET_NAMES = [
-    "Cyclone Intensity",
-    "Volcano",
-    "Flood",
-    "Earthquake",
-    "Tsunami",
-    "Landslide",
-    "Drought",
-    "Wildfire",
-]
 
 class ClusterDatasetsView(APIView):
     """Single endpoint returning all dataset types for a cluster in one response.
@@ -115,23 +110,67 @@ class ClusterDatasetsView(APIView):
             name_q = Q()
             for n in DRIVER_DATASET_NAMES:
                 name_q |= Q(name__icontains=n)
-            tabular_qs = TabularDataset.objects.filter(name_q)
-            raster_qs = RasterDataset.objects.filter(name_q)
-            vector_qs = filter_by_scenario(VectorDataset.objects.filter(name_q), cluster_param=cluster_name)
-            pmtiles_qs = filter_by_scenario(PMTilesDataset.objects.filter(name_q), cluster_param=cluster_name)
+            tabular_qs = filter_queryset_for_public_api(
+                TabularDataset.objects.filter(name_q), request
+            )
+            raster_qs = filter_queryset_for_public_api(
+                RasterDataset.objects.filter(name_q), request
+            )
+            vector_qs = filter_by_scenario(
+                filter_queryset_for_public_api(
+                    VectorDataset.objects.filter(name_q), request
+                ),
+                cluster_param=cluster_name,
+            )
+            pmtiles_qs = filter_by_scenario(
+                filter_queryset_for_public_api(
+                    PMTilesDataset.objects.filter(name_q), request
+                ),
+                cluster_param=cluster_name,
+            )
             tabular = TabularDatasetSerializer(tabular_qs, many=True).data
             raster = RasterDatasetSerializer(raster_qs, many=True).data
             vector = VectorDatasetSerializer(vector_qs, many=True).data
             pmtiles = PMTilesDatasetSerializer(pmtiles_qs, many=True).data
         elif cluster_name.lower() == "disaster":
             # Disaster overlay: Disaster mode — fetch by name across ALL clusters
+            # Tag names are admin-configurable (DisasterDatasetTag).
             from django.db.models import Q
-            name_q = Q()
-            for n in DISASTER_DATASET_NAMES:
-                name_q |= Q(name__icontains=n)
-            raster_qs = RasterDataset.objects.filter(name_q)
-            vector_qs = filter_by_scenario(VectorDataset.objects.filter(name_q), cluster_param=cluster_name)
-            pmtiles_qs = filter_by_scenario(PMTilesDataset.objects.filter(name_q), cluster_param=cluster_name)
+            tag_names = get_disaster_dataset_tag_names()
+            if tag_names:
+                name_q = Q()
+                for n in tag_names:
+                    name_q |= Q(name__icontains=n)
+                raster_qs = filter_queryset_for_public_api(
+                    RasterDataset.objects.filter(name_q), request
+                )
+                vector_qs = filter_by_scenario(
+                    filter_queryset_for_public_api(
+                        VectorDataset.objects.filter(name_q), request
+                    ),
+                    cluster_param=cluster_name,
+                )
+                pmtiles_qs = filter_by_scenario(
+                    filter_queryset_for_public_api(
+                        PMTilesDataset.objects.filter(name_q), request
+                    ),
+                    cluster_param=cluster_name,
+                )
+            else:
+                empty = RasterDataset.objects.none()
+                raster_qs = filter_queryset_for_public_api(empty, request)
+                vector_qs = filter_by_scenario(
+                    filter_queryset_for_public_api(
+                        VectorDataset.objects.none(), request
+                    ),
+                    cluster_param=cluster_name,
+                )
+                pmtiles_qs = filter_by_scenario(
+                    filter_queryset_for_public_api(
+                        PMTilesDataset.objects.none(), request
+                    ),
+                    cluster_param=cluster_name,
+                )
             tabular = []
             raster = RasterDatasetSerializer(raster_qs, many=True).data
             vector = VectorDatasetSerializer(vector_qs, many=True).data
@@ -141,11 +180,17 @@ class ClusterDatasetsView(APIView):
             from django.db.models import Q
             module = cluster_name.lower().replace(" ", "_")
             mod_filter = Q(climate_modules__contains=[module]) | Q(climate_module=module)
-            base_vector = VectorDataset.objects.filter(mod_filter)
-            base_pmtiles = PMTilesDataset.objects.filter(mod_filter)
+            base_vector = filter_queryset_for_public_api(
+                VectorDataset.objects.filter(mod_filter), request
+            )
+            base_pmtiles = filter_queryset_for_public_api(
+                PMTilesDataset.objects.filter(mod_filter), request
+            )
             tabular = []
             # Land cover raster only in Land Use/Land Cover (Land Accounts); exclude from Coastal changes
-            raster_qs = RasterDataset.objects.all()
+            raster_qs = filter_queryset_for_public_api(
+                RasterDataset.objects.all(), request
+            )
             if cluster_name.lower() == "coastal changes":
                 raster_qs = raster_qs.filter(is_land_cover=False)
             raster = RasterDatasetSerializer(raster_qs, many=True).data
@@ -153,8 +198,9 @@ class ClusterDatasetsView(APIView):
             pmtiles = PMTilesDatasetSerializer(base_pmtiles, many=True).data
         else:
             tabular_ids = list(
-                TabularDataset.objects.filter(
-                    cluster__name__iexact=cluster_name
+                filter_queryset_for_public_api(
+                    TabularDataset.objects.filter(cluster__name__iexact=cluster_name),
+                    request,
                 ).values_list("id", flat=True)
             )
             tabular = TabularDatasetSerializer(
@@ -162,11 +208,17 @@ class ClusterDatasetsView(APIView):
             ).data
             # Rasters are Climate-mode only: return all rasters for every cluster
             raster = RasterDatasetSerializer(
-                RasterDataset.objects.all(),
+                filter_queryset_for_public_api(RasterDataset.objects.all(), request),
                 many=True,
             ).data
-            base_vector = VectorDataset.objects.filter(cluster__name__iexact=cluster_name)
-            base_pmtiles = PMTilesDataset.objects.filter(cluster__name__iexact=cluster_name)
+            base_vector = filter_queryset_for_public_api(
+                VectorDataset.objects.filter(cluster__name__iexact=cluster_name),
+                request,
+            )
+            base_pmtiles = filter_queryset_for_public_api(
+                PMTilesDataset.objects.filter(cluster__name__iexact=cluster_name),
+                request,
+            )
             vector = VectorDatasetSerializer(
                 filter_by_scenario(base_vector, cluster_param=cluster_name),
                 many=True,
@@ -220,32 +272,40 @@ class AreaCouncilListView(ListAPIView):
 
 @method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class RasterDatasetListView(ListAPIView):
-    queryset = RasterDataset.objects.all()
     serializer_class = RasterDatasetSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = DatasetListPagination
     filterset_class = RasterDatasetFilter
 
+    def get_queryset(self):
+        return filter_queryset_for_public_api(RasterDataset.objects.all(), self.request)
+
 
 class RasterDatasetDetailView(RetrieveAPIView):
-    queryset = RasterDataset.objects.all()
     serializer_class = RasterDatasetSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return filter_queryset_for_public_api(RasterDataset.objects.all(), self.request)
 
 
 @method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class PMTilesDatasetListView(ListAPIView):
-    queryset = PMTilesDataset.objects.all()
     serializer_class = PMTilesDatasetSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = DatasetListPagination
     filterset_class = PMTilesDatasetFilter
 
+    def get_queryset(self):
+        return filter_queryset_for_public_api(PMTilesDataset.objects.all(), self.request)
+
 
 class PMTilesDatasetDetailView(RetrieveAPIView):
-    queryset = PMTilesDataset.objects.all()
     serializer_class = PMTilesDatasetSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return filter_queryset_for_public_api(PMTilesDataset.objects.all(), self.request)
 
 
 class PMTilesIntensityView(APIView):
@@ -254,13 +314,7 @@ class PMTilesIntensityView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        try:
-            dataset = PMTilesDataset.objects.get(pk=pk)
-        except PMTilesDataset.DoesNotExist:
-            return Response(
-                {"detail": "PMTiles dataset not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        dataset = get_dataset_for_read_or_404(PMTilesDataset, request, pk)
         intensity_data = dataset.intensity_data or []
         if not isinstance(intensity_data, list):
             return Response(
@@ -321,7 +375,7 @@ class AssetExposureView(APIView):
 
             province_counts_qs = (
                 VectorItem.objects.filter(
-                    dataset__name__in=DISASTER_DATASET_NAMES,
+                    dataset__name__in=get_disaster_dataset_tag_names(),
                     province__isnull=False,
                 )
                 .values("province__name")
@@ -374,7 +428,10 @@ class AssetExposureView(APIView):
 
         point = Point(lng, lat, srid=4326)
         exposed = []
-        for ds in VectorDataset.objects.filter(pk__in=layer_ids):
+        visible = filter_queryset_for_public_api(
+            VectorDataset.objects.filter(pk__in=layer_ids), request
+        )
+        for ds in visible:
             has_feature = VectorItem.objects.filter(
                 dataset=ds,
                 geometry__intersects=point,
@@ -386,17 +443,21 @@ class AssetExposureView(APIView):
 
 @method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class VectorDatasetListView(ListAPIView):
-    queryset = VectorDataset.objects.all()
     serializer_class = VectorDatasetSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = DatasetListPagination
     filterset_class = VectorDatasetFilter
 
+    def get_queryset(self):
+        return filter_queryset_for_public_api(VectorDataset.objects.all(), self.request)
+
 
 class VectorDatasetDetailView(RetrieveAPIView):
-    queryset = VectorDataset.objects.all()
     serializer_class = VectorDatasetSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return filter_queryset_for_public_api(VectorDataset.objects.all(), self.request)
 
 
 class VectorDatasetDataView(ListAPIView):
@@ -409,6 +470,10 @@ class VectorDatasetDataView(ListAPIView):
         InBBoxFilter,
         django_filters.rest_framework.DjangoFilterBackend,
     )
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        get_dataset_for_read_or_404(VectorDataset, request, self.kwargs.get("pk"))
 
     def get_queryset(self):
         from vbos.datasets.models import VectorDataset
@@ -448,17 +513,21 @@ class VectorDatasetDataView(ListAPIView):
 
 @method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class TabularDatasetListView(ListAPIView):
-    queryset = TabularDataset.objects.all()
     serializer_class = TabularDatasetSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = DatasetListPagination
     filterset_class = TabularDatasetFilter
 
+    def get_queryset(self):
+        return filter_queryset_for_public_api(TabularDataset.objects.all(), self.request)
+
 
 class TabularDatasetDetailView(RetrieveAPIView):
-    queryset = TabularDataset.objects.all()
     serializer_class = TabularDatasetSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return filter_queryset_for_public_api(TabularDataset.objects.all(), self.request)
 
 
 class TabularDatasetDataView(ListAPIView):
@@ -466,6 +535,10 @@ class TabularDatasetDataView(ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = TabularItemSerializer
     pagination_class = DataResultsSetPagination
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        get_dataset_for_read_or_404(TabularDataset, request, self.kwargs.get("pk"))
 
     def get_queryset(self):
         return TabularItem.objects.filter(
@@ -480,3 +553,39 @@ class TabularDatasetXSLXDataView(XLSXFileMixin, TabularDatasetDataView):
 
     def get_filename(self, request, *args, **kwargs):
         return f"vbos-mis-tabular-{kwargs.get('pk')}.xlsx"
+
+
+class MapQueryPlanView(APIView):
+    """
+    POST JSON body: {"query": "Show schools in Tafea with more than 200 students"}
+    Returns: {"plan": {...}, "warnings": [...]} for the frontend to apply to map state.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        key = getattr(settings, "AI_OPENAI_API_KEY", "") or ""
+        if not (key and str(key).strip()):
+            return Response(
+                {
+                    "detail": "AI map query is not configured. Set OPENAI_API_KEY (or AI_OPENAI_API_KEY).",
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        q = request.data.get("query") if isinstance(request.data, dict) else None
+        if not q or not str(q).strip():
+            return Response(
+                {"errors": {"query": ["This field is required."]}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        text = str(q).strip()
+        if len(text) > 4000:
+            return Response(
+                {"errors": {"query": ["Maximum length is 4000 characters."]}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            result = run_map_query(text)
+        except RuntimeError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response(result)

@@ -9,24 +9,24 @@ import { chartColors } from "@/components/colors";
 
 const LIGHT = {
   chartBg: "#ffffff",
-  text: "#1e293b",
-  mutedText: "#64748b",
+  text: "#1a1a1a",
+  mutedText: "#5f7d95",
   gridLine: "rgba(0,0,0,0.05)",
   axisLine: "rgba(0,0,0,0.06)",
   tooltipBg: "#ffffff",
-  tooltipBorder: "#e2e8f0",
-  tooltipText: "#1e293b",
+  tooltipBorder: "#d1d9e0",
+  tooltipText: "#1a1a1a",
 } as const;
 
 const DARK = {
   chartBg: "transparent",
-  text: "#f8fafc",
-  mutedText: "#94a3b8",
+  text: "#e8ecf0",
+  mutedText: "#8fb3cc",
   gridLine: "rgba(255,255,255,0.05)",
   axisLine: "rgba(255,255,255,0.06)",
-  tooltipBg: "#0f172a",
-  tooltipBorder: "#334155",
-  tooltipText: "#f8fafc",
+  tooltipBg: "#122536",
+  tooltipBorder: "#2a4a5f",
+  tooltipText: "#e8ecf0",
 } as const;
 
 export function useHighchartsTheme(): Highcharts.Options {
@@ -39,7 +39,7 @@ export function useHighchartsTheme(): Highcharts.Options {
       accessibility: { enabled: false },
       chart: {
         backgroundColor: c.chartBg,
-        style: { fontFamily: "var(--font-work-sans), system-ui, sans-serif" },
+        style: { fontFamily: "var(--font-sans)" },
         spacing: [24, 20, 20, 24],
         plotBorderWidth: 0,
       },

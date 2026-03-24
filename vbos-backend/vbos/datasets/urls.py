@@ -1,10 +1,25 @@
 from django.urls import path
 
-from . import aggregate_views, audit_views, pmtiles_serve, views
+from . import aggregate_views, audit_views, pmtiles_serve, views, workspace_views
 
 app_name = "datasets"
 
 urlpatterns = [
+    path(
+        "workspaces/",
+        workspace_views.MapSavedWorkspaceListCreateView.as_view(),
+        name="map-workspace-list",
+    ),
+    path(
+        "workspaces/<int:pk>/",
+        workspace_views.MapSavedWorkspaceDetailView.as_view(),
+        name="map-workspace-detail",
+    ),
+    path(
+        "ai/map-query/",
+        views.MapQueryPlanView.as_view(),
+        name="map-query-plan",
+    ),
     path(
         "pmtiles-serve/<path:path>",
         pmtiles_serve.serve_pmtiles,

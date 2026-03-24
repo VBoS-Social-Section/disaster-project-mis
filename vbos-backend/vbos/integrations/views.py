@@ -14,6 +14,10 @@ from vbos.datasets.models import TabularDataset, TabularItem, Province, AreaCoun
 from vbos.datasets.serializers import TabularDatasetSerializer, TabularItemSerializer
 from vbos.datasets.pagination import DataResultsSetPagination, DatasetListPagination
 from vbos.datasets.filters import TabularDatasetFilter, TabularItemFilter
+from vbos.datasets.publication import (
+    filter_queryset_for_public_api,
+    get_dataset_for_read_or_404,
+)
 
 from .authentication import IntegrationAPIKeyAuthentication
 from .permissions import IsIntegrationAPIKey
@@ -24,20 +28,24 @@ from .permissions import IsIntegrationAPIKey
 
 class IntegrationTabularListView(ListAPIView):
     """List tabular datasets. Auth: X-API-Key or Authorization: ApiKey <key>."""
-    queryset = TabularDataset.objects.all()
     serializer_class = TabularDatasetSerializer
     authentication_classes = [IntegrationAPIKeyAuthentication]
     permission_classes = [IsIntegrationAPIKey]
     pagination_class = DatasetListPagination
     filterset_class = TabularDatasetFilter
 
+    def get_queryset(self):
+        return filter_queryset_for_public_api(TabularDataset.objects.all(), self.request)
+
 
 class IntegrationTabularDetailView(RetrieveAPIView):
     """Get a single tabular dataset. Auth: X-API-Key or Authorization: ApiKey <key>."""
-    queryset = TabularDataset.objects.all()
     serializer_class = TabularDatasetSerializer
     authentication_classes = [IntegrationAPIKeyAuthentication]
     permission_classes = [IsIntegrationAPIKey]
+
+    def get_queryset(self):
+        return filter_queryset_for_public_api(TabularDataset.objects.all(), self.request)
 
 
 class IntegrationTabularDataView(ListAPIView):
@@ -47,6 +55,10 @@ class IntegrationTabularDataView(ListAPIView):
     permission_classes = [IsIntegrationAPIKey]
     pagination_class = DataResultsSetPagination
     filterset_class = TabularItemFilter
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        get_dataset_for_read_or_404(TabularDataset, request, self.kwargs.get("pk"))
 
     def get_queryset(self):
         return TabularItem.objects.filter(
@@ -60,12 +72,7 @@ class IntegrationTabularAggregateView(APIView):
     permission_classes = [IsIntegrationAPIKey]
 
     def get(self, request, pk):
-        dataset = TabularDataset.objects.filter(pk=pk).first()
-        if not dataset:
-            return Response(
-                {"detail": "Not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        dataset = get_dataset_for_read_or_404(TabularDataset, request, pk)
         group_by = request.query_params.get("group_by", "province")
         year = request.query_params.get("year")
         attribute = request.query_params.get("attribute")
