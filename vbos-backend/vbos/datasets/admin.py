@@ -9,15 +9,23 @@ from django.db.models import Q
 from django.contrib import messages
 from django.contrib.gis import admin
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.urls import reverse
 from django.utils.html import format_html
 from django.urls import path
 from unfold.admin import ModelAdmin as UnfoldModelAdmin
 
 from .forms import GeoJSONUploadForm, IconPickerWidget
+from .widgets import VectorColorPickerWidget
+from vbos.audit.models import AuditLog
+from vbos.audit.signals import log_audit_action
+
 from .models import (
     AreaCouncil,
     Cluster,
+    DatasetPublicationStatus,
+    DisasterDatasetTag,
+    MapSavedWorkspace,
     PMTilesDataset,
     Province,
     RasterDataset,
@@ -59,6 +67,101 @@ INTENSITY_BADGE_STYLES = {
 }
 
 
+class DatasetPublicationAdminMixin:
+    """Bulk publish/archive + audit trail for dataset catalog models."""
+
+    @admin.action(description="Publish selected")
+    def publish_selected_datasets(self, request, queryset):
+        user = request.user
+        now = timezone.now()
+        count = 0
+        for obj in queryset:
+            old = obj.publication_status
+            if old == DatasetPublicationStatus.PUBLISHED:
+                continue
+            old_str = str(old)
+            old_pb = obj.published_by_id
+            old_pa = obj.published_at
+            obj.publication_status = DatasetPublicationStatus.PUBLISHED
+            obj.published_by = user
+            obj.published_at = now
+            obj.updated_by = user
+            obj.save(
+                update_fields=[
+                    "publication_status",
+                    "published_by",
+                    "published_at",
+                    "updated",
+                    "updated_by",
+                ]
+            )
+            log_audit_action(
+                action=AuditLog.ACTION_UPDATE,
+                instance=obj,
+                user=user,
+                field_changes={
+                    "publication_status": (old_str, DatasetPublicationStatus.PUBLISHED),
+                    "published_by": (str(old_pb) if old_pb is not None else None, str(user.pk)),
+                    "published_at": (
+                        str(old_pa) if old_pa is not None else None,
+                        str(now),
+                    ),
+                },
+                request=request,
+            )
+            count += 1
+        self.message_user(
+            request,
+            f"Published {count} dataset(s).",
+            level=messages.SUCCESS,
+        )
+
+    @admin.action(description="Archive selected")
+    def archive_selected_datasets(self, request, queryset):
+        user = request.user
+        count = 0
+        for obj in queryset:
+            old = obj.publication_status
+            if old == DatasetPublicationStatus.ARCHIVED:
+                continue
+            old_str = str(old)
+            obj.publication_status = DatasetPublicationStatus.ARCHIVED
+            obj.updated_by = user
+            obj.save(update_fields=["publication_status", "updated", "updated_by"])
+            log_audit_action(
+                action=AuditLog.ACTION_UPDATE,
+                instance=obj,
+                user=user,
+                field_changes={
+                    "publication_status": (old_str, DatasetPublicationStatus.ARCHIVED),
+                },
+                request=request,
+            )
+            count += 1
+        self.message_user(
+            request,
+            f"Archived {count} dataset(s).",
+            level=messages.SUCCESS,
+        )
+
+
+class DatasetAdminAuthorshipMixin:
+    """Set created_by / updated_by from the admin user on save."""
+
+    def get_readonly_fields(self, request, obj=None):
+        base = list(super().get_readonly_fields(request, obj))
+        for f in ("created_by", "updated_by"):
+            if f not in base:
+                base.append(f)
+        return base
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+
+
 class YearListFilter(SimpleListFilter):
     title = "Year"
     parameter_name = "year"
@@ -81,22 +184,57 @@ class ClusterAdmin(SortableAdminMixin, UnfoldModelAdmin):
     list_display = ["id", "name"]
 
 
+@admin.register(DisasterDatasetTag)
+class DisasterDatasetTagAdmin(UnfoldModelAdmin):
+    """Names matched against dataset names for the Disaster overlay (cluster=disaster)."""
+
+    list_display = ["id", "name", "order"]
+    list_editable = ["order"]
+    ordering = ["order", "name"]
+    search_fields = ["name"]
+
+
 class RasterFileAdmin(UnfoldModelAdmin):
     """Base admin for RasterFile. Registered in climate app as ClimateRasterFileAdmin."""
     list_display = ["id", "name", "created", "file"]
 
 
-class RasterDatasetAdmin(UnfoldModelAdmin):
+class RasterDatasetAdmin(
+    DatasetPublicationAdminMixin, DatasetAdminAuthorshipMixin, UnfoldModelAdmin
+):
     """Base admin for RasterDataset. Registered in climate app as ClimateRasterDatasetAdmin."""
-    list_display = ["id", "name", "type", "is_land_cover", "updated", "filename_id"]
-    list_filter = ["type", "is_land_cover"]
+    list_display = [
+        "id",
+        "name",
+        "type",
+        "publication_status",
+        "is_land_cover",
+        "updated",
+        "filename_id",
+    ]
+    list_filter = ["type", "is_land_cover", "publication_status"]
     list_editable = ["is_land_cover"]
+    actions = ["publish_selected_datasets", "archive_selected_datasets"]
     fieldsets = (
         (
             None,
             {
                 "fields": ("name", "type", "description", "source"),
                 "description": "Raster datasets are Climate-mode only. They appear in the Land cover tab regardless of selected cluster.",
+            },
+        ),
+        (
+            "Publication",
+            {
+                "fields": ("publication_status", "published_by", "published_at"),
+                "description": "Draft / Published / Archived. New datasets default to Draft; use Publish to expose them in the API.",
+            },
+        ),
+        (
+            "Record",
+            {
+                "fields": ("created_by", "updated_by"),
+                "description": "Who created and last edited this row in admin.",
             },
         ),
         (
@@ -118,17 +256,40 @@ class RasterDatasetAdmin(UnfoldModelAdmin):
 
 
 @admin.register(PMTilesDataset)
-class PMTilesDatasetAdmin(UnfoldModelAdmin):
+class PMTilesDatasetAdmin(
+    DatasetPublicationAdminMixin, DatasetAdminAuthorshipMixin, UnfoldModelAdmin
+):
     def get_queryset(self, request):
         from django.db.models import Q
         qs = super().get_queryset(request)
         return qs.filter(Q(climate_module__isnull=True) | Q(climate_module=""))
-    list_display = ["id", "name", "cluster", "type", "climate_module", "updated"]
-    list_filter = ["cluster", "type", "climate_module"]
+    list_display = [
+        "id",
+        "name",
+        "cluster",
+        "type",
+        "publication_status",
+        "climate_module",
+        "updated",
+    ]
+    list_filter = ["cluster", "type", "climate_module", "publication_status"]
     list_editable = ["climate_module"]
+    actions = ["publish_selected_datasets", "archive_selected_datasets"]
 
     fieldsets = (
         (None, {"fields": ("name", "type", "description", "source", "cluster")}),
+        (
+            "Publication",
+            {
+                "fields": ("publication_status", "published_by", "published_at"),
+            },
+        ),
+        (
+            "Record",
+            {
+                "fields": ("created_by", "updated_by"),
+            },
+        ),
         (
             "Section",
             {
@@ -153,14 +314,28 @@ class PMTilesDatasetAdmin(UnfoldModelAdmin):
 
 
 @admin.register(VectorDataset)
-class VectorDatasetAdmin(UnfoldModelAdmin):
+class VectorDatasetAdmin(
+    DatasetPublicationAdminMixin, DatasetAdminAuthorshipMixin, UnfoldModelAdmin
+):
     def get_queryset(self, request):
         from django.db.models import Q
         qs = super().get_queryset(request)
         return qs.filter(Q(climate_module__isnull=True) | Q(climate_module=""))
-    list_display = ["id", "name", "cluster", "type", "climate_module", "icon", "color", "updated"]
-    list_filter = ["cluster", "type", "climate_module"]
-    list_editable = ["climate_module", "icon", "color"]
+    list_display = [
+        "id",
+        "name",
+        "cluster",
+        "type",
+        "publication_status",
+        "climate_module",
+        "icon",
+        "color",
+        "updated",
+    ]
+    list_filter = ["cluster", "type", "climate_module", "publication_status"]
+    # color uses VectorColorPickerWidget (not compatible with list_editable)
+    list_editable = ["climate_module", "icon"]
+    actions = ["publish_selected_datasets", "archive_selected_datasets"]
     change_form_template = "admin/datasets/vectordataset/change_form.html"
     readonly_fields = ["view_on_map_link"]
     # `created`/`updated` are non-editable model fields.
@@ -169,6 +344,18 @@ class VectorDatasetAdmin(UnfoldModelAdmin):
 
     fieldsets = (
         (None, {"fields": ("name", "type", "description", "source", "cluster")}),
+        (
+            "Publication",
+            {
+                "fields": ("publication_status", "published_by", "published_at"),
+            },
+        ),
+        (
+            "Record",
+            {
+                "fields": ("created_by", "updated_by"),
+            },
+        ),
         (
             "Section",
             {
@@ -190,13 +377,15 @@ class VectorDatasetAdmin(UnfoldModelAdmin):
         if province is not None:
             url += f"&province={province.pk}"
         return format_html(
-            '<a href="{}" target="_blank" style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:#185FA5;text-decoration:none;">Open in Live Map →</a>',
+            '<a href="{}" target="_blank" style="font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:11px;color:#185FA5;text-decoration:none;">Open in Live Map →</a>',
             url,
         )
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "icon":
             kwargs["widget"] = IconPickerWidget
+        if db_field.name == "color":
+            kwargs["widget"] = VectorColorPickerWidget
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
 
@@ -406,23 +595,53 @@ class VectorItemAdmin(admin.GISModelAdmin, UnfoldModelAdmin):
 
 
 @admin.register(TabularDataset)
-class TabularDatasetAdmin(UnfoldModelAdmin):
+class TabularDatasetAdmin(
+    DatasetPublicationAdminMixin, DatasetAdminAuthorshipMixin, UnfoldModelAdmin
+):
     list_display = [
         "id",
         "name",
         "cluster",
         "type",
+        "publication_status",
         "rap_sector_badge",
         "rap_batch_link",
         "updated",
     ]
-    list_filter = ["cluster", "type", "rap_sector_family", "rap_batch"]
+    list_filter = ["cluster", "type", "rap_sector_family", "rap_batch", "publication_status"]
     search_fields = ["name", "description", "rap_sector_family"]
-    actions = ["clean_redundant_items"]
+    actions = [
+        "clean_redundant_items",
+        "publish_selected_datasets",
+        "archive_selected_datasets",
+    ]
     readonly_fields = ["view_on_map_link"]
     # `created`/`updated` are non-editable model fields.
     # Exclude them to avoid FieldError when Unfold builds fieldsets.
     exclude = ("created", "updated")
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "name",
+                    "type",
+                    "description",
+                    "source",
+                    "cluster",
+                    "unit",
+                    "rap_batch",
+                    "rap_sector_family",
+                ),
+            },
+        ),
+        (
+            "Publication",
+            {"fields": ("publication_status", "published_by", "published_at")},
+        ),
+        ("Record", {"fields": ("created_by", "updated_by")}),
+        ("Map", {"fields": ("view_on_map_link",)}),
+    )
 
     @admin.display(description="View on map")
     def view_on_map_link(self, obj):
@@ -432,7 +651,7 @@ class TabularDatasetAdmin(UnfoldModelAdmin):
         if province is not None:
             url += f"&province={province.pk}"
         return format_html(
-            '<a href="{}" target="_blank" style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:#185FA5;text-decoration:none;">Open in Live Map →</a>',
+            '<a href="{}" target="_blank" style="font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:11px;color:#185FA5;text-decoration:none;">Open in Live Map →</a>',
             url,
         )
 
@@ -442,7 +661,7 @@ class TabularDatasetAdmin(UnfoldModelAdmin):
         if batch:
             url = reverse("admin:rap_import_rapimportbatch_change", args=[batch.pk])
             return format_html(
-                '<a href="{}" style="font-family:\'IBM Plex Mono\',monospace;'
+                '<a href="{}" style="font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;'
                 'font-size:10px;color:#378ADD;">{}</a>',
                 url,
                 batch.batch_ref,
@@ -461,7 +680,7 @@ class TabularDatasetAdmin(UnfoldModelAdmin):
         )
         css, label = style_label
         return format_html(
-            '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;'
+            '<span style="font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:9px;'
             "padding:2px 6px;border-radius:3px;text-transform:uppercase;"
             'letter-spacing:.04em;{}">{}</span>',
             css,
@@ -520,7 +739,7 @@ class TabularItemAdmin(UnfoldModelAdmin):
             int(intensity), ("#4A5568", "#F8F9FB", "#E2E6EE")
         )
         return format_html(
-            '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;'
+            '<span style="font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:11px;'
             'font-weight:500;color:{};background:{};padding:2px 8px;border-radius:3px;'
             'border:1px solid {};">Cat {}</span>',
             color,
@@ -650,3 +869,12 @@ class TabularItemAdmin(UnfoldModelAdmin):
         }
         context.update(self.admin_site.each_context(request))
         return render(request, "admin/csv_import.html", context)
+
+
+@admin.register(MapSavedWorkspace)
+class MapSavedWorkspaceAdmin(UnfoldModelAdmin):
+    list_display = ("id", "name", "user", "updated_at")
+    list_filter = ("updated_at",)
+    search_fields = ("name", "user__username")
+    readonly_fields = ("created_at", "updated_at", "payload")
+    ordering = ("-updated_at",)

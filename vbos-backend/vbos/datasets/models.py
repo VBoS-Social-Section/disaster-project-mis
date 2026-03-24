@@ -1,11 +1,12 @@
 from django.conf import settings
 from django.contrib.gis.db import models
 from django.core.cache import cache
-from django.core.validators import FileExtensionValidator
+from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db.models.fields.files import default_storage
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
+from vbos.audit.signals import AuditableMixin, log_audit_action, get_field_changes
 
 UPLOAD_TO = "staging/raster/" if settings.DEBUG else "production/raster/"
 
@@ -15,6 +16,87 @@ TYPE_CHOICES = {
     "aid_resources_needed": _("Immediate Response Resources"),
     "estimate_financial_damage": _("Estimated Financial Damage"),
 }
+
+
+class DatasetPublicationStatus(models.TextChoices):
+    """Catalog visibility: draft (internal), published (live), archived (hidden)."""
+
+    DRAFT = "draft", _("Draft")
+    PUBLISHED = "published", _("Published")
+    ARCHIVED = "archived", _("Archived")
+
+
+class DatasetPublicationMixin(models.Model):
+    """Shared publication workflow for all dataset catalog models."""
+
+    publication_status = models.CharField(
+        max_length=20,
+        choices=DatasetPublicationStatus.choices,
+        default=DatasetPublicationStatus.DRAFT,
+        db_index=True,
+    )
+    published_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    published_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_("Set when publication_status is Published (audit / display)."),
+    )
+
+    class Meta:
+        abstract = True
+
+
+class DatasetAuthorshipMixin(models.Model):
+    """Who created / last updated the dataset row (set from Django admin)."""
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+
+    class Meta:
+        abstract = True
+
+
+class DisasterDatasetTag(models.Model):
+    """
+    Names used to match disaster overlay layers (Cluster API cluster=disaster).
+    Dataset names are matched with icontains against each tag name.
+    """
+
+    name = models.CharField(max_length=155, unique=True)
+    order = models.PositiveIntegerField(default=0, db_index=True)
+
+    class Meta:
+        ordering = ["order", "name"]
+        verbose_name = _("Disaster dataset tag")
+        verbose_name_plural = _("Disaster dataset tags")
+
+    def __str__(self):
+        return self.name
+
+
+def get_disaster_dataset_tag_names():
+    """Ordered tag names for disaster overlay (icontains) and exposure summaries (exact name)."""
+    return list(
+        DisasterDatasetTag.objects.order_by("order", "name").values_list("name", flat=True)
+    )
 
 
 class Cluster(models.Model):
@@ -49,6 +131,12 @@ def invalidate_cluster_cache(sender, **kwargs):
 @receiver(post_save, sender="datasets.PMTilesDataset")
 @receiver(post_delete, sender="datasets.PMTilesDataset")
 def invalidate_dataset_cache(sender, **kwargs):
+    _invalidate_cluster_cache(sender, **kwargs)
+
+
+@receiver(post_save, sender="datasets.DisasterDatasetTag")
+@receiver(post_delete, sender="datasets.DisasterDatasetTag")
+def invalidate_disaster_tag_cache(sender, **kwargs):
     _invalidate_cluster_cache(sender, **kwargs)
 
 
@@ -106,7 +194,7 @@ def delete_raster_file(sender, instance, **kwargs):
             default_storage.delete(instance.file.name)
 
 
-class RasterDataset(models.Model):
+class RasterDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Model):
     """
     Raster datasets are Climate-mode only and are not tied to a particular cluster.
     They appear in the Land cover tab regardless of selected cluster.
@@ -157,19 +245,9 @@ class RasterDataset(models.Model):
 
 
 # Legacy Lucide icon keys (still supported). Flaticon format: fi-sr-{name} (e.g. fi-sr-hospital)
-VECTOR_COLOR_CHOICES = [
-    ("#3d4aff", "Blue"),
-    ("#10b981", "Emerald"),
-    ("#f09000", "Orange"),
-    ("#8b5cf6", "Violet"),
-    ("#e34a33", "Red"),
-    ("#06b6d4", "Cyan"),
-    ("#6366f1", "Indigo"),
-    ("#14b8a6", "Teal"),
-]
 
 
-class VectorDataset(models.Model):
+class VectorDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Model):
     name = models.CharField(max_length=155, unique=False)
     description = models.TextField(max_length=2000, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -188,10 +266,15 @@ class VectorDataset(models.Model):
     )
     color = models.CharField(
         max_length=7,
-        choices=VECTOR_COLOR_CHOICES,
         blank=True,
         null=True,
-        help_text="Color for map markers. Leave empty for auto (cluster or index).",
+        validators=[
+            RegexValidator(
+                regex=r"^$|^#[0-9A-Fa-f]{6}$",
+                message="Use empty for auto, or a hex color like #3d4aff.",
+            )
+        ],
+        help_text="Hex color for map markers (e.g. #3d4aff). Leave empty for auto (cluster or index).",
     )
     cyclone_name = models.CharField(
         max_length=155,
@@ -224,7 +307,7 @@ class VectorDataset(models.Model):
         unique_together = ["name", "type", "cluster"]
 
 
-class PMTilesDataset(models.Model):
+class PMTilesDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Model):
     name = models.CharField(max_length=155, unique=False)
     description = models.TextField(max_length=2000, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -274,7 +357,7 @@ class PMTilesDataset(models.Model):
         verbose_name = "PMTiles Dataset"
 
 
-class VectorItem(models.Model):
+class VectorItem(AuditableMixin, models.Model):
     dataset = models.ForeignKey(VectorDataset, on_delete=models.CASCADE)
     name = models.CharField(max_length=155, blank=True, null=True)
     ref = models.CharField(max_length=50, blank=True, null=True)
@@ -294,7 +377,7 @@ class VectorItem(models.Model):
         ordering = ["id"]
 
 
-class TabularDataset(models.Model):
+class TabularDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Model):
     name = models.CharField(max_length=155, unique=False)
     description = models.TextField(max_length=2000, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -329,7 +412,7 @@ class TabularDataset(models.Model):
         unique_together = ["name", "type", "cluster"]
 
 
-class TabularItem(models.Model):
+class TabularItem(AuditableMixin, models.Model):
     dataset = models.ForeignKey(TabularDataset, on_delete=models.CASCADE)
     date = models.DateField(null=True)
     attribute = models.CharField(max_length=155, blank=True, null=True)
@@ -348,3 +431,26 @@ class TabularItem(models.Model):
         indexes = [
             models.Index(fields=["dataset", "province", "area_council"]),
         ]
+
+
+class MapSavedWorkspace(models.Model):
+    """User-saved Live Map layout (layers, filters, camera) — JSON payload from frontend."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="map_saved_workspaces",
+    )
+    name = models.CharField(max_length=120)
+    payload = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+        indexes = [
+            models.Index(fields=["user", "updated_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.user_id})"

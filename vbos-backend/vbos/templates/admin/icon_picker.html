@@ -14,12 +14,20 @@
   .icon-picker-suggested-item { cursor: pointer; border: 2px solid #e0e0e0; border-radius: 6px; }
   .icon-picker-suggested-item:hover { border-color: #417690; background: #f0f7ff; }
   .icon-picker-empty { grid-column: 1 / -1; padding: 24px; text-align: center; color: #666; }
+  .icon-picker-color-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; padding: 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0; }
+  .icon-picker-color-row label { font-size: 14px; font-weight: 500; }
 </style>
 {% endblock %}
 {% block content %}
 <div id="content-main">
   <h1>{% trans "Choose Icon" %}</h1>
   <p class="help">{% trans "50,000+ icons from Flaticon Uicons. Search and click to select." %}</p>
+
+  <div class="icon-picker-color-row">
+    <label for="icon-picker-color">{% trans "Marker color" %}</label>
+    <input type="color" id="icon-picker-color" value="#3d4aff" title="{% trans 'Marker color' %}" style="width: 44px; height: 32px; padding: 0; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;" />
+    <button type="button" class="button" id="icon-picker-color-auto">{% trans "Auto (inherit)" %}</button>
+  </div>
 
   <div class="icon-picker-suggested" style="margin-bottom: 20px;">
     <h3 style="margin: 0 0 12px 0; font-size: 14px;">{% trans "Suggested" %}</h3>
@@ -44,11 +52,34 @@
   const icons = {{ icons_json|safe }};
   const grid = document.getElementById('icon-picker-grid');
   const searchInput = document.getElementById('icon-picker-search');
+  const colorPicker = document.getElementById('icon-picker-color');
+  let markerColorAuto = false;
+  /** Only send color when the user changed the color row (avoid resetting form to default blue on icon-only pick). */
+  let colorRowTouched = false;
+
+  document.getElementById('icon-picker-color-auto')?.addEventListener('click', function() {
+    markerColorAuto = true;
+    colorRowTouched = true;
+    if (colorPicker) colorPicker.style.opacity = '0.45';
+  });
+  colorPicker?.addEventListener('input', function() {
+    markerColorAuto = false;
+    colorRowTouched = true;
+    colorPicker.style.opacity = '1';
+  });
 
   function selectIcon(iconId) {
     if (window.opener) {
       try {
-        window.opener.postMessage({ type: 'icon-picker-select', icon: iconId }, '*');
+        var payload = { type: 'icon-picker-select', icon: iconId };
+        if (colorRowTouched) {
+          if (!markerColorAuto && colorPicker && /^#[0-9A-Fa-f]{6}$/.test((colorPicker.value || '').trim())) {
+            payload.color = colorPicker.value.trim().toLowerCase();
+          } else {
+            payload.color = '';
+          }
+        }
+        window.opener.postMessage(payload, '*');
       } catch (e) {}
     }
     window.close();

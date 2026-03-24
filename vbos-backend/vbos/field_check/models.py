@@ -7,9 +7,10 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from vbos.audit.signals import AuditableMixin, log_audit_action, get_field_changes
 
 
-class FieldCheckRecord(models.Model):
+class FieldCheckRecord(AuditableMixin, models.Model):
     """
     One field verification event for a damage estimate item.
     Confidence is derived from the latest record per item:

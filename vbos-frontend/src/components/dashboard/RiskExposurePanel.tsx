@@ -93,7 +93,7 @@ export function RiskExposurePanel({
           type="button"
           className="shrink-0 rounded-md px-2 py-1 text-xs font-semibold uppercase tracking-wide transition-colors hover:bg-muted/30 focus-visible:outline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--drmis-bg-surface)]"
           style={{
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
             color: colors.text.muted,
           }}
           onClick={() => onByProvince?.()}
@@ -107,7 +107,7 @@ export function RiskExposurePanel({
           <p
             className="text-xs"
             style={{
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
               color: colors.text.muted,
             }}
           >
@@ -126,7 +126,7 @@ export function RiskExposurePanel({
               <span
                 className="w-[4.5rem] shrink-0 truncate sm:w-24"
                 style={{
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
                   fontSize: "10px",
                   fontWeight: 600,
                   letterSpacing: "0.04em",
@@ -157,7 +157,7 @@ export function RiskExposurePanel({
               <span
                 className="w-9 shrink-0 text-right text-xs font-semibold tabular-nums sm:w-10"
                 style={{
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
                   color: colors.text.secondary,
                 }}
               >
@@ -170,7 +170,7 @@ export function RiskExposurePanel({
           <p
             className="pt-1 text-[10px]"
             style={{
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
               color: colors.text.muted,
             }}
           >

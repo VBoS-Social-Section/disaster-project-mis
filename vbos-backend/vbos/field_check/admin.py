@@ -23,14 +23,21 @@ class FieldCheckRecordAdmin(UnfoldModelAdmin):
 def field_check_dashboard(request):
     """Admin view: field check coverage and improvement over time."""
     from django.contrib.contenttypes.models import ContentType
-    from vbos.datasets.models import TabularItem, TabularDataset
+    from vbos.datasets.models import (
+        DatasetPublicationStatus,
+        TabularItem,
+        TabularDataset,
+    )
     from django.db.models import OuterRef, Subquery
     from django.utils import timezone
     from datetime import timedelta
 
     tabular_ct = ContentType.objects.get_for_model(TabularItem)
     damage_types = ["estimated_damage", "estimate_financial_damage"]
-    damage_datasets = TabularDataset.objects.filter(type__in=damage_types)
+    damage_datasets = TabularDataset.objects.filter(
+        type__in=damage_types,
+        publication_status=DatasetPublicationStatus.PUBLISHED,
+    )
     item_ids = list(
         TabularItem.objects.filter(dataset__in=damage_datasets).values_list("id", flat=True)
     )

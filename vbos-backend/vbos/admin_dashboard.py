@@ -57,7 +57,7 @@ def _format_age_label(dt) -> tuple[str, bool]:
 
 def _badge_html(text: str, bg: str, color: str, border: str, font_size: int = 10):
     return format_html(
-        '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:{}px;'
+        '<span style="font-family:\'Segoe UI Mono\',\'Cascadia Mono\',Consolas,ui-monospace,monospace;font-size:{}px;'
         'padding:2px 8px;border-radius:4px;background:{};color:{};border:1px solid {};">{}</span>',
         font_size,
         bg,

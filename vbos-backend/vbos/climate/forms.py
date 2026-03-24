@@ -1,8 +1,10 @@
 """Climate-specific forms. No cluster-related fields."""
 from django import forms
+from django.core.validators import RegexValidator
 from django.db.models import Q
 
-from vbos.datasets.forms import IconPickerWidget, VECTOR_COLOR_CHOICES
+from vbos.datasets.forms import IconPickerWidget
+from vbos.datasets.widgets import VectorColorPickerWidget
 from vbos.datasets.models import VectorDataset
 
 
@@ -28,11 +30,17 @@ class ClimateGeoJSONUploadForm(forms.Form):
         widget=IconPickerWidget,
         help_text="Lucide key (e.g. droplet) or Flaticon class (e.g. fi-sr-hospital). Use Browse to pick.",
     )
-    color = forms.ChoiceField(
+    color = forms.CharField(
         label="Color",
-        choices=VECTOR_COLOR_CHOICES,
         required=False,
-        help_text="Set the marker color for this dataset.",
+        widget=VectorColorPickerWidget,
+        validators=[
+            RegexValidator(
+                regex=r"^$|^#[0-9A-Fa-f]{6}$",
+                message="Use empty for auto, or a hex color like #3d4aff.",
+            )
+        ],
+        help_text="Hex marker color or leave empty for automatic (cluster or index).",
     )
 
     def __init__(self, *args, **kwargs):

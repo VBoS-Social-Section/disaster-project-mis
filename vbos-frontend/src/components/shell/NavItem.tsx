@@ -36,7 +36,7 @@ export function NavItem({
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-2.5 rounded-md border-l-2 py-2 pl-3 pr-2 text-left text-[13px] font-medium transition-colors",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4D90FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--drmis-sidebar-bg)]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--drmis-sidebar-bg)]",
         active
           ? "text-[var(--drmis-sidebar-text-active)]"
           : "border-transparent text-[var(--drmis-sidebar-text-muted)] hover:bg-[var(--drmis-sidebar-hover-bg)] hover:text-[var(--drmis-sidebar-text-hover)]",
@@ -68,7 +68,7 @@ export function NavItem({
           style={{
             backgroundColor: badgeBg,
             color: badgeFg,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
           }}
         >
           {badge}

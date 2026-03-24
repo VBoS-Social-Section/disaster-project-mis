@@ -307,7 +307,7 @@ function JobQueuePanel({
         <div className="flex items-center gap-3">
           <h2
             className="text-[11px] font-semibold uppercase tracking-[0.1em]"
-            style={{ fontFamily: "'IBM Plex Mono', monospace", color: colors.text.muted }}
+            style={{ fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace", color: colors.text.muted }}
           >
             Export Queue
           </h2>
@@ -456,7 +456,7 @@ function ExportFiltersPanel({
     >
       <h2
         className="text-[10px] font-semibold uppercase tracking-[0.12em]"
-        style={{ fontFamily: "'IBM Plex Mono', monospace", color: colors.text.muted }}
+        style={{ fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace", color: colors.text.muted }}
       >
         Export Filters
       </h2>
@@ -778,7 +778,7 @@ export function ExportsPage() {
           <h1
             className="text-[22px] font-bold leading-tight tracking-tight"
             style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "'Segoe UI Variable', 'Segoe UI', ui-sans-serif, system-ui, sans-serif",
               fontWeight: 700,
               color: colors.text.primary,
             }}
@@ -789,7 +789,7 @@ export function ExportsPage() {
             className="mt-1 text-xs"
             style={{
               color: colors.text.muted,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
             }}
           >
             Select datasets · choose formats · download — XLSX, GeoJSON, GeoTIFF, PMTiles
@@ -1029,7 +1029,7 @@ export function ExportsPage() {
           >
             <h2
               className="text-[10px] font-semibold uppercase tracking-[0.12em]"
-              style={{ fontFamily: "'IBM Plex Mono', monospace", color: colors.text.muted }}
+              style={{ fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace", color: colors.text.muted }}
             >
               Format Guide
             </h2>

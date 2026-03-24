@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ..models import Cluster, PMTilesDataset
+from ..models import Cluster, DatasetPublicationStatus, PMTilesDataset
 
 
 class TestPMTilesDatasetListDetailViews(APITestCase):
@@ -14,6 +14,7 @@ class TestPMTilesDatasetListDetailViews(APITestCase):
             source="WMO",
             source_layer="data",
             url="https://s3.us-west-2.amazonaws.com/dep-public-data/dep_ls_coastlines/dep_ls_coastlines_0-7-0-55.pmtiles",
+            publication_status=DatasetPublicationStatus.PUBLISHED,
         )
         self.dataset_2 = PMTilesDataset.objects.create(
             name="Population",
@@ -22,6 +23,7 @@ class TestPMTilesDatasetListDetailViews(APITestCase):
             type="estimated_damage",
             source_layer="data",
             url="https://s3.us-west-2.amazonaws.com/pop/population.pmtiles",
+            publication_status=DatasetPublicationStatus.PUBLISHED,
         )
         self.url = reverse("datasets:pmtiles-list")
 

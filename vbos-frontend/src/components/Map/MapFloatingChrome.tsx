@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useSimulationStore } from "@/store/simulation-store";
 import { FloatingLayerControl } from "@/components/Map/FloatingLayerControl";
 import { Legend } from "@/components/Map/Legend/Legend";
+import { WorkspaceMenu } from "@/components/Map/WorkspaceMenu";
 
 export function MapFloatingChrome() {
   const { isOpen: simOpen, setIsOpen: setSimOpen } = useSimulationStore();
@@ -53,6 +54,8 @@ export function MapFloatingChrome() {
         <FloatingLayerControl chrome />
         <div className="w-px shrink-0 self-stretch bg-border" aria-hidden />
         <Legend variant="chrome" />
+        <div className="w-px shrink-0 self-stretch bg-border" aria-hidden />
+        <WorkspaceMenu chrome />
       </div>
     </div>
   );

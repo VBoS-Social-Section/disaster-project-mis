@@ -42,9 +42,6 @@ interface UiState {
   /** Climate module selected (Land Use, Coastal, etc.); one at a time */
   selectedClimateModule: string;
   setSelectedClimateModule: (v: string) => void;
-  /** Profile page visible (full-screen overlay) */
-  profilePageOpen: boolean;
-  setProfilePageOpen: (v: boolean) => void;
   /** Area data entry page (for area administrators) */
   dataEntryPageOpen: boolean;
   setDataEntryPageOpen: (v: boolean) => void;
@@ -98,9 +95,6 @@ export const useUiStore = create<UiState>()(
 
       selectedClimateModule: "",
       setSelectedClimateModule: (v) => set({ selectedClimateModule: v }),
-
-      profilePageOpen: false,
-      setProfilePageOpen: (v) => set({ profilePageOpen: v }),
 
       dataEntryPageOpen: false,
       setDataEntryPageOpen: (v) => set({ dataEntryPageOpen: v }),

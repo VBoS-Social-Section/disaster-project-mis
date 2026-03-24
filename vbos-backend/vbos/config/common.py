@@ -38,6 +38,8 @@ class Common(Configuration):
         "django_celery_results",
         # Your apps
         "vbos.users",
+        # Audit must load before climate/datasets: vbos.audit.signals imports AuditLog from .models.
+        "vbos.audit.apps.AuditConfig",
         "vbos.climate",
         "vbos.land_accounts",
         "vbos.coastal_changes",
@@ -107,6 +109,9 @@ class Common(Configuration):
         "DRMIS_VERSION_DISPLAY",
         f"v{DRMIS_API_VERSION} · Build {DRMIS_BUILD_ID}",
     )
+    # Natural-language map query (OpenAI). Uses OPENAI_API_KEY or AI_OPENAI_API_KEY.
+    AI_OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "") or os.getenv("AI_OPENAI_API_KEY", "")
+    AI_MAP_QUERY_MODEL = os.getenv("AI_MAP_QUERY_MODEL", "gpt-4o-mini")
     APPEND_SLASH = False
     # Allow bulk delete and changelist edits for many items (TabularItems, VectorItems)
     DATA_UPLOAD_MAX_NUMBER_FIELDS = int(os.getenv("DATA_UPLOAD_MAX_NUMBER_FIELDS", 200000))

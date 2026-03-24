@@ -1,9 +1,11 @@
 from django import forms
+from django.core.validators import RegexValidator
 from django.forms import formset_factory
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 from .models import TabularDataset, VectorDataset
+from .widgets import VectorColorPickerWidget
 
 
 class IconPickerWidget(forms.TextInput):
@@ -93,19 +95,6 @@ class CSVUploadForm(forms.Form):
     )
 
 
-VECTOR_COLOR_CHOICES = [
-    ("", "Auto (cluster or index)"),
-    ("#3d4aff", "Blue"),
-    ("#10b981", "Emerald"),
-    ("#f09000", "Orange"),
-    ("#8b5cf6", "Violet"),
-    ("#e34a33", "Red"),
-    ("#06b6d4", "Cyan"),
-    ("#6366f1", "Indigo"),
-    ("#14b8a6", "Teal"),
-]
-
-
 class GeoJSONUploadForm(forms.Form):
     file = forms.FileField(label="File")
     dataset = forms.ModelChoiceField(
@@ -117,9 +106,15 @@ class GeoJSONUploadForm(forms.Form):
         widget=IconPickerWidget,
         help_text="Lucide key (e.g. droplet) or Flaticon class (e.g. fi-sr-hospital). Use Browse to pick from 50,000+ icons.",
     )
-    color = forms.ChoiceField(
+    color = forms.CharField(
         label="Color",
-        choices=VECTOR_COLOR_CHOICES,
         required=False,
-        help_text="Set the marker color for this dataset (e.g. Primary=blue, Secondary=emerald).",
+        widget=VectorColorPickerWidget,
+        validators=[
+            RegexValidator(
+                regex=r"^$|^#[0-9A-Fa-f]{6}$",
+                message="Use empty for auto, or a hex color like #3d4aff.",
+            )
+        ],
+        help_text="Hex marker color or leave empty for automatic (cluster or index).",
     )

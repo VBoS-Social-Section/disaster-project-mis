@@ -50,7 +50,7 @@ export function AlertCountPill({
         className="min-w-[1.25rem] text-center text-[11px] font-semibold tabular-nums"
         style={{
           color: hasAlerts ? colors.text.primary : colors.text.muted,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: "'Segoe UI Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace",
         }}
       >
         {count > 99 ? "99+" : count}
