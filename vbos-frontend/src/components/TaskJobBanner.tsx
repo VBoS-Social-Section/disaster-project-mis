@@ -1,4 +1,4 @@
-import { LuLoader2, LuX } from "react-icons/lu";
+import { LuLoader, LuX } from "react-icons/lu";
 import { Button } from "@/components/ui/button";
 import { useTaskStatus } from "@/hooks/useTaskStatus";
 import { TaskProgressBar } from "@/components/TaskProgressBar";
@@ -60,7 +60,7 @@ export function TaskJobBanner({
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-foreground">
           {isPolling && !terminal ? (
-            <LuLoader2 className="size-4 shrink-0 animate-spin text-muted-foreground" aria-hidden />
+            <LuLoader className="size-4 shrink-0 animate-spin text-muted-foreground" aria-hidden />
           ) : null}
           <span className="truncate">{title}</span>
         </div>

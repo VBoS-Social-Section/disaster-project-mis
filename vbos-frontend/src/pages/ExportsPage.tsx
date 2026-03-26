@@ -636,7 +636,7 @@ export function ExportsPage() {
 
   // ── Download runners ──────────────────────────────────────────────────────
 
-  const runJob = useCallback(async (job: ExportJob, dataset: Dataset, format: string) => {
+  const runJob = useCallback(async (_job: ExportJob, dataset: Dataset, format: string) => {
     const areaFilters = new URLSearchParams();
     provinces.forEach((p) => areaFilters.append("province", p));
     acList.forEach((a) => areaFilters.append("area_council", a));
