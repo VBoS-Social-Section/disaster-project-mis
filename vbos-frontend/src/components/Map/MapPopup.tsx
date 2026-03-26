@@ -7,6 +7,7 @@ import { toSentenceCase } from "@/utils/format";
 import { getAssetExposure } from "@/api/getDatasets";
 import { useLayerStore } from "@/store/layer-store";
 import type { PopupInfo } from "./index";
+import { orderedVectorPopupEntries } from "@/utils/vectorPopupProperties";
 
 const transparentIcon = L.divIcon({
   className: "leaflet-transparent-marker",
@@ -15,7 +16,15 @@ const transparentIcon = L.divIcon({
 });
 
 export function MapPopup(popupInfo: PopupInfo) {
-  const { latitude, longitude, datasetName, properties, featureId, datasetId } = popupInfo;
+  const {
+    latitude,
+    longitude,
+    datasetName,
+    properties,
+    featureId,
+    datasetId,
+    popupProperties,
+  } = popupInfo;
   const { layers } = useLayerStore();
   const [exposure, setExposure] = useState<{ layer_id: number; layer_name: string }[] | null>(null);
 
@@ -68,9 +77,7 @@ export function MapPopup(popupInfo: PopupInfo) {
             </p>
           )}
           <dl className="space-y-1 divide-y text-sm">
-            {Object.entries(properties)
-              .filter(([key]) => !["id", "ref", "metadata"].includes(key))
-              .map(([key, value]) => {
+            {orderedVectorPopupEntries(properties, popupProperties).map(([key, value]) => {
               const displayValue =
                 value === null || value === undefined
                   ? "N/A"

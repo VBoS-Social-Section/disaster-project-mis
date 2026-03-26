@@ -138,7 +138,7 @@ Services:
 
 - **postgres**: PostGIS 17
 - **web**: Django on port 8000 (migrates on startup)
-- **documentation**: MkDocs on port 8001
+- **documentation**: MkDocs on port 8015
 - **titiler**: TiTiler on port 8002 (COG/GeoTIFF tile service)
 
 Optional: mount raster data in `./data` for TiTiler.

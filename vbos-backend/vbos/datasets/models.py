@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.gis.db import models
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db.models.fields.files import default_storage
 from django.db.models.signals import post_delete, post_save, pre_delete
@@ -298,6 +299,15 @@ class VectorDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Mode
         blank=True,
         help_text="Modules where this dataset is shown: Land cover, Coastal changes, Flood, etc. Empty = Disaster only.",
     )
+    popup_properties = models.JSONField(
+        default=list,
+        blank=True,
+        help_text=(
+            "Optional ordered list of property keys (as in map GeoJSON features) to show in the live map popup. "
+            "Examples: name, attribute, province, or keys from imported metadata such as "
+            '"Industry size". Leave empty to show every property.'
+        ),
+    )
 
     def __str__(self):
         return f"{self.name} - {self.cluster} / {self.type}"
@@ -305,6 +315,23 @@ class VectorDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Mode
     class Meta:
         ordering = ["id"]
         unique_together = ["name", "type", "cluster"]
+
+    def clean(self):
+        super().clean()
+        pp = self.popup_properties
+        if pp is None:
+            return
+        if not isinstance(pp, list):
+            raise ValidationError(
+                {"popup_properties": "Must be a JSON array of strings (property keys)."}
+            )
+        for i, item in enumerate(pp):
+            if not isinstance(item, str):
+                raise ValidationError(
+                    {
+                        "popup_properties": f"Entry {i + 1} must be a string (property key), not {type(item).__name__}."
+                    }
+                )
 
 
 class PMTilesDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Model):

@@ -22,8 +22,8 @@ docker-compose up
 ```
 
 - API: http://localhost:8000
-- Docs: http://localhost:8001
-- TiTiler: http://localhost:8002
+- Docs: http://localhost:8015
+- TiTiler (Compose): http://localhost:8043
 
 ### Frontend (React)
 
