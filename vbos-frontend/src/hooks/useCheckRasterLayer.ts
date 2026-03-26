@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 
-// It checks if the raster layer is available for a specific year via TiTiler.
-// When using precomputed tiles, the check is skipped.
+/**
+ * Best-effort check that TiTiler can serve a raster for this dataset/year.
+ * We probe a real tile URL — not `/tiles?f=json` (often 404 on vbos-titiler / titiler-local).
+ * When using precomputed tiles, the check is skipped.
+ */
 export function useCheckRasterLayer(
   datasetUrlId: string,
   year: string,
@@ -9,7 +12,9 @@ export function useCheckRasterLayer(
 ) {
   const [isLoading, setIsloading] = useState(false);
   const [error, setError] = useState(false);
-  const url = `${import.meta.env.VITE_TITILER_API}/dataset/${datasetUrlId}/years/${year}/tiles?f=json`;
+  const base = import.meta.env.VITE_TITILER_API ?? "";
+  // z=0 single world tile — valid for WebMercatorQuad; confirms path + file exist
+  const probeUrl = `${base}/dataset/${datasetUrlId}/years/${year}/tiles/WebMercatorQuad/0/0/0.png`;
 
   useEffect(() => {
     if (isPrecomputed) {
@@ -17,28 +22,22 @@ export function useCheckRasterLayer(
       setIsloading(false);
       return;
     }
-    // Skip TiTiler check when datasetUrlId is empty (metadata not loaded or precomputed-only config)
-    if (!datasetUrlId) {
+    if (!datasetUrlId || !base) {
       setError(true);
       setIsloading(false);
       return;
     }
     setIsloading(true);
-    fetch(url)
+    fetch(probeUrl, { method: "GET", cache: "no-store" })
       .then((res) => {
-        if (res.ok) {
-          setError(false);
-          setIsloading(false);
-        } else {
-          setError(true);
-          setIsloading(false);
-        }
+        setError(!res.ok);
+        setIsloading(false);
       })
       .catch(() => {
         setError(true);
         setIsloading(false);
       });
-  }, [url, isPrecomputed, datasetUrlId]);
+  }, [probeUrl, isPrecomputed, datasetUrlId, base]);
 
   return { error: isPrecomputed ? false : error, isLoading: isPrecomputed ? false : isLoading };
 }

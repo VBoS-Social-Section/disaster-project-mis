@@ -178,3 +178,72 @@ class VectorColorPickerWidget(forms.Widget):
         if v is None:
             return ""
         return str(v).strip()
+
+
+class SortableCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
+    """
+    Checkbox list where rows can be drag-reordered (SortableJS).
+    POST sends checked values in document order so popup_properties order matches the UI.
+    """
+
+    class Media:
+        js = (
+            "datasets/admin/Sortable.min.js",
+            "datasets/admin/popup_properties_sortable.js",
+        )
+
+    def render(self, name, value, attrs=None, renderer=None):
+        if value is None:
+            value = []
+        elif not isinstance(value, (list, tuple)):
+            value = [value]
+        selected = {str(v) for v in value}
+        attrs = attrs.copy() if attrs else {}
+        attrs.setdefault("class", "")
+        if "vbos-sortable-checkboxes" not in attrs["class"]:
+            attrs["class"] = (attrs["class"] + " vbos-sortable-checkboxes").strip()
+        final_attrs = self.build_attrs(attrs)
+        wid = final_attrs.get("id") or f"id_{name}"
+
+        rows = []
+        idx = 0
+        for opt_value, opt_label in self.choices:
+            if opt_value == "":
+                continue
+            cb_id = f"{wid}_{idx}"
+            idx += 1
+            v_esc = escape(str(opt_value))
+            lbl_esc = escape(str(opt_label))
+            chk = " checked" if str(opt_value) in selected else ""
+            rows.append(
+                f'<li class="vbos-popup-prop-item">'
+                f'<span class="vbos-popup-prop-handle" role="button" tabindex="0" '
+                f'title="Drag to reorder" aria-label="Drag to reorder">⋮⋮</span>'
+                f'<label class="vbos-popup-prop-label">'
+                f'<input type="checkbox" name="{escape(name)}" id="{cb_id}" '
+                f'value="{v_esc}"{chk}>'
+                f"<span>{lbl_esc}</span>"
+                f"</label></li>"
+            )
+
+        style = (
+            "<style>"
+            ".vbos-popup-prop-sortable-root{margin:8px 0;max-width:42rem;}"
+            ".vbos-popup-prop-sortable{list-style:none;margin:0;padding:0;}"
+            ".vbos-popup-prop-item{display:flex;align-items:center;gap:6px;padding:6px 8px;"
+            "border-bottom:1px solid rgba(128,128,128,.2);background:var(--body-bg, #fff);}"
+            ".vbos-popup-prop-handle{cursor:grab;color:#888;font-size:12px;line-height:1;"
+            "padding:4px 6px;user-select:none;letter-spacing:-2px;flex-shrink:0;}"
+            ".vbos-popup-prop-handle:active{cursor:grabbing;}"
+            ".vbos-popup-prop-label{display:flex;align-items:center;gap:10px;margin:0;"
+            "cursor:pointer;flex:1;min-width:0;}"
+            ".vbos-popup-prop-ghost{opacity:.55;background:rgba(59,130,246,.12)!important;}"
+            ".vbos-popup-prop-chosen{opacity:.95;}"
+            "</style>"
+        )
+        ul = (
+            f'<div class="vbos-popup-prop-sortable-root">'
+            f'<ul class="vbos-popup-prop-sortable" id="{escape(wid)}_sortlist">'
+            f'{"".join(rows)}</ul></div>'
+        )
+        return mark_safe(f"{style}{ul}")

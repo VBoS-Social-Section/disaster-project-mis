@@ -3,6 +3,7 @@
  */
 import { usePanelStore } from "@/store/panel-store";
 import { toSentenceCase } from "@/utils/format";
+import { orderedVectorPopupEntries } from "@/utils/vectorPopupProperties";
 import { LuMapPin } from "react-icons/lu";
 
 export function FeatureInsights() {
@@ -10,7 +11,8 @@ export function FeatureInsights() {
 
   if (!selectedFeatureInfo) return null;
 
-  const { datasetName, properties, latitude, longitude } = selectedFeatureInfo;
+  const { datasetName, properties, latitude, longitude, popupProperties } =
+    selectedFeatureInfo;
 
   return (
     <div className="rounded-lg border border-border bg-muted/30 p-4">
@@ -36,9 +38,7 @@ export function FeatureInsights() {
         {latitude.toFixed(4)}, {longitude.toFixed(4)}
       </p>
       <dl className="space-y-1.5 divide-y divide-border/60 text-xs">
-        {Object.entries(properties)
-          .filter(([key]) => !["id", "ref", "metadata"].includes(key))
-          .map(([key, value]) => {
+        {orderedVectorPopupEntries(properties, popupProperties).map(([key, value]) => {
             const displayValue =
               value === null || value === undefined
                 ? "N/A"

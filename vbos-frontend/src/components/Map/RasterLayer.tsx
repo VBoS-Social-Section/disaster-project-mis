@@ -102,7 +102,8 @@ function RasterMapLayer({ id }: RasterMapLayerProps) {
       maxNativeZoom: 14,
       maxZoom: 18,
       pane: paneName,
-      tms: true, // gdal2tiles outputs TMS (y from bottom); Leaflet defaults to XYZ
+      // TiTiler WebMercatorQuad = XYZ; gdal2tiles precomputed (no --xyz) = TMS
+      tms: isPrecomputed,
     });
     tileLayer.addTo(map);
 

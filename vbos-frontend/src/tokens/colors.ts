@@ -40,14 +40,14 @@ export const colors = {
     red: "#FF4B2B",
     amber: "#F5A623",
     green: "#30E87A",
-    /** Resilience Explorer action blue (matches --re-blue) */
-    blue: "#1A73E8",
+    /** Resilience Explorer primary blue (matches --re-blue) */
+    blue: "#005BB7",
   },
   /** Semantic status dots (hex — same in light/dark) */
   severity: {
     critical: "#FF4B2B",
     high: "#F5A623",
-    medium: "#1A73E8",
+    medium: "#005BB7",
     low: "#30E87A",
   },
 } as const;

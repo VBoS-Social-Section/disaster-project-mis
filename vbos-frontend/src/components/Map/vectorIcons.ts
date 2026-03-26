@@ -1,9 +1,37 @@
 /**
  * SVG icon definitions for vector point layers.
  * Each icon is a 24x24 viewBox SVG, designed to be colored via fill/stroke.
+ *
+ * Map markers use a **location pin** shell (white fill, category-colored stroke)
+ * with the chosen icon scaled inside the pin head — Resilience Explorer / GIS style.
  */
 
-const SIZE = 24;
+/** Full marker dimensions (Leaflet divIcon) */
+export const VECTOR_PIN_MARKER_SIZE: [number, number] = [48, 56];
+/** Anchor at bottom tip of pin */
+export const VECTOR_PIN_MARKER_ANCHOR: [number, number] = [24, 56];
+
+const PIN_W = 48;
+const PIN_H = 56;
+/** Center of inner glyph area (bulb of pin) */
+const PIN_CX = 24;
+const PIN_CY = 19;
+/** Scale Lucide 24×24 paths to fit inside pin head */
+const INNER_ICON_SCALE = 0.52;
+
+/**
+ * Teardrop map pin outline (viewBox 0 0 48 56). Stroke uses category `color`.
+ */
+const PIN_BODY_PATH = `
+M24 3.5
+C13.5 3.5 5.5 11.8 5.5 22.2
+C5.5 32.5 24 52.2 24 52.2
+S42.5 32.5 42.5 22.2
+C42.5 11.8 34.5 3.5 24 3.5
+Z`.replace(/\s+/g, " ");
+
+/** Inner white disc (optional ring) so glyphs read clearly */
+const PIN_INNER_RING = `<circle cx="${PIN_CX}" cy="${PIN_CY}" r="10.5" fill="#ffffff" stroke="currentColor" stroke-width="1.15"/>`;
 
 const stroke =
   'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
@@ -128,6 +156,48 @@ export function getVectorIconKey(
   return VECTOR_ICON_KEYS[index % VECTOR_ICON_KEYS.length];
 }
 
+function buildInnerGlyphSvg(color: string, iconKey: VectorIconKey | string): string {
+  const path = VECTOR_ICON_PATHS[iconKey as VectorIconKey] ?? VECTOR_ICON_PATHS.circle;
+  return path.replace(/currentColor/g, color);
+}
+
+/** Pin geometry + inner Lucide glyph (paths only; wrap in svg for full marker). */
+function buildPinLucideBody(color: string, iconKey: VectorIconKey | string): string {
+  const glyph = buildInnerGlyphSvg(color, iconKey);
+  const g = `<g transform="translate(${PIN_CX} ${PIN_CY}) scale(${INNER_ICON_SCALE}) translate(-12 -12)">${glyph}</g>`;
+  return `<path d="${PIN_BODY_PATH.trim()}" fill="#ffffff" stroke="${color}" stroke-width="2.25" stroke-linejoin="round"/>
+  ${PIN_INNER_RING.replace(/currentColor/g, color)}
+  ${g}`;
+}
+
+/**
+ * Full pin SVG (viewBox 0 0 48 56) with inner Lucide paths only.
+ */
+function buildPinSvgWithLucideIcon(color: string, iconKey: VectorIconKey | string): string {
+  return `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PIN_W} ${PIN_H}" width="${PIN_W}" height="${PIN_H}" style="display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.22))" aria-hidden="true">
+  ${buildPinLucideBody(color, iconKey)}
+</svg>`.trim();
+}
+
+/**
+ * Pin + Flaticon: SVG shell + absolutely positioned icon in the bulb.
+ */
+function buildPinHtmlWithFlaticon(color: string, iconKey: string, opacity: number): string {
+  const fiSize = 15;
+  const topPx = 11;
+  return `
+<div class="vector-marker-pin-wrap" style="position:relative;width:${PIN_W}px;height:${PIN_H}px;opacity:${opacity}">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PIN_W} ${PIN_H}" width="${PIN_W}" height="${PIN_H}" style="display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.22))" aria-hidden="true">
+    <path d="${PIN_BODY_PATH.trim()}" fill="#ffffff" stroke="${color}" stroke-width="2.25" stroke-linejoin="round"/>
+    ${PIN_INNER_RING.replace(/currentColor/g, color)}
+  </svg>
+  <div style="position:absolute;left:50%;top:${topPx}px;transform:translateX(-50%);width:24px;height:24px;display:flex;align-items:center;justify-content:center;pointer-events:none">
+    <i class="fi ${iconKey}" style="color:${color};font-size:${fiSize}px;line-height:1"></i>
+  </div>
+</div>`.trim();
+}
+
 /** Build SVG or Flaticon HTML for legend display (React dangerouslySetInnerHTML) */
 export function buildVectorIconSvg(
   color: string,
@@ -142,16 +212,39 @@ export function buildVectorIconSvg(
   return `<svg viewBox="0 0 24 24" width="${size}" height="${size}">${coloredPath}</svg>`;
 }
 
-/** Build Leaflet DivIcon HTML for a vector point marker */
+/**
+ * Legend / UI: same location-pin look, scaled down (keeps aspect ratio).
+ */
+export function buildVectorPinIconSvg(
+  color: string,
+  iconKey: VectorIconKey | string,
+  heightPx = 24,
+): string {
+  const w = Math.round(heightPx * (PIN_W / PIN_H));
+  if (typeof iconKey === "string" && iconKey.startsWith(FLATICON_PREFIX)) {
+    const top = Math.round((11 / PIN_H) * heightPx);
+    const fs = Math.max(8, Math.round((15 / PIN_H) * heightPx));
+    return `<div style="position:relative;width:${w}px;height:${heightPx}px;display:inline-block;vertical-align:middle">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PIN_W} ${PIN_H}" width="${w}" height="${heightPx}" style="display:block">
+        <path d="${PIN_BODY_PATH.trim()}" fill="#ffffff" stroke="${color}" stroke-width="2.25" stroke-linejoin="round"/>
+        ${PIN_INNER_RING.replace(/currentColor/g, color)}
+      </svg>
+      <div style="position:absolute;left:50%;top:${top}px;transform:translateX(-50%);display:flex;align-items:center;justify-content:center">
+        <i class="fi ${iconKey}" style="color:${color};font-size:${fs}px;line-height:1"></i>
+      </div>
+    </div>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PIN_W} ${PIN_H}" width="${w}" height="${heightPx}" style="display:block;vertical-align:middle;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.18))">${buildPinLucideBody(color, iconKey)}</svg>`;
+}
+
+/** Build Leaflet DivIcon HTML for a vector point marker (location pin + category icon) */
 export function buildVectorMarkerIcon(
   color: string,
   iconKey: VectorIconKey | string,
   opacity: number,
 ): string {
   if (typeof iconKey === "string" && iconKey.startsWith(FLATICON_PREFIX)) {
-    return `<div class="vector-marker-icon" style="width:${SIZE}px;height:${SIZE}px;display:flex;align-items:center;justify-content:center;opacity:${opacity}"><i class="fi ${iconKey}" style="color:${color};font-size:${SIZE}px;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3))"></i></div>`;
+    return buildPinHtmlWithFlaticon(color, iconKey, opacity);
   }
-  const path = VECTOR_ICON_PATHS[iconKey as VectorIconKey] ?? VECTOR_ICON_PATHS.circle;
-  const coloredPath = path.replace(/currentColor/g, color);
-  return `<div class="vector-marker-icon" style="width:${SIZE}px;height:${SIZE}px;display:flex;align-items:center;justify-content:center;opacity:${opacity}"><svg viewBox="0 0 24 24" width="${SIZE}" height="${SIZE}" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3))">${coloredPath}</svg></div>`;
+  return `<div class="vector-marker-icon" style="width:${PIN_W}px;height:${PIN_H}px;display:flex;align-items:center;justify-content:center;opacity:${opacity}">${buildPinSvgWithLucideIcon(color, iconKey)}</div>`;
 }

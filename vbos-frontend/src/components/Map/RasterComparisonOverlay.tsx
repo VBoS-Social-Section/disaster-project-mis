@@ -130,7 +130,7 @@ export function RasterComparisonOverlay() {
       maxNativeZoom: 14,
       maxZoom: 18,
       pane: paneName,
-      tms: true, // gdal2tiles outputs TMS (y from bottom); Leaflet defaults to XYZ
+      tms: isPrecomputed, // gdal2tiles = TMS; TiTiler WebMercatorQuad = XYZ
     };
     const leftLayer = L.tileLayer(leftUrl, layerOpts);
     const rightLayer = L.tileLayer(rightUrl, layerOpts);

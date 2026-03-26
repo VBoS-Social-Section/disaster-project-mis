@@ -37,6 +37,14 @@ class TestVectorDatasetListDetailViews(APITestCase):
         assert req.data.get("results")[0]["description"] == "Administratives Boundaries"
         assert req.data.get("results")[0]["type"] == "baseline"
         assert req.data.get("results")[1]["type"] == "estimated_damage"
+        assert req.data.get("results")[0]["popup_properties"] == []
+
+    def test_vector_dataset_popup_properties_serialized(self):
+        self.dataset_1.popup_properties = ["name", "attribute", "Industry size"]
+        self.dataset_1.save(update_fields=["popup_properties"])
+        req = self.client.get(reverse("datasets:vector-detail", args=[self.dataset_1.id]))
+        assert req.status_code == status.HTTP_200_OK
+        assert req.data["popup_properties"] == ["name", "attribute", "Industry size"]
 
     def test_vector_datasets_list_filter(self):
         req = self.client.get(self.url, {"cluster": "transportation"})

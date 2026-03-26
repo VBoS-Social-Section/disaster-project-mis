@@ -15,7 +15,7 @@ import type {
 } from "./types";
 import { MAP_COLORS } from "../../colors";
 import { useColorMode } from "../../ui/color-mode";
-import { buildVectorIconSvg } from "../../Map/vectorIcons";
+import { buildVectorPinIconSvg } from "../../Map/vectorIcons";
 import { abbreviateUnit } from "@/utils/abbreviateUnit";
 import { CYCLONE_INTENSITY_LEGEND } from "@/config/disaster";
 
@@ -219,10 +219,10 @@ function VectorEntry(props: VectorLegendLayer) {
         {isPoint && (
           <>
             <div
-              className="size-4 shrink-0 flex items-center justify-center [&>svg]:block"
+              className="flex h-4 min-w-4 shrink-0 items-center justify-center [&>div]:leading-none [&>svg]:block"
               dangerouslySetInnerHTML={{
                 __html: iconKey
-                  ? buildVectorIconSvg(color, iconKey, 16)
+                  ? buildVectorPinIconSvg(color, iconKey, 16)
                   : `<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="6" fill="${color}"/></svg>`,
               }}
             />

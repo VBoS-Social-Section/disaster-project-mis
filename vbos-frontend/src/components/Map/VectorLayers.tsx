@@ -16,8 +16,13 @@ import { VECTOR_LAYER_COLORS, VECTOR_CLUSTER_COLORS } from "../colors";
 import {
   buildVectorMarkerIcon,
   getVectorIconKey,
+  VECTOR_PIN_MARKER_ANCHOR,
+  VECTOR_PIN_MARKER_SIZE,
 } from "./vectorIcons";
 import type { PopupInfo } from "./index";
+import type { VectorDataset } from "@/types/api";
+import { escapeHtml, formatPropertyLabel } from "@/utils/format";
+import { orderedVectorPopupEntries } from "@/utils/vectorPopupProperties";
 
 type VectorLayersProps = {
   setPopupInfo: (info: PopupInfo | null) => void;
@@ -177,41 +182,67 @@ function VectorMapLayer({ id, colorIndex, setPopupInfo, bbox }: VectorMapLayerPr
     const icon = L.divIcon({
       html: buildVectorMarkerIcon(layerColor, iconKey, opacity),
       className: "vector-marker-div-icon",
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
+      iconSize: [...VECTOR_PIN_MARKER_SIZE] as [number, number],
+      iconAnchor: [...VECTOR_PIN_MARKER_ANCHOR] as [number, number],
     });
     return L.marker(latlng, { icon });
   };
-
-  const toSentenceCase = (str: string) =>
-    str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
 
   const buildTooltipContent = (
     props: Record<string, unknown>,
     datasetName?: string,
     featureId?: number,
+    popupPropertyKeys?: string[] | null,
   ) => {
-    const lines: string[] = [];
-    if (datasetName) lines.push(`<strong>${datasetName}</strong>`);
-    if (featureId != null) lines.push(`<strong>ID ${featureId}</strong>`);
-    Object.entries(props)
-      .filter(([key]) => !["id", "ref", "metadata"].includes(key))
-      .forEach(([key, value]) => {
-        const v = value !== null && value !== undefined ? String(value) : "N/A";
-        lines.push(`${toSentenceCase(key)}: ${v}`);
-      });
-    return lines.join("<br/>");
+    const rows: string[] = [];
+    orderedVectorPopupEntries(props, popupPropertyKeys).forEach(([key, value]) => {
+      const raw = value !== null && value !== undefined ? String(value).trim() : "";
+      if (raw === "" || raw.toUpperCase() === "N/A") return;
+      const label = escapeHtml(formatPropertyLabel(key));
+      const val = escapeHtml(raw);
+      rows.push(
+        `<div class="vmt-row"><span class="vmt-label">${label}</span><span class="vmt-value">${val}</span></div>`,
+      );
+    });
+
+    const hasHeader = Boolean(datasetName) || featureId != null;
+    if (!hasHeader && rows.length === 0) return "";
+
+    let header = "";
+    if (hasHeader) {
+      const title = datasetName ? escapeHtml(datasetName) : "Feature";
+      const sub =
+        featureId != null
+          ? `<div class="vmt-sub">ID <span class="vmt-id">${escapeHtml(String(featureId))}</span></div>`
+          : "";
+      header = `<header class="vmt-header"><div class="vmt-title">${title}</div>${sub}</header>`;
+    }
+
+    const body = rows.length
+      ? `<div class="vmt-body">${rows.join("")}</div>`
+      : hasHeader
+        ? `<div class="vmt-body vmt-body--empty"><span class="vmt-empty">No attributes to preview</span></div>`
+        : "";
+
+    return `<div class="vmt" role="tooltip">${header}${body}</div>`;
   };
 
   const onEachFeature = (feature: GeoJSON.Feature, layer: L.Layer) => {
     const props = feature.properties || {};
     const metadata = getLayerMetadata(layerId);
+    const vectorMeta = metadata?.dataType === "vector" ? (metadata as VectorDataset) : undefined;
+    const popupPropertyKeys = vectorMeta?.popup_properties;
     const featureId =
       (feature as GeoJSON.Feature & { id?: number }).id ??
       (props.id as number | undefined);
     // Skip tooltips for large layers to reduce DOM load and prevent freeze
     if (featureCount <= TOOLTIP_SKIP_THRESHOLD) {
-      const tooltipContent = buildTooltipContent(props, metadata?.name, featureId);
+      const tooltipContent = buildTooltipContent(
+        props,
+        metadata?.name,
+        featureId,
+        popupPropertyKeys,
+      );
       if (tooltipContent) {
         (layer as L.Marker | L.Path).bindTooltip(tooltipContent, {
           permanent: false,
@@ -230,6 +261,7 @@ function VectorMapLayer({ id, colorIndex, setPopupInfo, bbox }: VectorMapLayerPr
           properties: props,
           datasetName: metadata?.name,
           datasetId: layerId,
+          popupProperties: popupPropertyKeys,
           featureId,
         });
       },

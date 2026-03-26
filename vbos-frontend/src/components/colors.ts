@@ -2,7 +2,7 @@ import { LAND_COVER_CLASS_ORDER, LAND_COVER_PIXEL_COLORS } from "@/config/landCo
 
 /** Distinct colors for vector point layers when multiple are active */
 export const VECTOR_LAYER_COLORS = [
-  "#1a73e8", /* Resilience primary blue */
+  "#005bb7", /* Resilience primary blue */
   "#10b981", /* emerald */
   "#f09000", /* orange */
   "#8b5cf6", /* violet */
@@ -14,7 +14,7 @@ export const VECTOR_LAYER_COLORS = [
 
 /** Semantic mapping: cluster name (lowercase) -> color. Education=blue, Health=emerald. */
 export const VECTOR_CLUSTER_COLORS: Record<string, string> = {
-  education: "#1a73e8",
+  education: "#005bb7",
   health: "#10b981",
 };
 
@@ -44,7 +44,7 @@ export function getCoastalShorelineColor(year: number | string | null | undefine
 
 const mapColors = {
   blueLight: "#22d3ee",
-  blue: "#1a73e8",
+  blue: "#005bb7",
   purple: "#8b5cf6",
   orange: "#f09000",
   red: "#e34a33",
@@ -119,7 +119,7 @@ export function getDeltaColor(t: number, palette?: MapPalette): string {
 
 /* Data viz: Resilience blue first, then emerald/indigo/purple */
 const chartColors = [
-  "#1a73e8", /* Resilience primary */
+  "#005bb7", /* Resilience primary */
   "#10b981", /* emerald-500 */
   "#5f7d95", /* muted slate (reference UI) */
   "#6366f1", /* indigo-500 */
@@ -134,7 +134,7 @@ const chartColors = [
 /** Softer palette for line charts (light blue, darker blue/purple like reference) */
 export const lineChartColors = [
   "#38bdf8", /* sky-400 - light blue */
-  "#1a73e8", /* Resilience primary */
+  "#005bb7", /* Resilience primary */
   "#6366f1", /* indigo-500 */
   "#06b6d4", /* cyan-500 */
   "#8b5cf6", /* violet-500 */

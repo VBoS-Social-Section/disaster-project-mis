@@ -17,6 +17,7 @@ from vbos.datasets.admin import (
     RasterFileAdmin,
     VectorDatasetAdmin,
 )
+from vbos.datasets.forms import VectorDatasetAdminForm
 from vbos.datasets.models import AreaCouncil, Cluster, Province, VectorDataset, VectorItem
 from vbos.datasets.utils import process_geojson_file_to_vector_items
 
@@ -73,7 +74,7 @@ class ClimatePMTilesDatasetForm(forms.ModelForm):
         return obj
 
 
-class ClimateVectorDatasetForm(forms.ModelForm):
+class ClimateVectorDatasetForm(VectorDatasetAdminForm):
     display_in = forms.MultipleChoiceField(
         choices=CLIMATE_DISPLAY_MODULE_CHOICES,
         required=False,
@@ -82,10 +83,9 @@ class ClimateVectorDatasetForm(forms.ModelForm):
         help_text="Select modules where this dataset appears (Land cover, Coastal changes, etc.).",
     )
 
-    class Meta:
+    class Meta(VectorDatasetAdminForm.Meta):
         model = ClimateVectorDataset
-        fields = "__all__"
-        exclude = ["climate_module", "climate_modules"]
+        exclude = ("popup_properties", "climate_module", "climate_modules")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -102,6 +102,7 @@ class ClimateVectorDatasetForm(forms.ModelForm):
         obj.climate_module = mods[0] if mods else None
         if commit:
             obj.save()
+            self.save_m2m()
         return obj
 
 

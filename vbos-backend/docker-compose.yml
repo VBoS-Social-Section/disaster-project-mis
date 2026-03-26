@@ -32,6 +32,15 @@ services:
     # ports: ["127.0.0.1:6380:6379"]
     restart: always
 
+  # Fake SMTP for OTP / email trials: open http://localhost:8025 (no TLS on :1025)
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    platform: linux/amd64
+    ports:
+      - "1025:1025" # SMTP — use host localhost:1025 from host-run Django; use mailhog:1025 from web container
+      - "8025:8025" # Web UI to read messages
+    restart: unless-stopped
+
   web:
     working_dir: /code
     restart: always
@@ -50,6 +59,8 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_started
+      mailhog:
         condition: service_started
   celery-worker:
     working_dir: /code
@@ -92,14 +103,16 @@ services:
     volumes:
       - ./:/code
     ports:
-      - "8001:8001"
+      # 8001 often taken (other IDEs/tools); use 8015 for MkDocs
+      - "8015:8015"
   titiler:
     build: ./titiler-local
     platform: linux/amd64
     environment:
       WEB_CONCURRENCY: 1
     ports:
-      - "8003:8000"  # 8003 to avoid conflict with VM deploy titiler (8002)
+      # 8002/8003 often taken (VM deploy, other stacks); use 8043 for local Compose
+      - "8043:8000"
     volumes:
       - ./raster_data:/data
     restart: unless-stopped
