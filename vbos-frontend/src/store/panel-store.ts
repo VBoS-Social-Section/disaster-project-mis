@@ -9,6 +9,7 @@ export interface SelectedFeatureInfo {
   properties: Record<string, unknown>;
   datasetName?: string;
   datasetId: string;
+  popupProperties?: string[] | null;
   featureId?: number;
 }
 

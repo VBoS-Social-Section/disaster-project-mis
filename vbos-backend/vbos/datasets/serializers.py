@@ -86,6 +86,7 @@ class VectorDatasetSerializer(serializers.ModelSerializer):
             "cyclone_name",
             "climate_module",
             "climate_modules",
+            "popup_properties",
             "publication_status",
             "published_at",
             "published_by_id",

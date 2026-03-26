@@ -57,8 +57,13 @@ export interface VectorDataset extends BaseDataset {
   dataType: "vector";
   /** Icon key for map display (e.g. mapPin, cross). Empty = auto from cluster/index. */
   icon?: string | null;
-  /** Hex color for map markers (e.g. #1a73e8). Empty = auto from cluster/index. */
+  /** Hex color for map markers (e.g. #005bb7). Empty = auto from cluster/index. */
   color?: string | null;
+  /**
+   * Ordered list of GeoJSON property keys to show in the map popup/tooltip.
+   * Empty or omitted = show all properties (except id/ref/metadata in default mode).
+   */
+  popup_properties?: string[];
 }
 
 export interface PMTilesDataset extends BaseDataset {

@@ -15,7 +15,7 @@ export interface NavItemProps {
 
 /**
  * Sidebar row: leading dot + optional icon + label + optional badge.
- * Active: 2px left red border + elevated background.
+ * Active: Resilience-style light pill on navy + primary blue accent (left border + dot).
  */
 export function NavItem({
   label,
@@ -43,14 +43,14 @@ export function NavItem({
         className,
       )}
       style={{
-        borderLeftColor: active ? colors.accent.red : "transparent",
+        borderLeftColor: active ? colors.accent.blue : "transparent",
         backgroundColor: active ? colors.sidebar.activeBg : "transparent",
       }}
     >
       <span
         className="size-1.5 shrink-0 rounded-full"
         style={{
-          backgroundColor: active ? colors.accent.red : colors.sidebar.dotInactive,
+          backgroundColor: active ? colors.accent.blue : colors.sidebar.dotInactive,
         }}
         aria-hidden
       />

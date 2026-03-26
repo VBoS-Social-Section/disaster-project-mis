@@ -3,7 +3,7 @@ site_description: VBOS Django application and data services
 repo_url: https://github.com/developmentseed/vbos-backend
 site_dir: site
 copyright: Copyright &copy; 2020, <a href="https://github.com/developmentseed">developmentseed</a>.
-dev_addr: 0.0.0.0:8001
+dev_addr: 0.0.0.0:8015
 
 nav:
   - Home: 'index.md'

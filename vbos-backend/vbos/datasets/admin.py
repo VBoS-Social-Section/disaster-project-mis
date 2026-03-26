@@ -15,7 +15,7 @@ from django.utils.html import format_html
 from django.urls import path
 from unfold.admin import ModelAdmin as UnfoldModelAdmin
 
-from .forms import GeoJSONUploadForm, IconPickerWidget
+from .forms import GeoJSONUploadForm, IconPickerWidget, VectorDatasetAdminForm
 from .widgets import VectorColorPickerWidget
 from vbos.audit.models import AuditLog
 from vbos.audit.signals import log_audit_action
@@ -317,6 +317,8 @@ class PMTilesDatasetAdmin(
 class VectorDatasetAdmin(
     DatasetPublicationAdminMixin, DatasetAdminAuthorshipMixin, UnfoldModelAdmin
 ):
+    form = VectorDatasetAdminForm
+
     def get_queryset(self, request):
         from django.db.models import Q
         qs = super().get_queryset(request)
@@ -365,7 +367,13 @@ class VectorDatasetAdmin(
         ),
         (
             "Map display",
-            {"fields": ("icon", "color", "cyclone_name", "view_on_map_link")},
+            {
+                "fields": ("icon", "color", "cyclone_name", "popup_property_keys", "view_on_map_link"),
+                "description": (
+                    "Map popup: tick the properties to show on the live map (keys come from this dataset’s vector items). "
+                    "Leave all unchecked to show every property. Order in the list is top-to-bottom in the popup."
+                ),
+            },
         ),
     )
 

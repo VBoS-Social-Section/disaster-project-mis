@@ -41,6 +41,8 @@ export interface PopupInfo {
   properties: Record<string, unknown>;
   datasetName?: string;
   datasetId: string;
+  /** VectorDataset.popup_properties — filters/order for attribute list */
+  popupProperties?: string[] | null;
   /** VectorItem id from GeoJSON feature (for admin lookup) */
   featureId?: number;
 }

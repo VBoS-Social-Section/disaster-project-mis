@@ -32,6 +32,11 @@ Use this distinction when prioritising: build governance and app features **now*
 - [x] **Settings page** — full-page Settings replacing the ProfilePage overlay; 3 tabs: Profile (avatar, name, email), Security (password, 2FA, session PIN), Appearance (light/dark/system theme picker); "Profile & security" removed from Live Map header dropdown
 - [x] **Version string visible** — `v1.0.0 · Build 2026.03.21` shown as tooltip on DRMIS logo (frontend topbar) and in admin footer (replacing "Powered by Django")
 - [x] **VMGD live volcano + warning alerts** — HTML scraper replaces broken RSS approach; parses `/warnings` (active advisories with date + body) and `/geohazards/volcanoes` (Level 2+ volcano alert levels); 6 real VMGD alerts confirmed live (Ambae Level 3, Yasur/Lopevi/Ambrym/Gaua Level 2)
+- [x] **Vector marker pins + consistent legend icons** — vector category icons wrapped in location-pin SVGs; corrected Leaflet `iconSize`/`iconAnchor` for accurate marker placement
+- [x] **Configurable vector popup properties (admin + frontend)** — `VectorDataset.popup_properties` JSON whitelist/order is configurable in Django admin, with drag-and-drop reordering and ordered tooltips/popups
+- [x] **Professional vector tooltips (opaque + auto-sizing)** — tooltip cards are fully opaque, single-line labels expand by content, and empty/`N/A` rows are filtered for clarity
+- [x] **Raster rendering reliability (TiTiler + precomputed tiles)** — raster availability probing updated to request a concrete `WebMercatorQuad/0/0/0.png` tile; `tms` handling fixed for gdal2tiles (TMS) vs TiTiler (XYZ)
+- [x] **Local SMTP trial + Docker port conflict fixes** — added `mailhog` for OTP/email testing and adjusted local `documentation`/`titiler` host ports (8015/8043) with corresponding frontend env updates
 
 ---
 
@@ -58,15 +63,15 @@ Use this distinction when prioritising: build governance and app features **now*
   - [ ] Test with MoCCA, MOET, NDMO sample user accounts
   - [ ] Document permission matrix per role
 
-- [~] **Audit logging** `40%` — dataset change history accessible to all authenticated users
+- [~] **Audit logging** `75%` — dataset change history accessible to all authenticated users
   - [x] Django `LogEntry` registered in admin (basic action log)
   - [x] `GET /api/v1/audit/` endpoint scoped to `datasets` app, accessible to all users
   - [x] `AuditLogPage.tsx` — searchable, filterable by action/date, paginated, human-readable model names
-  - [ ] Custom `AuditLog` model: model, pk, field, old_value, new_value, user, timestamp (field-level diff)
-  - [ ] Signal or mixin to capture field-level diffs on save
-  - [ ] Cover key models: TabularItem, VectorItem, FieldCheckRecord, Dataset
-  - [ ] Export as CSV and PDF
-  - [ ] Retention policy: auto-archive audit logs older than 2 years
+  - [x] Custom `AuditLog` model: model, pk, field, old_value, new_value, user, timestamp (field-level diff)
+  - [x] Signal or mixin to capture field-level diffs on save
+  - [~] Cover key models: TabularItem, VectorItem, FieldCheckRecord (Dataset not yet wired)
+  - [~] Export as CSV and PDF (PDF export requires `reportlab`, not in requirements)
+  - [~] Retention policy: auto-archive audit logs older than 2 years (command exists, not scheduled/automatic yet)
 
 - [ ] **Security headers** `0%` — CSP, HSTS, Permissions-Policy currently missing
   - [ ] Add `django-csp` and configure Content-Security-Policy
@@ -105,10 +110,10 @@ Use this distinction when prioritising: build governance and app features **now*
   - [ ] Move departmental data sync (`sync_external_data`) to scheduled task
   - [ ] Add task retry logic and dead-letter queue
 
-- [~] **Job status in UI** `50%`
+- [~] **Job status in UI** `60%`
   - [x] `/api/v1/tasks/<task_id>/status/` endpoint exists
-  - [ ] Add `IsAuthenticated` to task status endpoint (currently unauthenticated — security gap)
-  - [ ] Frontend: polling hook `useTaskStatus(taskId)`
+  - [x] Add `IsAuthenticated` to task status endpoint
+  - [x] Frontend: polling hook `useTaskStatus(taskId)`
   - [ ] Show progress bar for long-running tasks (backup, import)
   - [ ] Toast notification on completion or failure
 
@@ -432,7 +437,7 @@ Use this distinction when prioritising: build governance and app features **now*
 
 | Feature | Effort | Impact | Progress | Phase |
 |---|---|---|---|---|
-| Add `IsAuthenticated` to task status endpoint | XS | High | 0% | A |
+| Add `IsAuthenticated` to task status endpoint | XS | High | 100% | A |
 | Rate limiting on auth endpoints | Low | Very High | 0% | A |
 | Encrypt SMTP password at rest | Low | High | 0% | A |
 | Token expiry (Knox) | Low | High | 0% | A |

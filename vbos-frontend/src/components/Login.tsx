@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FloatingLabelInput } from "@/components/ui/floating-label-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useAuthStore } from "@/store/auth-store";
@@ -106,7 +107,7 @@ export function Login() {
       role="main"
       aria-label="Sign in"
     >
-      <Card className="w-full max-w-[400px] border border-border shadow-md">
+      <Card className="w-full max-w-[400px] rounded-xl border border-border/80 bg-card shadow-lg">
         {step === "credentials" ? (
           <form onSubmit={handleCredentialsSubmit}>
             <CardHeader className="space-y-6 text-center">
@@ -123,30 +124,26 @@ export function Login() {
                 preparedness and response.
               </p>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  ref={usernameInputRef}
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username"
-                  required
-                  autoComplete="username"
-                  aria-invalid={!!error}
-                />
-              </div>
+            <CardContent className="space-y-5">
+              <FloatingLabelInput
+                id="username"
+                ref={usernameInputRef}
+                label="Username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                autoComplete="username"
+                aria-invalid={!!error}
+              />
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
+                <FloatingLabelInput
                   id="password"
+                  label="Password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
                   required
                   autoComplete="current-password"
                   aria-invalid={!!error}

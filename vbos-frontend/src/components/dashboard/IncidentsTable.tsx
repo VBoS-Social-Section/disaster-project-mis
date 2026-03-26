@@ -22,7 +22,7 @@ const severityBadge: Record<
   Medium: {
     border: colors.accent.blue,
     background: "rgba(77, 144, 255, 0.12)",
-    color: "#1a73e8",
+    color: "#005bb7",
   },
   Low: {
     border: colors.accent.green,
