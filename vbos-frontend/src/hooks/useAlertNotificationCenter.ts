@@ -33,11 +33,12 @@ function notify(alert: LiveAlert) {
   const title = `[${alert.source}] ${alert.title}`;
   const body = `${alert.severity.toUpperCase()} · ${alert.type} · ${alert.summary || "New alert received."}`;
   try {
-    new Notification(title, {
+    const opts: NotificationOptions & { renotify?: boolean } = {
       body,
       tag: `drmis-alert-${alert.id}`,
       renotify: true,
-    });
+    };
+    new Notification(title, opts);
   } catch {
     // best effort
   }

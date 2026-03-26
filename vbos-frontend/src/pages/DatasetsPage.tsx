@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import type { CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import API from "@/api";
 import { useClusters } from "@/hooks/useClusters";
@@ -295,13 +296,16 @@ function ClusterSelector({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-9 appearance-none rounded-lg border pl-3 pr-8 text-sm font-medium outline-none focus:ring-2 focus:ring-offset-1"
-        style={{
-          borderColor: colors.border.default,
-          backgroundColor: colors.bg.surface,
-          color: colors.text.primary,
-          focusRingColor: colors.accent.blue,
-        }}
+        className="h-9 appearance-none rounded-lg border pl-3 pr-8 text-sm font-medium outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[color:var(--ring)]"
+        style={
+          {
+            borderColor: colors.border.default,
+            backgroundColor: colors.bg.surface,
+            color: colors.text.primary,
+            // CSS variable for Tailwind arbitrary focus:ring color (not a valid React CSSProperties key)
+            ["--ring" as string]: colors.accent.blue,
+          } as CSSProperties
+        }
         aria-label="Select cluster"
       >
         <option value="">All clusters</option>
