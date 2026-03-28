@@ -40,7 +40,7 @@ Use this distinction when prioritising: build governance and app features **now*
 
 ---
 
-## Phase A — Foundation *(3–6 months, low cost, do now)*
+## Phase A — Foundation *(3–6 months)*
 
 ### Security & Access Control
 
@@ -328,7 +328,7 @@ Use this distinction when prioritising: build governance and app features **now*
 
 ---
 
-## Phase C — Advanced *(12+ months, seek funding/SPC/World Bank partners)*
+## Phase C — Advanced *(12+ months)*
 
 ### Multi-tenancy & Departmental Views
 
