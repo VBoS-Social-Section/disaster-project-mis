@@ -4,6 +4,7 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from .models import (
     AreaCouncil,
     Cluster,
+    CycloneEvent,
     PMTilesDataset,
     Province,
     RasterDataset,
@@ -14,10 +15,25 @@ from .models import (
 )
 
 
+def _owning_organisation_representation(obj):
+    o = getattr(obj, "owning_organisation", None)
+    if o is None:
+        return None
+    return {"id": o.pk, "slug": o.slug, "name": o.name, "short_name": o.short_name or None}
+
+
 class ClusterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cluster
         fields = ["id", "name"]
+
+
+class CycloneEventSerializer(serializers.ModelSerializer):
+    """Lightweight event list used by the layer browser Risk sources tab."""
+
+    class Meta:
+        model = CycloneEvent
+        fields = ["id", "name", "slug", "season_year", "is_archived", "started_on", "ended_on"]
 
 
 class ProvinceSerializer(GeoFeatureModelSerializer):
@@ -36,11 +52,15 @@ class AreaCouncilSerializer(GeoFeatureModelSerializer):
 
 class RasterDatasetSerializer(serializers.ModelSerializer):
     cluster = serializers.SerializerMethodField()
+    owning_organisation = serializers.SerializerMethodField()
     created_by_id = serializers.IntegerField(read_only=True, allow_null=True)
     updated_by_id = serializers.IntegerField(read_only=True, allow_null=True)
 
     def get_cluster(self, obj):
         return obj.cluster.name if obj.cluster else None
+
+    def get_owning_organisation(self, obj):
+        return _owning_organisation_representation(obj)
 
     class Meta:
         model = RasterDataset
@@ -57,6 +77,7 @@ class RasterDatasetSerializer(serializers.ModelSerializer):
             "titiler_url_params",
             "is_land_cover",
             "precomputed_tile_url",
+            "owning_organisation",
             "publication_status",
             "published_at",
             "published_by_id",
@@ -67,8 +88,12 @@ class RasterDatasetSerializer(serializers.ModelSerializer):
 
 class VectorDatasetSerializer(serializers.ModelSerializer):
     cluster = serializers.ReadOnlyField(source="cluster.name")
+    owning_organisation = serializers.SerializerMethodField()
     created_by_id = serializers.IntegerField(read_only=True, allow_null=True)
     updated_by_id = serializers.IntegerField(read_only=True, allow_null=True)
+
+    def get_owning_organisation(self, obj):
+        return _owning_organisation_representation(obj)
 
     class Meta:
         model = VectorDataset
@@ -87,6 +112,7 @@ class VectorDatasetSerializer(serializers.ModelSerializer):
             "climate_module",
             "climate_modules",
             "popup_properties",
+            "owning_organisation",
             "publication_status",
             "published_at",
             "published_by_id",
@@ -97,8 +123,12 @@ class VectorDatasetSerializer(serializers.ModelSerializer):
 
 class PMTilesDatasetSerializer(serializers.ModelSerializer):
     cluster = serializers.ReadOnlyField(source="cluster.name")
+    owning_organisation = serializers.SerializerMethodField()
     created_by_id = serializers.IntegerField(read_only=True, allow_null=True)
     updated_by_id = serializers.IntegerField(read_only=True, allow_null=True)
+
+    def get_owning_organisation(self, obj):
+        return _owning_organisation_representation(obj)
 
     class Meta:
         model = PMTilesDataset
@@ -116,6 +146,7 @@ class PMTilesDatasetSerializer(serializers.ModelSerializer):
             "cyclone_name",
             "climate_module",
             "climate_modules",
+            "owning_organisation",
             "publication_status",
             "published_at",
             "published_by_id",
@@ -156,10 +187,21 @@ class VectorItemSerializer(GeoFeatureModelSerializer):
         return data
 
 
+class CycloneEventMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CycloneEvent
+        fields = ("id", "name", "slug", "season_year")
+
+
 class TabularDatasetSerializer(serializers.ModelSerializer):
     cluster = serializers.ReadOnlyField(source="cluster.name")
+    cyclone_event = CycloneEventMiniSerializer(read_only=True, allow_null=True)
+    owning_organisation = serializers.SerializerMethodField()
     created_by_id = serializers.IntegerField(read_only=True, allow_null=True)
     updated_by_id = serializers.IntegerField(read_only=True, allow_null=True)
+
+    def get_owning_organisation(self, obj):
+        return _owning_organisation_representation(obj)
 
     class Meta:
         model = TabularDataset
@@ -173,6 +215,8 @@ class TabularDatasetSerializer(serializers.ModelSerializer):
             "type",
             "source",
             "unit",
+            "cyclone_event",
+            "owning_organisation",
             "publication_status",
             "published_at",
             "published_by_id",

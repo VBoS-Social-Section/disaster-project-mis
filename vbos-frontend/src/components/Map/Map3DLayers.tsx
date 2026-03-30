@@ -15,6 +15,10 @@ import API from "@/api";
 import { VECTOR_LAYER_COLORS, VECTOR_CLUSTER_COLORS, MAP_COLORS } from "../colors";
 import { useColorMode } from "../ui/color-mode";
 import { getLandCoverColormap, LAND_COVER_COLORMAP } from "../colors";
+import {
+  build3DPinSvg,
+  getVectorIconKey,
+} from "./vectorIcons";
 
 const DEFAULT_BBOX = "166,-21,170,-12";
 
@@ -42,6 +46,45 @@ function resolvePmtilesUrl(url: string): string {
     /* ignore */
   }
   return url;
+}
+
+const PIN_3D_W = 56;
+const PIN_3D_H = 72;
+
+/**
+ * Renders the 3D perspective pin SVG into a MapLibre named image sprite.
+ * Uses build3DPinSvg which includes radial gradients, depth shading, and a
+ * ground shadow ellipse — giving a genuine raised-object look in 3D mode.
+ */
+function load3DPinImageToMap(
+  map: MapLibreMapType,
+  imageId: string,
+  color: string,
+  iconKey: string,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (map.hasImage(imageId)) {
+      resolve();
+      return;
+    }
+    const svgString = build3DPinSvg(color, iconKey);
+    const blob = new Blob([svgString], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const img = new Image(PIN_3D_W * 2, PIN_3D_H * 2); // render at 2× for crispness
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      if (!map.hasImage(imageId)) {
+        // sdf: false — we use pre-shaded gradients, not SDF colouring
+        map.addImage(imageId, img, { pixelRatio: 2 });
+      }
+      resolve();
+    };
+    img.onerror = (e) => {
+      URL.revokeObjectURL(url);
+      reject(e);
+    };
+    img.src = url;
+  });
 }
 
 function useMapLibreMap(): MapLibreMapType | undefined {
@@ -127,18 +170,34 @@ function Map3DVectorLayer({
     (cluster && VECTOR_CLUSTER_COLORS[cluster.toLowerCase().trim()]) ??
     VECTOR_LAYER_COLORS[colorIndex % VECTOR_LAYER_COLORS.length];
 
+  // Same icon logic as Leaflet VectorLayers
+  const iconKey = getVectorIconKey(
+    colorIndex,
+    cluster,
+    metadata && "icon" in metadata ? (metadata as { icon?: string | null }).icon : undefined,
+  );
+
+  const pinImageId = `pin-${id}-${layerColor.replace("#", "")}`;
+
   useEffect(() => {
-    if (!map || typeof map.isStyleLoaded !== "function" || !map.isStyleLoaded()) return;
+    if (!map) return;
 
     const sourceId = `vector-3d-${id}`;
     const layerIdFill = `vector-3d-${id}-fill`;
     const layerIdLine = `vector-3d-${id}-line`;
-    const layerIdCircle = `vector-3d-${id}-circle`;
+    const layerIdSymbol = `vector-3d-${id}-symbol`;
 
     const load = async () => {
       const filters = new URLSearchParams({ in_bbox: bbox });
       const data = await API.getDatasetData("vector", id, filters);
       if (!data || !("features" in data) || !data.features?.length) return;
+
+      // Register the 3D pin SVG as a MapLibre sprite image
+      try {
+        await load3DPinImageToMap(map, pinImageId, layerColor, iconKey);
+      } catch {
+        /* fall through — symbol layer will just show nothing for points */
+      }
 
       if (map.getSource(sourceId)) {
         (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(data as GeoJSON.FeatureCollection);
@@ -150,6 +209,7 @@ function Map3DVectorLayer({
         data: data as GeoJSON.FeatureCollection,
       });
 
+      // Polygons
       map.addLayer({
         id: layerIdFill,
         type: "fill",
@@ -161,6 +221,8 @@ function Map3DVectorLayer({
           "fill-outline-color": "#666",
         },
       });
+
+      // Lines
       map.addLayer({
         id: layerIdLine,
         type: "line",
@@ -172,32 +234,59 @@ function Map3DVectorLayer({
           "line-opacity": opacity,
         },
       });
+
+      // Points — 3D perspective pin: billboard mode, tip anchored to coordinate
       map.addLayer({
-        id: layerIdCircle,
-        type: "circle",
+        id: layerIdSymbol,
+        type: "symbol",
         source: sourceId,
         filter: ["in", ["geometry-type"], ["literal", ["Point", "MultiPoint"]]],
+        layout: {
+          "icon-image": pinImageId,
+          // Scale: 56px SVG at pixelRatio:2 → effective 28px wide; 0.75 gives ~42px — visible but not huge
+          "icon-size": 0.75,
+          // Pin tip = anchor point, so the marker "sticks out" of the terrain surface
+          "icon-anchor": "bottom",
+          // Billboard: icon always faces the camera regardless of map bearing/pitch
+          // This is what makes it look truly 3D — it stands upright even when tilted
+          "icon-rotation-alignment": "viewport",
+          "icon-pitch-alignment": "viewport",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
+        },
         paint: {
-          "circle-color": layerColor,
-          "circle-radius": 6,
-          "circle-opacity": opacity,
+          "icon-opacity": opacity,
+          // Slight translate upward so the pin visually rises off terrain
+          "icon-translate": [0, -4],
+          "icon-translate-anchor": "viewport",
         },
       });
     };
 
-    load();
+    // If the style is already loaded we can add layers immediately; otherwise
+    // wait for the 'style.load' event so the guard never causes a silent bail-out.
+    if (map.isStyleLoaded()) {
+      load();
+    } else {
+      map.once("style.load", load);
+    }
 
     return () => {
+      // Cancel a pending once-listener in case the component unmounts before
+      // the style finishes loading.
+      map.off("style.load", load);
       try {
-        [layerIdFill, layerIdLine, layerIdCircle].forEach((lid) => {
+        [layerIdFill, layerIdLine, layerIdSymbol].forEach((lid) => {
           if (map?.getLayer?.(lid)) map.removeLayer(lid);
         });
         if (map?.getSource?.(sourceId)) map.removeSource(sourceId);
+        // Clean up sprite image when layer is removed
+        if (map?.hasImage?.(pinImageId)) map.removeImage(pinImageId);
       } catch {
         /* map may be destroyed when switching views */
       }
     };
-  }, [map, id, bbox, layerColor, opacity]);
+  }, [map, id, bbox, layerColor, opacity, iconKey, pinImageId]);
 
   return null;
 }

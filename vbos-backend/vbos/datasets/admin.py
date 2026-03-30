@@ -23,6 +23,7 @@ from vbos.audit.signals import log_audit_action
 from .models import (
     AreaCouncil,
     Cluster,
+    CycloneEvent,
     DatasetPublicationStatus,
     DisasterDatasetTag,
     MapSavedWorkspace,
@@ -182,6 +183,15 @@ class YearListFilter(SimpleListFilter):
 @admin.register(Cluster)
 class ClusterAdmin(SortableAdminMixin, UnfoldModelAdmin):
     list_display = ["id", "name"]
+    search_fields = ["name"]
+
+
+@admin.register(CycloneEvent)
+class CycloneEventAdmin(UnfoldModelAdmin):
+    list_display = ["id", "name", "slug", "season_year", "is_archived", "updated_at"]
+    list_filter = ["season_year", "is_archived"]
+    search_fields = ["name", "slug", "notes"]
+    prepopulated_fields = {"slug": ("name", "season_year")}
 
 
 @admin.register(DisasterDatasetTag)
@@ -212,7 +222,7 @@ class RasterDatasetAdmin(
         "updated",
         "filename_id",
     ]
-    list_filter = ["type", "is_land_cover", "publication_status"]
+    list_filter = ["type", "is_land_cover", "publication_status", "owning_organisation"]
     list_editable = ["is_land_cover"]
     actions = ["publish_selected_datasets", "archive_selected_datasets"]
     fieldsets = (
@@ -226,8 +236,14 @@ class RasterDatasetAdmin(
         (
             "Publication",
             {
-                "fields": ("publication_status", "published_by", "published_at"),
-                "description": "Draft / Published / Archived. New datasets default to Draft; use Publish to expose them in the API.",
+                "fields": (
+                    "owning_organisation",
+                    "publication_status",
+                    "published_by",
+                    "published_at",
+                ),
+                "description": "Draft / Published / Archived. New datasets default to Draft; use Publish to expose them in the API. "
+                "Owning organisation restricts the catalog when VBOS_ORGANISATION_SCOPING is enabled.",
             },
         ),
         (
@@ -272,7 +288,7 @@ class PMTilesDatasetAdmin(
         "climate_module",
         "updated",
     ]
-    list_filter = ["cluster", "type", "climate_module", "publication_status"]
+    list_filter = ["cluster", "type", "climate_module", "publication_status", "owning_organisation"]
     list_editable = ["climate_module"]
     actions = ["publish_selected_datasets", "archive_selected_datasets"]
 
@@ -281,7 +297,12 @@ class PMTilesDatasetAdmin(
         (
             "Publication",
             {
-                "fields": ("publication_status", "published_by", "published_at"),
+                "fields": (
+                    "owning_organisation",
+                    "publication_status",
+                    "published_by",
+                    "published_at",
+                ),
             },
         ),
         (
@@ -334,7 +355,7 @@ class VectorDatasetAdmin(
         "color",
         "updated",
     ]
-    list_filter = ["cluster", "type", "climate_module", "publication_status"]
+    list_filter = ["cluster", "type", "climate_module", "publication_status", "owning_organisation"]
     # color uses VectorColorPickerWidget (not compatible with list_editable)
     list_editable = ["climate_module", "icon"]
     actions = ["publish_selected_datasets", "archive_selected_datasets"]
@@ -349,7 +370,12 @@ class VectorDatasetAdmin(
         (
             "Publication",
             {
-                "fields": ("publication_status", "published_by", "published_at"),
+                "fields": (
+                    "owning_organisation",
+                    "publication_status",
+                    "published_by",
+                    "published_at",
+                ),
             },
         ),
         (
@@ -616,8 +642,17 @@ class TabularDatasetAdmin(
         "rap_batch_link",
         "updated",
     ]
-    list_filter = ["cluster", "type", "rap_sector_family", "rap_batch", "publication_status"]
+    list_filter = [
+        "cluster",
+        "type",
+        "cyclone_event",
+        "rap_sector_family",
+        "rap_batch",
+        "publication_status",
+        "owning_organisation",
+    ]
     search_fields = ["name", "description", "rap_sector_family"]
+    autocomplete_fields = ["cyclone_event", "rap_batch"]
     actions = [
         "clean_redundant_items",
         "publish_selected_datasets",
@@ -638,14 +673,27 @@ class TabularDatasetAdmin(
                     "source",
                     "cluster",
                     "unit",
+                    "cyclone_event",
                     "rap_batch",
                     "rap_sector_family",
+                ),
+                "description": (
+                    "For Cyclone RAP output types (estimated damage, resources needed, "
+                    "financial damage), set Cyclone event before publishing. "
+                    "These three types are produced exclusively by the cyclone RAP tool."
                 ),
             },
         ),
         (
             "Publication",
-            {"fields": ("publication_status", "published_by", "published_at")},
+            {
+                "fields": (
+                    "owning_organisation",
+                    "publication_status",
+                    "published_by",
+                    "published_at",
+                ),
+            },
         ),
         ("Record", {"fields": ("created_by", "updated_by")}),
         ("Map", {"fields": ("view_on_map_link",)}),

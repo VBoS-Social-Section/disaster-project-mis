@@ -6,28 +6,28 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('audit', '0001_initial'),
+        ("audit", "0001_initial"),
     ]
 
     operations = [
         migrations.RenameIndex(
-            model_name='auditlog',
-            new_name='audit_audit_content_4c2ead_idx',
-            old_name='audit_audit_content_0c6b_idx',
+            model_name="auditlog",
+            new_name="audit_audit_content_4c2ead_idx",
+            old_name="audit_audit_content_0c6b_idx",
         ),
         migrations.RenameIndex(
-            model_name='auditlog',
-            new_name='audit_audit_user_id_e8be02_idx',
-            old_name='audit_audit_user_id_0a1b_idx',
+            model_name="auditlog",
+            new_name="audit_audit_user_id_e8be02_idx",
+            old_name="audit_audit_user_id_0a1b_idx",
         ),
         migrations.RenameIndex(
-            model_name='auditlog',
-            new_name='audit_audit_action_2a1328_idx',
-            old_name='audit_audit_action_t_1c2d_idx',
+            model_name="auditlog",
+            new_name="audit_audit_action_2a1328_idx",
+            old_name="audit_audit_action_t_1c2d_idx",
         ),
         migrations.RenameIndex(
-            model_name='auditlog',
-            new_name='audit_audit_field_n_c4809d_idx',
-            old_name='audit_audit_field_n_2e3f_idx',
+            model_name="auditlog",
+            new_name="audit_audit_field_n_c4809d_idx",
+            old_name="audit_audit_field_n_2e3f_idx",
         ),
     ]

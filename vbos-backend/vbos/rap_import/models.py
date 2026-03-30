@@ -6,14 +6,27 @@ from django.db import models
 
 class RAPImportBatch(models.Model):
     """
-    Tracks a single RAP export batch — one batch = one cyclone event rendered
-    from the Quarto RAP. Links all imported CSVs together under one event.
+    Tracks a single Cyclone RAP export batch.
+    One batch = one cyclone event rendered from the Quarto RAP tool.
+    Produces the three DRMIS cyclone output types:
+      - estimated_damage (physical damage by sector)
+      - aid_resources_needed (immediate response resources)
+      - estimate_financial_damage (financial damage by sector)
+    Links all imported CSVs for one event under one batch reference.
     """
 
     batch_ref = models.CharField(
         max_length=50,
         unique=True,
         help_text="e.g. TC-HAROLD-2026 — must be unique per cyclone event",
+    )
+    cyclone_event = models.ForeignKey(
+        "datasets.CycloneEvent",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="rap_batches",
+        help_text="Link to DRMIS cyclone record (recommended for new batches).",
     )
     cyclone_name = models.CharField(max_length=100)
     event_year = models.PositiveSmallIntegerField()

@@ -101,7 +101,7 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
   },
 };
 
-/** Scenarios surfaced in the main header segmented control. */
+/** Primary map contexts (Resilience workspace); switched from Map data or shortcuts. */
 export const ACTIVE_SCENARIOS: ScenarioId[] = ["disaster", "climate", "compare"];
 
 export function getScenario(id: ScenarioId): Scenario {

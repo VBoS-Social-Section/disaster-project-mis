@@ -43,6 +43,12 @@ def get_field_changes(instance, old_instance=None):
     return changes
 
 
+def _acting_organisation_id(user):
+    if user is None or not getattr(user, "is_authenticated", False):
+        return None
+    return getattr(user, "organisation_id", None)
+
+
 def log_audit_action(action, instance, user=None, field_changes=None, request=None):
     """
     Create an AuditLog entry for the given action.
@@ -55,6 +61,8 @@ def log_audit_action(action, instance, user=None, field_changes=None, request=No
         user = getattr(instance, 'user', None)
     elif not user and request:
         user = getattr(request, 'user', None)
+
+    acting_org_id = _acting_organisation_id(user)
     
     # Extract request metadata
     ip_address = getattr(request, 'ip_address', None) if request else None
@@ -67,6 +75,7 @@ def log_audit_action(action, instance, user=None, field_changes=None, request=No
             object_id=instance.pk,
             action=action,
             user=user,
+            acting_organisation_id=acting_org_id,
             ip_address=ip_address,
             user_agent=user_agent,
             object_repr=str(instance)[:200],
@@ -77,6 +86,7 @@ def log_audit_action(action, instance, user=None, field_changes=None, request=No
             object_id=instance.pk,
             action=action,
             user=user,
+            acting_organisation_id=acting_org_id,
             ip_address=ip_address,
             user_agent=user_agent,
             object_repr=str(instance)[:200],
@@ -89,6 +99,7 @@ def log_audit_action(action, instance, user=None, field_changes=None, request=No
                 object_id=instance.pk,
                 action=action,
                 user=user,
+                acting_organisation_id=acting_org_id,
                 field_name=field_name,
                 old_value=old_value,
                 new_value=new_value,

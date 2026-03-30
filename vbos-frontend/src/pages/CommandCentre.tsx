@@ -9,8 +9,8 @@ import { useRecentSubmissions } from "@/hooks/useRecentSubmissions";
 import { useLiveAlerts } from "@/hooks/useLiveAlerts";
 import { useFieldTeamsDeployed } from "@/hooks/useFieldTeamsDeployed";
 import { useDatasetsUpdatedToday } from "@/hooks/useDatasetsUpdatedToday";
+import { useUiStore } from "@/store/ui-store";
 import { colors } from "@/tokens";
-import { toast } from "@/utils/toast";
 import { LuDownload } from "react-icons/lu";
 import { useState } from "react";
 
@@ -20,6 +20,7 @@ import { useState } from "react";
  */
 export function CommandCentre() {
   const [incidentDialogOpen, setIncidentDialogOpen] = useState(false);
+  const setShellNavId = useUiStore((s) => s.setShellNavId);
   const { relativeLabel } = useCommandCentreSyncClock(30_000);
   const submissionsQuery = useRecentSubmissions();
   const alertsQuery = useLiveAlerts();
@@ -67,14 +68,10 @@ export function CommandCentre() {
             size="sm"
             className="border"
             style={{ borderColor: colors.border.default }}
-            onClick={() =>
-              toast.info(
-                "Export",
-                "Report export will be available when connected to reporting API.",
-              )}
+            onClick={() => setShellNavId("exports")}
           >
             <LuDownload className="size-3.5" />
-            Export Report
+            Export data
           </Button>
           <Button
             type="button"
@@ -128,6 +125,28 @@ export function CommandCentre() {
         <div className="flex min-h-0 w-full min-w-0 flex-col gap-4 lg:w-[300px] lg:max-w-[300px]">
           <LiveAlertsPanel />
           <RiskExposurePanel />
+          <section
+            className="rounded-lg border p-3 text-[11px] leading-relaxed"
+            style={{
+              borderColor: colors.border.default,
+              backgroundColor: colors.bg.surface,
+              color: colors.text.muted,
+            }}
+            aria-labelledby="network-analysis-heading"
+          >
+            <h2
+              id="network-analysis-heading"
+              className="text-xs font-semibold leading-tight"
+              style={{ color: colors.text.primary }}
+            >
+              Network analysis (road isolation · cascading outages)
+            </h2>
+            <p className="mt-2">
+              Not automated in DRMIS yet. Needs road graph data (e.g. OpenStreetMap), a routing
+              engine (OSRM / pgRouting), and optional infrastructure network models for power, water,
+              and telecom. Planned when data and NDMO/MoCCA priorities align.
+            </p>
+          </section>
         </div>
       </div>
       <NewIncidentDialog open={incidentDialogOpen} onOpenChange={setIncidentDialogOpen} />

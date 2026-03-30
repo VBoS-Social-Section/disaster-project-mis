@@ -27,6 +27,7 @@ urlpatterns = [
     ),
     path("audit/", audit_views.AuditLogView.as_view(), name="audit-log"),
     path("cluster/", views.ClusterListView.as_view(), name="cluster-list"),
+    path("cyclone-events/", views.CycloneEventListView.as_view(), name="cyclone-event-list"),
     path(
         "datasets/",
         views.ClusterDatasetsView.as_view(),

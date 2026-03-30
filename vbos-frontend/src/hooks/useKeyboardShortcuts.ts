@@ -5,9 +5,9 @@ import { useModeTransition } from "@/hooks/useModeTransition";
 /**
  * Global keyboard shortcuts:
  * - Escape: Close panels (time series drawer, etc.)
- * - Alt+D: Disaster mode
- * - Alt+C: Climate mode
- * - Alt+X: Compare mode
+ * - Alt+D: Hazard / thematic (disaster) context
+ * - Alt+C: Climate module context
+ * - Alt+X: Compare years context
  */
 export function useKeyboardShortcuts() {
   const { isTimeSeriesOpen, setTimeSeriesOpen } = useUiStore();

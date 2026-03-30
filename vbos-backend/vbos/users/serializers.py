@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from vbos.organisations.serializers import OrganisationMiniSerializer
+
 from .models import User, SMTPSettings
 
 
@@ -20,6 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
     groups = serializers.SlugRelatedField(
         many=True, read_only=True, slug_field="name"
     )
+    organisation = OrganisationMiniSerializer(read_only=True)
     permissions = serializers.SerializerMethodField()
     avatar = serializers.ImageField(read_only=True)
     otp_required_for_all_logins = serializers.SerializerMethodField()
@@ -34,6 +37,7 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "email",
             "avatar",
+            "organisation",
             "is_staff",
             "is_superuser",
             "mfa_enabled",

@@ -24,6 +24,7 @@ from vbos.datasets.filters import (
 from .models import (
     AreaCouncil,
     Cluster,
+    CycloneEvent,
     PMTilesDataset,
     Province,
     RasterDataset,
@@ -48,6 +49,7 @@ from vbos.datasets.publication import (
 from .serializers import (
     AreaCouncilSerializer,
     ClusterSerializer,
+    CycloneEventSerializer,
     PMTilesDatasetSerializer,
     ProvinceSerializer,
     RasterDatasetSerializer,
@@ -111,7 +113,8 @@ class ClusterDatasetsView(APIView):
             for n in DRIVER_DATASET_NAMES:
                 name_q |= Q(name__icontains=n)
             tabular_qs = filter_queryset_for_public_api(
-                TabularDataset.objects.filter(name_q), request
+                TabularDataset.objects.filter(name_q).select_related("cyclone_event"),
+                request,
             )
             raster_qs = filter_queryset_for_public_api(
                 RasterDataset.objects.filter(name_q), request
@@ -204,7 +207,10 @@ class ClusterDatasetsView(APIView):
                 ).values_list("id", flat=True)
             )
             tabular = TabularDatasetSerializer(
-                TabularDataset.objects.filter(id__in=tabular_ids), many=True
+                TabularDataset.objects.filter(id__in=tabular_ids).select_related(
+                    "cyclone_event"
+                ),
+                many=True,
             ).data
             # Rasters are Climate-mode only: return all rasters for every cluster
             raster = RasterDatasetSerializer(
@@ -248,6 +254,24 @@ class ClusterListView(ListAPIView):
         response = super().finalize_response(request, response, *args, **kwargs)
         response["Cache-Control"] = "no-store, must-revalidate"
         return response
+
+
+class CycloneEventListView(ListAPIView):
+    """
+    Active (non-archived) cyclone events for the layer browser Risk sources accordion.
+    Ordered newest season first. Archived events are excluded; staff can see all via ?all=1.
+    """
+
+    serializer_class = CycloneEventSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = None  # small list, no pagination needed
+
+    def get_queryset(self):
+        qs = CycloneEvent.objects.order_by("-season_year", "name")
+        show_all = self.request.query_params.get("all") == "1"
+        if not (show_all and self.request.user and self.request.user.is_staff):
+            qs = qs.filter(is_archived=False)
+        return qs
 
 
 @method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
@@ -519,7 +543,9 @@ class TabularDatasetListView(ListAPIView):
     filterset_class = TabularDatasetFilter
 
     def get_queryset(self):
-        return filter_queryset_for_public_api(TabularDataset.objects.all(), self.request)
+        return filter_queryset_for_public_api(
+            TabularDataset.objects.select_related("cyclone_event"), self.request
+        )
 
 
 class TabularDatasetDetailView(RetrieveAPIView):
@@ -527,7 +553,9 @@ class TabularDatasetDetailView(RetrieveAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return filter_queryset_for_public_api(TabularDataset.objects.all(), self.request)
+        return filter_queryset_for_public_api(
+            TabularDataset.objects.select_related("cyclone_event"), self.request
+        )
 
 
 class TabularDatasetDataView(ListAPIView):
@@ -585,7 +613,7 @@ class MapQueryPlanView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            result = run_map_query(text)
+            result = run_map_query(text, request=request)
         except RuntimeError as e:
             return Response({"detail": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
         return Response(result)

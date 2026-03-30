@@ -13,6 +13,24 @@ export interface ICluster {
   description?: string;
 }
 
+export interface ICycloneEvent {
+  id: number;
+  name: string;
+  slug: string;
+  season_year: number;
+  is_archived: boolean;
+  started_on: string | null;
+  ended_on: string | null;
+}
+
+/** Owning ministry/partner when set (API catalog governance). */
+export interface DatasetOwningOrganisation {
+  id: number;
+  slug: string;
+  name: string;
+  short_name: string | null;
+}
+
 export interface BaseDataset {
   id: number;
   name: string;
@@ -20,6 +38,7 @@ export interface BaseDataset {
   created: string;
   updated: string;
   cluster?: string | null; // Cluster name; null for Climate-only rasters
+  owning_organisation?: DatasetOwningOrganisation | null;
   type: DatasetType;
   source: string | null;
   unit?: string | null;
@@ -45,6 +64,13 @@ export interface BaseDataset {
 
 export interface TabularDataset extends BaseDataset {
   dataType: "tabular";
+  /** Canonical cyclone/event record for damage, resources, and financial tabular types. */
+  cyclone_event?: {
+    id: number;
+    name: string;
+    slug: string;
+    season_year: number;
+  } | null;
 }
 
 export interface RasterDataset extends BaseDataset {

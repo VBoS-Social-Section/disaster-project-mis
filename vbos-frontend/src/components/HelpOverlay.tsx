@@ -21,8 +21,9 @@ const TOUR_STEPS: TourStep[] = [
   {
     id: "view-mode",
     target: "[data-tour='view-mode']",
-    title: "View mode",
-    content: "Switch between Disaster (risk & preparedness) and Climate (land cover, rasters) modes.",
+    title: "Resilience map",
+    content:
+      "One Resilience workspace. Use Map data below to pick a thematic cluster, a climate module, or Compare years.",
   },
   {
     id: "cluster-select",

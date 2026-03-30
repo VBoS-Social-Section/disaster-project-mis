@@ -13,10 +13,17 @@ UPLOAD_TO = "staging/raster/" if settings.DEBUG else "production/raster/"
 
 TYPE_CHOICES = {
     "baseline": _("Baseline"),
-    "estimated_damage": _("Estimated Hazard Damage"),
-    "aid_resources_needed": _("Immediate Response Resources"),
-    "estimate_financial_damage": _("Estimated Financial Damage"),
+    # RAP cyclone outputs — must be linked to a CycloneEvent or RAPImportBatch.
+    "estimated_damage": _("Cyclone RAP — Estimated Physical Damage"),
+    "aid_resources_needed": _("Cyclone RAP — Immediate Response Resources Needed"),
+    "estimate_financial_damage": _("Cyclone RAP — Estimated Financial Damage"),
 }
+
+# Cyclone RAP output types: require CycloneEvent or RAPImportBatch (see TabularDataset.clean).
+# These are produced exclusively by the Quarto RAP tool for cyclone events.
+RAP_EVENT_TABULAR_TYPES = frozenset(
+    {"estimated_damage", "aid_resources_needed", "estimate_financial_damage"}
+)
 
 
 class DatasetPublicationStatus(models.TextChoices):
@@ -75,6 +82,25 @@ class DatasetAuthorshipMixin(models.Model):
         abstract = True
 
 
+class DatasetOwningOrganisationMixin(models.Model):
+    """
+    Optional owning ministry/partner (GGGI, MoCCA, etc.).
+    Null means national / platform catalog visible to all orgs when scoping is enabled.
+    """
+
+    owning_organisation = models.ForeignKey(
+        "organisations.Organisation",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="owned_%(class)s",
+        help_text=_("Leave empty for national platform datasets; set for partner-owned layers."),
+    )
+
+    class Meta:
+        abstract = True
+
+
 class DisasterDatasetTag(models.Model):
     """
     Names used to match disaster overlay layers (Cluster API cluster=disaster).
@@ -111,6 +137,41 @@ class Cluster(models.Model):
         ordering = ["order"]
 
 
+class CycloneEvent(models.Model):
+    """
+    Canonical cyclone / TC event for attributing RAP-style tabular outputs.
+    Operators create an event first; estimated damage, resources, and financial damage
+    datasets must reference this (or a RAP import batch) before publish-ready workflow.
+    """
+
+    name = models.CharField(
+        max_length=155,
+        help_text=_('Display label, e.g. "Cyclone Lola".'),
+    )
+    slug = models.SlugField(
+        max_length=80,
+        unique=True,
+        help_text=_("Stable key for APIs and URLs, e.g. lola-2023."),
+    )
+    season_year = models.PositiveSmallIntegerField(
+        help_text=_("Tropical cyclone season year (e.g. 2023)."),
+    )
+    started_on = models.DateField(null=True, blank=True)
+    ended_on = models.DateField(null=True, blank=True)
+    is_archived = models.BooleanField(default=False, db_index=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-season_year", "slug"]
+        verbose_name = _("Cyclone event")
+        verbose_name_plural = _("Cyclone events")
+
+    def __str__(self):
+        return f"{self.name} ({self.season_year})"
+
+
 def _invalidate_cluster_cache(sender, **kwargs):
     """Clear cache so cluster list and datasets endpoints reflect admin changes."""
     cache.clear()
@@ -119,6 +180,12 @@ def _invalidate_cluster_cache(sender, **kwargs):
 @receiver(post_save, sender=Cluster)
 @receiver(post_delete, sender=Cluster)
 def invalidate_cluster_cache(sender, **kwargs):
+    _invalidate_cluster_cache(sender, **kwargs)
+
+
+@receiver(post_save, sender=CycloneEvent)
+@receiver(post_delete, sender=CycloneEvent)
+def invalidate_cyclone_event_cache(sender, **kwargs):
     _invalidate_cluster_cache(sender, **kwargs)
 
 
@@ -195,7 +262,12 @@ def delete_raster_file(sender, instance, **kwargs):
             default_storage.delete(instance.file.name)
 
 
-class RasterDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Model):
+class RasterDataset(
+    DatasetPublicationMixin,
+    DatasetAuthorshipMixin,
+    DatasetOwningOrganisationMixin,
+    models.Model,
+):
     """
     Raster datasets are Climate-mode only and are not tied to a particular cluster.
     They appear in the Land cover tab regardless of selected cluster.
@@ -248,7 +320,12 @@ class RasterDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Mode
 # Legacy Lucide icon keys (still supported). Flaticon format: fi-sr-{name} (e.g. fi-sr-hospital)
 
 
-class VectorDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Model):
+class VectorDataset(
+    DatasetPublicationMixin,
+    DatasetAuthorshipMixin,
+    DatasetOwningOrganisationMixin,
+    models.Model,
+):
     name = models.CharField(max_length=155, unique=False)
     description = models.TextField(max_length=2000, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -334,7 +411,12 @@ class VectorDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Mode
                 )
 
 
-class PMTilesDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Model):
+class PMTilesDataset(
+    DatasetPublicationMixin,
+    DatasetAuthorshipMixin,
+    DatasetOwningOrganisationMixin,
+    models.Model,
+):
     name = models.CharField(max_length=155, unique=False)
     description = models.TextField(max_length=2000, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -404,7 +486,12 @@ class VectorItem(AuditableMixin, models.Model):
         ordering = ["id"]
 
 
-class TabularDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Model):
+class TabularDataset(
+    DatasetPublicationMixin,
+    DatasetAuthorshipMixin,
+    DatasetOwningOrganisationMixin,
+    models.Model,
+):
     name = models.CharField(max_length=155, unique=False)
     description = models.TextField(max_length=2000, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -430,6 +517,18 @@ class TabularDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Mod
         null=True,
         help_text="RAP sector_family when sourced from RAP CSV (education, hazard, …).",
     )
+    cyclone_event = models.ForeignKey(
+        CycloneEvent,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="tabular_datasets",
+        help_text=_(
+            "Required for the three Cyclone RAP output types (estimated damage, "
+            "resources needed, financial damage), unless a RAP import batch is linked. "
+            "Create the cyclone event first under Cyclone events."
+        ),
+    )
 
     def __str__(self):
         return f"{self.name} - {self.cluster} / {self.type}"
@@ -437,6 +536,21 @@ class TabularDataset(DatasetPublicationMixin, DatasetAuthorshipMixin, models.Mod
     class Meta:
         ordering = ["id"]
         unique_together = ["name", "type", "cluster"]
+
+    def clean(self):
+        super().clean()
+        if self.type in RAP_EVENT_TABULAR_TYPES:
+            if not self.cyclone_event_id and not self.rap_batch_id:
+                raise ValidationError(
+                    {
+                        "cyclone_event": _(
+                            "Cyclone RAP output datasets (estimated damage, resources needed, "
+                            "financial damage) must be linked to a cyclone event "
+                            "or to a RAP import batch. "
+                            "These types are only produced by the cyclone RAP tool."
+                        ),
+                    }
+                )
 
 
 class TabularItem(AuditableMixin, models.Model):

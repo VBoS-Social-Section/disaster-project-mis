@@ -92,6 +92,14 @@ const DATASET_TYPE_LABELS: Record<DatasetType, string> = {
   estimate_financial_damage: "Financial Damage",
 };
 
+/** RAP / risk-register style groupings (filters `dataset.type`, not raster/vector). */
+const REGISTER_CATEGORY_ORDER: DatasetType[] = [
+  "estimated_damage",
+  "estimate_financial_damage",
+  "aid_resources_needed",
+  "baseline",
+];
+
 /** Formats available per data type */
 const FORMATS_FOR: Record<string, string[]> = {
   tabular: ["XLSX"],
@@ -559,6 +567,8 @@ export function ExportsPage() {
   const [selectedCluster, setSelectedCluster] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeDataType, setActiveDataType] = useState<string | null>(null);
+  /** Filters by API `dataset.type` (RAP / risk-register categories). */
+  const [registerCategoryFilter, setRegisterCategoryFilter] = useState<DatasetType | null>(null);
   const [exportYear, setExportYear] = useState<string>(String(new Date().getFullYear()));
   // Map: `${dataType}-${id}-${format}` → selected
   const [selectedFormats, setSelectedFormats] = useState<Record<string, Set<string>>>({});
@@ -591,9 +601,20 @@ export function ExportsPage() {
     [allDatasets],
   );
 
+  const countsByRegisterCategory = useMemo(() => {
+    const acc: Partial<Record<DatasetType, number>> = {};
+    for (const d of allDatasets) {
+      acc[d.type] = (acc[d.type] ?? 0) + 1;
+    }
+    return acc;
+  }, [allDatasets]);
+
   const filtered = useMemo(() => {
     let list = allDatasets;
     if (activeDataType) list = list.filter((d) => d.dataType === activeDataType);
+    if (registerCategoryFilter) {
+      list = list.filter((d) => d.type === registerCategoryFilter);
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(
@@ -604,7 +625,7 @@ export function ExportsPage() {
       );
     }
     return list;
-  }, [allDatasets, activeDataType, searchQuery]);
+  }, [allDatasets, activeDataType, registerCategoryFilter, searchQuery]);
 
   const toggleFormat = useCallback((dataset: Dataset, format: string) => {
     const key = `${dataset.dataType}-${dataset.id}`;
@@ -805,6 +826,7 @@ export function ExportsPage() {
                 setSelectedFormats({});
                 setActiveDataType(null);
                 setSearchQuery("");
+                setRegisterCategoryFilter(null);
               }}
             />
           )}
@@ -921,17 +943,50 @@ export function ExportsPage() {
                       count={countsByDataType[dt]}
                     />
                   ))}
-                  {(activeDataType || searchQuery) && (
+                  {(activeDataType || searchQuery || registerCategoryFilter) && (
                     <button
                       type="button"
                       className="ml-auto inline-flex items-center gap-1 text-[11px] font-medium underline underline-offset-2"
                       style={{ color: colors.accent.blue }}
-                      onClick={() => { setActiveDataType(null); setSearchQuery(""); }}
+                      onClick={() => {
+                        setActiveDataType(null);
+                        setSearchQuery("");
+                        setRegisterCategoryFilter(null);
+                      }}
                     >
                       <LuX className="size-3" />
                       Clear
                     </button>
                   )}
+                </div>
+
+                <div className="flex min-w-0 flex-wrap items-center gap-2 border-t border-dashed pt-3" style={{ borderColor: colors.border.default }}>
+                  <span
+                    className="w-full text-[10px] font-semibold uppercase tracking-wide sm:w-auto sm:pr-1"
+                    style={{ color: colors.text.muted }}
+                  >
+                    Risk register (by dataset category)
+                  </span>
+                  <FilterPill
+                    label="All categories"
+                    active={registerCategoryFilter === null}
+                    onClick={() => setRegisterCategoryFilter(null)}
+                  />
+                  {REGISTER_CATEGORY_ORDER.map((cat) => {
+                    const n = countsByRegisterCategory[cat] ?? 0;
+                    if (n === 0 && registerCategoryFilter !== cat) return null;
+                    return (
+                      <FilterPill
+                        key={cat}
+                        label={DATASET_TYPE_LABELS[cat]}
+                        active={registerCategoryFilter === cat}
+                        onClick={() =>
+                          setRegisterCategoryFilter(registerCategoryFilter === cat ? null : cat)
+                        }
+                        count={n}
+                      />
+                    );
+                  })}
                 </div>
               </div>
 

@@ -23,7 +23,7 @@ class UserViewSet(
     Updates and retrieves user accounts. Only staff can create new users.
     """
 
-    queryset = User.objects.all()
+    queryset = User.objects.select_related("organisation")
     serializer_class = UserSerializer
     permission_classes = (IsAdminOrReadOnlySelf,)
 

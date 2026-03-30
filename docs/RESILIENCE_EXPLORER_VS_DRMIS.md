@@ -59,25 +59,25 @@ VBoS, NDMO, or contracted developers can change any part of the system. No vendo
 
 ## Feature Comparison
 
+Statuses reflect the **disaster-project-mis** codebase (2026). “Partial” means usable capability exists but not full Resilience Explorer parity.
 
-| Resilience Explorer feature              | DRMIS today                      | Feasible to add?                                             |
-| ---------------------------------------- | -------------------------------- | ------------------------------------------------------------ |
-| **Geospatial mapping**                   | ✅ Yes                            | —                                                            |
-| **Layer visualization (raster, vector)** | ✅ Yes                            | —                                                            |
-| **Area-level statistics**                | ✅ Yes (province, area council)   | —                                                            |
-| **Damage estimates**                     | ✅ Yes (RAP outputs)              | —                                                            |
-| **PDF / XLSX export**                    | ✅ Yes                            | —                                                            |
-| **Multi-hazard layers**                  | ✅ Yes (cyclone, flood, etc.)     | —                                                            |
-| **Offline / field data entry**           | ✅ Yes (PWA)                      | —                                                            |
-| **Scenario comparison**                  | ⚠️ Partial (Disaster vs Climate) | ✅ Yes – extend comparison mode                               |
-| **Time-based scenarios**                 | ⚠️ Limited (year filter)         | ✅ Yes – add year/scenario toggles                            |
-| **3D scenario viewer**                   | ❌ No                             | ✅ Implementable – React + MapLibre GL / Cesium; Django serves tiles |
-| **Isolation risk (road disruption)**     | ❌ No                             | ✅ Implementable – road data + routing (pgRouting, OSRM)       |
-| **Cascading outages & recovery**         | ❌ No                             | ✅ Implementable – network model + failure logic              |
-| **Asset-level direct risk**              | ⚠️ Partial (vector points)       | ✅ Yes – link assets to hazard layers                         |
-| **Intervention testing**                 | ❌ No                             | ⚠️ Medium – scenario comparison logic                        |
-| **Custom risk registers**                | ⚠️ Partial (tabular export)      | ✅ Yes – templates and filters                                |
-
+| Resilience Explorer feature              | DRMIS today                                                                 | Feasible to add?                                             |
+| ---------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| **Geospatial mapping**                   | ✅ Yes (Leaflet 2D + optional MapLibre 3D)                                     | —                                                            |
+| **Layer visualization (raster, vector)** | ✅ Yes (TiTiler / precomputed rasters, vectors, PMTiles)                      | —                                                            |
+| **Area-level statistics**                | ✅ Yes (province, area council; tabular aggregates, Command Centre exposure) | —                                                            |
+| **Damage estimates**                     | ✅ Yes (RAP-style tabular datasets; cluster/type filters on Exports)         | —                                                            |
+| **PDF / XLSX export**                    | ✅ Yes (XLSX from Exports; PDF where wired in reporting)                     | —                                                            |
+| **Multi-hazard layers**                  | ✅ Yes (cyclone, flood, tagged disaster overlays, climate modules)           | —                                                            |
+| **Offline / field data entry**           | ✅ Yes (PWA, offline area sync, area data entry)                             | —                                                            |
+| **Scenario comparison**                  | ⚠️ Partial — Compare mode: year swipe, raster curtain, tabular delta; not RE multi-hazard scenario builder | ✅ Extend with saved scenarios / extra hazard dimensions     |
+| **Time-based scenarios**                 | ⚠️ Partial — global year + Compare left/right years; not full RE timeline UX | ✅ Richer time controls, presets                               |
+| **3D scenario viewer**                   | ⚠️ Partial — **3D** toggle: MapLibre GL + terrain (global DEM); not RE “scenario studio” | ✅ Vanuatu DEM, authored 3D layers, Cesium if needed          |
+| **Isolation risk (road disruption)**     | ❌ No (Command Centre notes data needs)                                      | ✅ OSM roads + OSRM/pgRouting                                 |
+| **Cascading outages & recovery**         | ❌ No                                                                        | ✅ Network graph + failure logic                              |
+| **Asset-level direct risk**              | ⚠️ Partial — vectors + hazard rasters; hint when both on; exposure API on dashboard | ✅ Pixel/sample exposure per asset                            |
+| **Intervention testing**                 | ⚠️ Partial — **Simulate** panel (sliders, estimated cost readout; not engineering-grade loss) | ✅ Tie to backend scenarios + validation                      |
+| **Custom risk registers**                | ⚠️ Partial — Exports by cluster + **dataset category** (RAP types) + formats | ✅ Saved templates, PDF register layouts                        |
 
 ---
 
@@ -88,21 +88,21 @@ VBoS, NDMO, or contracted developers can change any part of the system. No vendo
 | ---------------- | ----------------------------------------------------- |
 | **Backend**      | Django 5.2, Django REST Framework, PostGIS            |
 | **Frontend**     | React 19, Vite 7, TypeScript, Tailwind CSS, shadcn/ui |
-| **Maps**         | Leaflet, react-leaflet, protomaps-leaflet             |
+| **Maps**         | Leaflet, react-leaflet, protomaps-leaflet; **MapLibre GL** for 3D mode |
 | **Raster tiles** | TiTiler (COG/GeoTIFF), PMTiles                        |
 | **Database**     | PostgreSQL with PostGIS                               |
 
 
-For 3D features, adding MapLibre GL JS or Cesium to the React frontend would be required; Django would serve tiles and data via API.
+3D mode uses MapLibre GL in-app; optional Vanuatu DEM / TiTiler endpoints can replace generic terrain when deployed.
 
 ---
 
 ## What DRMIS Can Realistically Replicate
 
-1. **Scenario comparison** – Extend existing comparison mode for different years or hazard scenarios.
-2. **Time-based scenarios** – Add year/scenario selectors and filters.
-3. **Asset-level risk** – Overlay infrastructure points on hazard layers and show exposure.
-4. **Custom reporting** – Improve PDF/XLSX templates and filters for risk registers.
+1. **Scenario comparison** – Extend existing Compare mode (already: swipe, tabular delta, raster comparison) with saved workspaces and multi-hazard presets.
+2. **Time-based scenarios** – Build on year left/right and map date store (scenario timelines, presets).
+3. **Asset-level risk** – Build on vector + raster overlays and dashboard exposure; add per-asset sampling or join API.
+4. **Custom reporting** – Exports already support category filters; add PDF templates and named register bundles.
 5. **Area statistics** – Strengthen aggregation and summaries by province/area council.
 
 ---
@@ -113,7 +113,7 @@ DRMIS is an ongoing project. All of these can be implemented with sufficient tim
 
 | Feature | What's needed | Feasibility |
 |---------|---------------|-------------|
-| **3D scenario viewer** | Add MapLibre GL JS or Cesium to React; Django serves terrain/3D tiles via TiTiler or custom endpoints. DEM (elevation) data for Vanuatu. | Implementable |
+| **3D scenario viewer (RE parity)** | MapLibre is in-app; upgrade path: Vanuatu DEM via TiTiler or terrain tiles, optional Cesium for full scene authoring. | Implementable |
 | **Isolation risk** | Road network data (OpenStreetMap or NDMO data), routing engine (e.g. pgRouting, OSRM), connectivity analysis. | Implementable |
 | **Cascading outages** | Infrastructure network model (power, water, telecom), failure propagation logic, recovery time assumptions. | Implementable |
 | **Resilience Explorer’s risk models** | Equivalent risk methodology (hazard x exposure x vulnerability), research or adoption of open models (e.g. from academia, UNDRR). | Implementable |

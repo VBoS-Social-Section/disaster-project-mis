@@ -9,6 +9,7 @@ import { useSimulationStore } from "@/store/simulation-store";
 import { FloatingLayerControl } from "@/components/Map/FloatingLayerControl";
 import { Legend } from "@/components/Map/Legend/Legend";
 import { WorkspaceMenu } from "@/components/Map/WorkspaceMenu";
+import { AssetHazardContextBanner } from "@/components/Map/AssetHazardContextBanner";
 
 export function MapFloatingChrome() {
   const { isOpen: simOpen, setIsOpen: setSimOpen } = useSimulationStore();
@@ -17,7 +18,7 @@ export function MapFloatingChrome() {
     <div
       className={cn(
         "pointer-events-none absolute left-3 right-3 top-3 z-[1040] md:left-4 md:right-auto",
-        "drmis-panel-enter max-md:max-w-[min(100%,calc(100vw-1.5rem))]",
+        "drmis-panel-enter flex max-w-[min(100%,calc(100vw-1.5rem))] flex-col items-start",
       )}
     >
       <div
@@ -57,6 +58,7 @@ export function MapFloatingChrome() {
         <div className="w-px shrink-0 self-stretch bg-border" aria-hidden />
         <WorkspaceMenu chrome />
       </div>
+      <AssetHazardContextBanner />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 Two-factor authentication: email OTP and TOTP (Microsoft Authenticator).
 """
 import base64
+import logging
 import os
 import random
 import string
@@ -30,6 +31,8 @@ TOTP_SETUP_PREFIX = "totp_setup:"
 OTP_CACHE_TTL = 300  # 5 minutes
 TOTP_SETUP_TTL = 600  # 10 minutes for setup
 OTP_LENGTH = 6
+
+logger = logging.getLogger(__name__)
 
 
 def _generate_temp_token(user_id: str) -> str:
@@ -135,7 +138,19 @@ def obtain_auth_token(request):
             )
         code = _generate_email_otp()
         _store_email_otp(str(user.pk), code)
-        _send_email_otp(user, code)
+        try:
+            _send_email_otp(user, code)
+        except Exception:
+            logger.exception("OTP email send failed for user_id=%s", user.pk)
+            return Response(
+                {
+                    "non_field_errors": [
+                        "Could not send verification email. From Docker, set Admin → SMTP settings "
+                        "host to mailhog (port 1025, no TLS), or set DISABLE_2FA_GLOBALLY=true for local dev."
+                    ],
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         temp_token = _generate_temp_token(str(user.pk))
         return Response({
             "requires_2fa": True,
@@ -222,7 +237,18 @@ def resend_email_otp(request):
 
     code = _generate_email_otp()
     _store_email_otp(str(user.pk), code)
-    _send_email_otp(user, code)
+    try:
+        _send_email_otp(user, code)
+    except Exception:
+        logger.exception("OTP resend email failed for user_id=%s", user.pk)
+        return Response(
+            {
+                "non_field_errors": [
+                    "Could not send verification email. Check SMTP settings (from Docker use host mailhog, port 1025)."
+                ],
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
 
     return Response({"detail": "Verification code sent to your email."})
 

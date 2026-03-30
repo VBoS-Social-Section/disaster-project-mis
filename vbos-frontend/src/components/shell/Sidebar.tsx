@@ -16,6 +16,8 @@ export interface SidebarProps {
   activeId: string;
   onNavigate: (id: string) => void;
   className?: string;
+  /** Live alert count — shown as badge on Live map nav item when > 0. */
+  alertCount?: number;
 }
 
 function SectionTitle({ children }: { children: string }) {
@@ -32,7 +34,7 @@ function SectionTitle({ children }: { children: string }) {
 /**
  * Left navigation: Operations, Data, Governance — 220px column.
  */
-export function Sidebar({ activeId, onNavigate, className }: SidebarProps) {
+export function Sidebar({ activeId, onNavigate, className, alertCount = 0 }: SidebarProps) {
   const user = useAuthStore((s) => s.user);
   const role = getUserRole(user);
 
@@ -63,7 +65,7 @@ export function Sidebar({ activeId, onNavigate, className }: SidebarProps) {
             label="Live map"
             icon={<LuMap />}
             active={activeId === "live-map"}
-            badge={2}
+            badge={alertCount > 0 ? alertCount : undefined}
             badgeVariant="red"
             onClick={() => onNavigate("live-map")}
           />
@@ -85,8 +87,6 @@ export function Sidebar({ activeId, onNavigate, className }: SidebarProps) {
             label="Exports"
             icon={<LuDownload />}
             active={activeId === "exports"}
-            badge="New"
-            badgeVariant="blue"
             onClick={() => onNavigate("exports")}
           />
         )}

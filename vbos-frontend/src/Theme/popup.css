@@ -17,25 +17,28 @@
   border: none !important;
 }
 
-/* Vector hover tooltip — opaque card, width grows for single-line column labels */
+/* Vector hover tooltip — fully opaque card, overrides all Leaflet transparency defaults */
 .leaflet-tooltip.vector-marker-tooltip {
   font-family: var(--font-sans, var(--chakra-fonts-body));
   padding: 0;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border) !important;
   border-radius: var(--radius-lg);
-  width: max-content;
-  max-width: calc(100vw - 2rem);
-  max-height: calc(100vh - 3rem);
-  overflow-x: auto;
-  overflow-y: auto;
-  /* Solid surface — no backdrop blur (that showed the map through the panel) */
-  background-color: var(--popover);
-  background-image: none;
-  color: var(--popover-foreground);
-  opacity: 1;
+  /* Fixed comfortable width — values wrap inside; no scrollbar needed */
+  width: 22rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+  /* Let height grow with content — no scroll */
+  overflow: visible;
+  /* Force solid surface — Leaflet defaults to rgba(255,255,255,0.83) background */
+  background: hsl(var(--popover)) !important;
+  background-color: hsl(var(--popover)) !important;
+  background-image: none !important;
+  color: hsl(var(--popover-foreground)) !important;
+  /* Leaflet sets opacity:0.9 on .leaflet-tooltip — override to fully opaque */
+  opacity: 1 !important;
+  filter: none;
   box-shadow:
-    0 4px 6px -1px rgb(0 0 0 / 0.08),
-    0 10px 24px -4px rgb(0 0 0 / 0.12);
+    0 4px 6px -1px rgb(0 0 0 / 0.10),
+    0 10px 24px -4px rgb(0 0 0 / 0.15) !important;
   white-space: normal;
   box-sizing: border-box;
 }
@@ -46,29 +49,28 @@
   line-height: 1.45;
   font-size: 0.8125rem;
   max-width: none;
+  width: 100%;
   overflow: visible;
   white-space: normal;
 }
 
-/* Arrow matches surface */
+/* Arrow matches solid surface */
 .leaflet-tooltip.vector-marker-tooltip.leaflet-tooltip-top:before {
-  border-top-color: var(--popover);
+  border-top-color: hsl(var(--popover)) !important;
 }
 .leaflet-tooltip.vector-marker-tooltip.leaflet-tooltip-bottom:before {
-  border-bottom-color: var(--popover);
+  border-bottom-color: hsl(var(--popover)) !important;
 }
 .leaflet-tooltip.vector-marker-tooltip.leaflet-tooltip-left:before {
-  border-left-color: var(--popover);
+  border-left-color: hsl(var(--popover)) !important;
 }
 .leaflet-tooltip.vector-marker-tooltip.leaflet-tooltip-right:before {
-  border-right-color: var(--popover);
+  border-right-color: hsl(var(--popover)) !important;
 }
 
 .vmt {
   text-align: left;
-  min-width: min(12rem, 100%);
-  max-width: calc(100vw - 2rem);
-  width: max-content;
+  width: 100%;
   box-sizing: border-box;
 }
 
@@ -116,11 +118,11 @@
   font-style: italic;
 }
 
-/* Label one line (column min = label width); value wraps in same column up to viewport */
+/* Label stacked above value — both wrap freely within the fixed tooltip width */
 .vmt-row {
-  display: grid;
-  grid-template-columns: fit-content(calc(100vw - 2.5rem));
-  gap: 0.15rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
   padding: 0.45rem 0;
   border-bottom: 1px solid var(--border);
 }
@@ -137,7 +139,8 @@
   letter-spacing: 0.04em;
   color: var(--muted-foreground);
   line-height: 1.35;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .vmt-value {

@@ -74,6 +74,14 @@ class SMTPSettings(models.Model):
 
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organisation = models.ForeignKey(
+        "organisations.Organisation",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="users",
+        help_text="Ministry or partner org (GGGI, MoCCA, …). Empty = platform operator / legacy full catalog access.",
+    )
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
     mfa_enabled = models.BooleanField(default=False)
     mfa_method = models.CharField(

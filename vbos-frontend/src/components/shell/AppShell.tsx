@@ -105,7 +105,7 @@ export function AppShell({
         alertPulse={alertPulse}
         showUserAvatar={topbarUserAvatar}
       />
-      <Sidebar activeId={shellNavId} onNavigate={handleNavigate} />
+      <Sidebar activeId={shellNavId} onNavigate={handleNavigate} alertCount={alertCount} />
       <main
         className={cn(
           "row-start-2 col-start-2 min-h-0 min-w-0",

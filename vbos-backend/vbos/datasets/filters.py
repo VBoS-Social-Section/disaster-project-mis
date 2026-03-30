@@ -12,6 +12,7 @@ from django.db.models import Q
 from .models import (
     AreaCouncil,
     Cluster,
+    CycloneEvent,
     PMTilesDataset,
     Province,
     RasterDataset,
@@ -62,9 +63,22 @@ class VectorDatasetFilter(DatasetFilter):
 
 
 class TabularDatasetFilter(DatasetFilter):
+    cyclone_event = ModelChoiceFilter(
+        field_name="cyclone_event",
+        queryset=CycloneEvent.objects.all(),
+    )
+
     class Meta:
         model = TabularDataset
-        fields = ["name", "source", "cluster", "publication_status", "created", "updated"]
+        fields = [
+            "name",
+            "source",
+            "cluster",
+            "cyclone_event",
+            "publication_status",
+            "created",
+            "updated",
+        ]
 
 
 class DataItemsBaseFilter(FilterSet):

@@ -18,14 +18,17 @@ import { useLayerStore } from "@/store/layer-store";
 import { useUiStore } from "@/store/ui-store";
 import { useViewStore } from "@/store/view-store";
 import { useScenario } from "@/hooks/useScenario";
+import { useCycloneEvents } from "@/hooks/useCycloneEvents";
 import { cn } from "@/lib/utils";
 import {
   LuDatabase,
   LuTriangleAlert,
   LuPackage,
   LuBanknote,
+  LuWind,
 } from "react-icons/lu";
 import type { DatasetType } from "@/types/api";
+import { DISASTER_VIEW_TYPES } from "@/store/ui-store";
 
 interface ViewTypeConfig {
   label: string;
@@ -94,6 +97,8 @@ export function TabularDatasetSelect() {
   const scenarioId = useViewStore((s) => s.scenarioId);
   const selectedCluster = useUiStore((s) => s.selectedCluster);
   const setSelectedViewType = useUiStore((s) => s.setSelectedViewType);
+  const activeRiskSource = useUiStore((s) => s.activeRiskSource);
+  const selectedCycloneEventId = useUiStore((s) => s.selectedCycloneEventId);
 
   const currentTabularId = layers
     .split(",")
@@ -105,11 +110,21 @@ export function TabularDatasetSelect() {
     )
     : null;
   const tabularDatasets = useMemo(() => {
-    const fromCluster = allDatasets.filter(
-      (d) =>
-        d.dataType === "tabular" &&
-        clusterMatches(d.cluster, selectedCluster),
-    );
+    const fromCluster = allDatasets.filter((d) => {
+      if (d.dataType !== "tabular") return false;
+      if (!clusterMatches(d.cluster, selectedCluster)) return false;
+      // For RAP output types: when a specific cyclone event is chosen, show only
+      // datasets linked to that event. Datasets without cyclone_event (e.g. legacy
+      // or un-tagged rows) are still shown so the UI degrades gracefully.
+      if (
+        selectedCycloneEventId !== null &&
+        DISASTER_VIEW_TYPES.includes(d.type as (typeof DISASTER_VIEW_TYPES)[number])
+      ) {
+        const evId = (d as import("@/types/api").TabularDataset).cyclone_event?.id;
+        if (evId != null && evId !== selectedCycloneEventId) return false;
+      }
+      return true;
+    });
     // Only include activeTabularMeta from another source when it's in the selected cluster
     // (e.g. Damage tab from same cluster). Never include when switching clusters — avoids
     // showing stale Education KPIs after switching to Telecommunications.
@@ -121,7 +136,7 @@ export function TabularDatasetSelect() {
       return [...fromCluster, activeTabularMeta];
     }
     return fromCluster;
-  }, [allDatasets, selectedCluster, activeTabularMeta]);
+  }, [allDatasets, selectedCluster, activeTabularMeta, selectedCycloneEventId]);
 
   const datasetsByType = useMemo(() => {
     const map = new Map<DatasetType, typeof tabularDatasets>();
@@ -158,14 +173,23 @@ export function TabularDatasetSelect() {
     }
   }, [selectedCluster, tabularDatasets, currentDataset, currentTabularId, switchLayer]);
 
-  const typesWithData = VIEW_TYPE_ORDER.filter(
-    (t) => (datasetsByType.get(t)?.length ?? 0) > 0,
-  );
+  // Only show RAP output types (Damage, Resources, Financial) when a risk source is active.
+  // Without a risk source, show Baseline only — these are cyclone-RAP-only outputs.
+  const typesWithData = VIEW_TYPE_ORDER.filter((t) => {
+    if ((datasetsByType.get(t)?.length ?? 0) === 0) return false;
+    if (DISASTER_VIEW_TYPES.includes(t) && !activeRiskSource) return false;
+    return true;
+  });
   const currentType = currentDataset?.type ?? typesWithData[0] ?? null;
 
   useEffect(() => {
     setSelectedViewType(currentType);
   }, [currentType, setSelectedViewType]);
+
+  const { data: cycloneEvents } = useCycloneEvents();
+  const activeCycloneEvent = selectedCycloneEventId != null
+    ? cycloneEvents?.find((e) => e.id === selectedCycloneEventId)
+    : null;
 
   const hasTabularAllowed = scenario.allowedLayerTypes.includes("tabular");
   if (!hasTabularAllowed || scenarioId === "climate") return null;
@@ -196,6 +220,13 @@ export function TabularDatasetSelect() {
       <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
         Data view
       </Label>
+      {activeCycloneEvent ? (
+        <div className="flex items-center gap-1.5 rounded-md border border-blue-400/30 bg-blue-500/8 px-2 py-1.5 text-xs">
+          <LuWind className="size-3.5 shrink-0 text-blue-500" aria-hidden />
+          <span className="font-medium text-foreground">{activeCycloneEvent.name}</span>
+          <span className="text-muted-foreground">{activeCycloneEvent.season_year}</span>
+        </div>
+      ) : null}
       <Tabs
         value={currentType}
         onValueChange={handleTypeChange}

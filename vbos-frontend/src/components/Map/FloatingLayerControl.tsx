@@ -2,7 +2,7 @@
  * Floating layer-control panel that overlays the map (top-left).
  * Replaces the left sidebar: cluster/dataset picker + active-layers list.
  */
-import { useEffect, useRef, useState, startTransition, useMemo } from "react";
+import { useEffect, useRef, useState, startTransition, useMemo, useCallback } from "react";
 import {
   LuLayers,
   LuChevronDown,
@@ -36,6 +36,7 @@ import { useClusters, useClusterDatasets } from "@/hooks/useClusters";
 import { useLayerStore } from "@/store/layer-store";
 import { useUiStore, DISASTER_VIEW_TYPES } from "@/store/ui-store";
 import { useViewStore } from "@/store/view-store";
+import { useModeTransition } from "@/hooks/useModeTransition";
 import { useScenario } from "@/hooks/useScenario";
 import { DatasetSection } from "@/components/LeftSidebar/DatasetSection";
 import { DisasterSection } from "@/components/LeftSidebar/DisasterSection";
@@ -48,6 +49,11 @@ import {
   CLIMATE_MODULES,
   type ClimateModuleId,
 } from "@/config/climate";
+import { LayerBrowserBrowse } from "@/components/Map/LayerBrowserBrowse";
+import type {
+  ApplyRiskNavDeps,
+  LayerBrowserTabId,
+} from "@/config/riskSourcesNavigation";
 
 const PANEL_WIDTH = 296;
 
@@ -227,6 +233,8 @@ function CycloneBannerInline() {
 
 export function FloatingLayerControl({ chrome = false }: { chrome?: boolean } = {}) {
   const [open, setOpen] = useState(false);
+  const [layerBrowserTab, setLayerBrowserTab] = useState<LayerBrowserTabId>("elements");
+  const [layerBrowserSearch, setLayerBrowserSearch] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
 
   const scenarioId = useViewStore((s) => s.scenarioId);
@@ -236,8 +244,38 @@ export function FloatingLayerControl({ chrome = false }: { chrome?: boolean } = 
   const selectedCluster = useUiStore((s) => s.selectedCluster);
   const setSelectedCluster = useUiStore((s) => s.setSelectedCluster);
   const selectedViewType = useUiStore((s) => s.selectedViewType);
+  const setSelectedViewType = useUiStore((s) => s.setSelectedViewType);
+  const setActiveRiskSource = useUiStore((s) => s.setActiveRiskSource);
+  const setSelectedCycloneEventId = useUiStore((s) => s.setSelectedCycloneEventId);
   const { data: clusters, isPending: clustersLoading } = useClusters();
   const { layers } = useLayerStore();
+  const { switchToMode } = useModeTransition();
+
+  const riskNavDeps: ApplyRiskNavDeps = useMemo(
+    () => ({
+      clusters,
+      switchToMode,
+      setSelectedCluster,
+      setSelectedClimateModule,
+      setSelectedViewType,
+      setActiveRiskSource,
+      setSelectedCycloneEventId,
+    }),
+    [
+      clusters,
+      switchToMode,
+      setSelectedCluster,
+      setSelectedClimateModule,
+      setSelectedViewType,
+      setActiveRiskSource,
+      setSelectedCycloneEventId,
+    ],
+  );
+
+  const onLayerBrowserNavigate = useCallback(() => {
+    setLayerBrowserTab("elements");
+    setLayerBrowserSearch("");
+  }, []);
 
   const activeLayerCount = layers ? layers.split(",").filter(Boolean).length : 0;
 
@@ -255,12 +293,22 @@ export function FloatingLayerControl({ chrome = false }: { chrome?: boolean } = 
     }
   }, [scenarioId, selectedClimateModule, setSelectedClimateModule]);
 
+  // Always prefer the user-selected cluster. In climate mode, fall back to the
+  // climate-module's canonical cluster only when no cluster is explicitly chosen.
   const effectiveCluster =
-    scenarioId === "climate"
+    selectedCluster ||
+    (scenarioId === "climate"
       ? getClusterForClimateModule(
           (selectedClimateModule || "land_use") as "land_use" | "coastal",
         )
-      : selectedCluster;
+      : "");
+
+  useEffect(() => {
+    if (!open) {
+      setLayerBrowserTab("elements");
+      setLayerBrowserSearch("");
+    }
+  }, [open]);
 
   // Close on outside click — but ignore clicks inside Radix portals (SelectContent, etc.)
   useEffect(() => {
@@ -282,10 +330,7 @@ export function FloatingLayerControl({ chrome = false }: { chrome?: boolean } = 
     return () => document.removeEventListener("mousedown", handler, true);
   }, [open]);
 
-  const triggerLabel =
-    scenarioId === "climate"
-      ? (CLIMATE_MODULES.find((m) => m.id === selectedClimateModule)?.label ?? "Layers")
-      : selectedCluster || "Select cluster";
+  const triggerLabel = selectedCluster || "Select cluster";
 
   return (
     <div
@@ -342,75 +387,71 @@ export function FloatingLayerControl({ chrome = false }: { chrome?: boolean } = 
             style={{ maxHeight: "min(500px, calc(100svh - 10rem))" }}
             aria-busy={isLayerPanelSwitching}
           >
-            {/* Cluster / climate-module selector */}
-            <div className="mb-3">
-              {scenarioId === "climate" ? (
-                <div className="space-y-1">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Climate module
-                  </label>
-                  <Select
-                    value={selectedClimateModule || undefined}
-                    onValueChange={(v) => setSelectedClimateModule(v || "")}
-                  >
-                    <SelectTrigger className="w-full rounded-md border-border bg-muted/50 text-sm">
-                      <SelectValue placeholder="Select module…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CLIMATE_MODULES.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
-                          {m.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ) : clustersLoading ? (
-                <Skeleton className="h-9 w-full rounded-md" />
-              ) : (
-                <div className="space-y-1">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Cluster
-                  </label>
-                  <Select value={selectedCluster} onValueChange={setSelectedCluster}>
-                    <SelectTrigger className="w-full rounded-md border-border bg-muted/50 text-sm">
-                      <SelectValue placeholder="Select cluster…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clusters?.map((c) => (
-                        <SelectItem key={c.id} value={c.name}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
-
-            {/* Layer list */}
-            {isLayerPanelSwitching ? (
-              <div className="space-y-1.5 py-2" role="status" aria-label="Loading layers">
-                {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-8 w-full rounded-md" />
-                ))}
-              </div>
-            ) : (
-              effectiveCluster && (
+            <LayerBrowserBrowse
+              tab={layerBrowserTab}
+              onTabChange={setLayerBrowserTab}
+              search={layerBrowserSearch}
+              onSearchChange={setLayerBrowserSearch}
+              navDeps={riskNavDeps}
+              onNavigateComplete={onLayerBrowserNavigate}
+              elementsPanel={
                 <>
-                  <CycloneBannerInline />
-                  <ClusterDatasetPanel clusterName={effectiveCluster} />
-                  {scenarioId !== "climate" &&
-                    selectedViewType &&
-                    DISASTER_VIEW_TYPES.includes(selectedViewType) && (
-                      <DisasterSection />
+                  <div className="mb-3">
+                    {clustersLoading ? (
+                      <Skeleton className="h-9 w-full rounded-md" />
+                    ) : (
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          Cluster
+                        </label>
+                        <Select
+                          value={selectedCluster}
+                          onValueChange={(v) => {
+                            setSelectedCluster(v);
+                            // Switching cluster manually in Elements clears the risk source
+                            // so RAP tabs don't persist from a previous cyclone navigation.
+                            setActiveRiskSource(null);
+                          }}
+                        >
+                          <SelectTrigger className="w-full rounded-md border-border bg-muted/50 text-sm">
+                            <SelectValue placeholder="Select cluster…" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {clusters?.map((c) => (
+                              <SelectItem key={c.id} value={c.name}>
+                                {c.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     )}
-                  {scenarioId === "climate" && <DriversSection />}
-                </>
-              )
-            )}
+                  </div>
 
-            {/* Active layers */}
+                  {isLayerPanelSwitching ? (
+                    <div className="space-y-1.5 py-2" role="status" aria-label="Loading layers">
+                      {[1, 2, 3, 4].map((i) => (
+                        <Skeleton key={i} className="h-8 w-full rounded-md" />
+                      ))}
+                    </div>
+                  ) : (
+                    effectiveCluster && (
+                      <>
+                        <CycloneBannerInline />
+                        <ClusterDatasetPanel clusterName={effectiveCluster} />
+                        {scenarioId !== "climate" &&
+                          selectedViewType &&
+                          DISASTER_VIEW_TYPES.includes(selectedViewType) && (
+                            <DisasterSection />
+                          )}
+                        {scenarioId === "climate" && <DriversSection />}
+                      </>
+                    )
+                  )}
+                </>
+              }
+            />
+
             <ActiveLayersStrip />
           </div>
         </div>

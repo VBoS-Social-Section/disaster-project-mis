@@ -1,6 +1,6 @@
 /**
- * Header segmented control: Disaster | Climate | Compare.
- * Shared labels for accessibility, toasts, and subtitles.
+ * Map context labels (hazard / climate / compare) for toasts, subtitles, and the Resilience chip.
+ * Switching is via Map data (sidebar) or shortcuts; the shell shows a single Resilience mode.
  */
 import type { ScenarioId } from "@/config/scenarios";
 

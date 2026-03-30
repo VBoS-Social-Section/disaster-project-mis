@@ -93,6 +93,7 @@ class RAPImportBatchAdmin(ModelAdmin):
         ("imported_at", RangeDateFilter),
     ]
     search_fields = ["batch_ref", "cyclone_name", "notes"]
+    autocomplete_fields = ["cyclone_event"]
     readonly_fields = [
         "status",
         "imported_by",
@@ -110,6 +111,7 @@ class RAPImportBatchAdmin(ModelAdmin):
             {
                 "fields": (
                     ("batch_ref", "cyclone_name"),
+                    "cyclone_event",
                     ("event_year", "rendered_at"),
                     "status",
                 ),
