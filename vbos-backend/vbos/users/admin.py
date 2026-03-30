@@ -24,7 +24,9 @@ class UserAdmin(BaseUserAdmin, UnfoldModelAdmin):
     form = UserChangeForm
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
+    autocomplete_fields = ("organisation",)
     fieldsets = BaseUserAdmin.fieldsets + (
+        ("Organisation", {"fields": ("organisation",)}),
         ("Two-factor authentication", {"fields": ("mfa_enabled", "mfa_method")}),
     )
 

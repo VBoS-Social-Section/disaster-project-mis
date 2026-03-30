@@ -35,7 +35,12 @@ export function DriversSection() {
         className="rounded-lg border border-border bg-muted/30"
       >
         <AccordionTrigger className="px-4 py-3 text-sm font-medium hover:no-underline rounded-md [&[data-state=open]]:rounded-b-none">
-          Drivers overlay
+          <div className="flex flex-col items-start gap-0.5 text-left">
+            <span>Drivers overlay</span>
+            <span className="text-[10px] font-normal text-muted-foreground">
+              Contextual layers — population, roads, urban expansion
+            </span>
+          </div>
         </AccordionTrigger>
         <AccordionContent className="px-4 pb-4 pt-0">
           {isPending ? (

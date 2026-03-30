@@ -11,7 +11,7 @@ from uuid import uuid4
 
 from django.core.files.storage import default_storage
 from django.utils import timezone as dj_timezone
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.request import Request
@@ -29,7 +29,8 @@ def _now_iso() -> str:
 
 
 class USGSEarthquakeView(APIView):
-    permission_classes = [IsAuthenticated]
+    """Public USGS feed (no auth)."""
+    permission_classes = [AllowAny]
 
     def get(self, request: Request) -> Response:
         alerts, status = fetch_usgs()
@@ -45,7 +46,8 @@ class USGSEarthquakeView(APIView):
 
 
 class VMGDWarningsView(APIView):
-    permission_classes = [IsAuthenticated]
+    """Public VMGD feed (no auth)."""
+    permission_classes = [AllowAny]
 
     def get(self, request: Request) -> Response:
         alerts, status = fetch_vmgd()
@@ -61,7 +63,8 @@ class VMGDWarningsView(APIView):
 
 
 class GDACSAlertsView(APIView):
-    permission_classes = [IsAuthenticated]
+    """Public GDACS feed (no auth)."""
+    permission_classes = [AllowAny]
 
     def get(self, request: Request) -> Response:
         alerts, status = fetch_gdacs()
@@ -79,11 +82,14 @@ class GDACSAlertsView(APIView):
 class CombinedAlertsView(APIView):
     """
     Merged live alerts feed. Fetches all three external sources concurrently
-    and merges with active internal (DRMIS) alerts.
+    and merges with active internal (DRMIS) alerts for authenticated users only.
     Sorted newest-first by issued_at.
+
+    Anonymous clients may read the combined feed (public external sources);
+    internal DRMIS rows require auth.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request: Request) -> Response:
         import concurrent.futures
@@ -103,13 +109,16 @@ class CombinedAlertsView(APIView):
         sources["VMGD"] = vmgd_status
         sources["GDACS"] = gdacs_status
 
-        # Internal DRMIS alerts (active only, newest 20)
-        internal_qs = Alert.objects.filter(is_active=True).select_related("province")[:20]
-        internal_alerts = AlertSerializer(internal_qs, many=True).data
-        # Add string id prefix to distinguish from external
-        for a in internal_alerts:
-            a["id"] = f"drmis-{a['id']}"
-        sources["DRMIS"] = "ok"
+        internal_alerts: list
+        if request.user.is_authenticated:
+            internal_qs = Alert.objects.filter(is_active=True).select_related("province")[:20]
+            internal_alerts = AlertSerializer(internal_qs, many=True).data
+            for a in internal_alerts:
+                a["id"] = f"drmis-{a['id']}"
+            sources["DRMIS"] = "ok"
+        else:
+            internal_alerts = []
+            sources["DRMIS"] = "auth_required"
 
         all_alerts = list(internal_alerts) + usgs_alerts + vmgd_alerts + gdacs_alerts
 

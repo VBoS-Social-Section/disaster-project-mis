@@ -20,11 +20,24 @@ def staff_sees_all_publication_statuses(request) -> bool:
     return pub in ("all", "*", "1", "true", "yes")
 
 
-def filter_queryset_for_public_api(qs, request):
-    """List/detail queryset: published only unless staff requests all."""
+def _filter_publication_only(qs, request):
     if staff_sees_all_publication_statuses(request):
         return qs
     return qs.filter(publication_status=DatasetPublicationStatus.PUBLISHED)
+
+
+def filter_queryset_for_public_api(qs, request):
+    """
+    List/detail queryset: published only unless staff requests all;
+    then optional organisation scoping (see vbos.organisations.access).
+    """
+    qs = _filter_publication_only(qs, request)
+    model = getattr(qs, "model", None)
+    if model is None:
+        return qs
+    from vbos.organisations.access import filter_queryset_for_organisation
+
+    return filter_queryset_for_organisation(qs, request, model)
 
 
 def get_dataset_for_read_or_404(model_class, request, pk):

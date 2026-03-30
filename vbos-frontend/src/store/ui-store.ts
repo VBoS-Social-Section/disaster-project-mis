@@ -7,12 +7,26 @@ export type ColorModeOption = "light" | "dark";
 /** Shell primary area: Command Centre dashboard vs map / operations workspace */
 export type PrimaryWorkspace = "command-centre" | "operations";
 
-/** Data view types that show the Disaster overlay (Damage, Resources, Financial) */
+/**
+ * Cyclone RAP output types.
+ * These three types are produced exclusively by the Quarto cyclone RAP tool and
+ * must always be linked to a CycloneEvent (or RAPImportBatch) in the backend.
+ * They are only shown in the right-sidebar Data view tabs when a cyclone risk
+ * source is active (selectedRiskSource === "cyclone").
+ */
 export const DISASTER_VIEW_TYPES: DatasetType[] = [
   "estimated_damage",
   "aid_resources_needed",
   "estimate_financial_damage",
 ];
+
+/**
+ * The risk source the user entered from the Layer browser Risk sources tab.
+ * null = no risk source active (only Baseline shown in right sidebar).
+ * "cyclone" = cyclone RAP outputs (Damage, Resources, Financial) are shown.
+ * Extend this union when flood / volcano RAPs are added.
+ */
+export type ActiveRiskSource = "cyclone" | null;
 
 interface UiState {
   isTimeSeriesOpen: boolean;
@@ -42,6 +56,20 @@ interface UiState {
   /** Climate module selected (Land Use, Coastal, etc.); one at a time */
   selectedClimateModule: string;
   setSelectedClimateModule: (v: string) => void;
+  /**
+   * Risk source chosen from the Layer browser Risk sources tab.
+   * Controls whether RAP tabs (Damage, Resources, Financial) appear in the right sidebar.
+   * null = no risk source; only Baseline is shown.
+   */
+  activeRiskSource: ActiveRiskSource;
+  setActiveRiskSource: (v: ActiveRiskSource) => void;
+  /**
+   * The specific cyclone event the user selected from the Risk sources accordion.
+   * null = no specific event chosen (shown when activeRiskSource is not "cyclone").
+   * When set, TabularDatasetSelect filters RAP datasets to this event only.
+   */
+  selectedCycloneEventId: number | null;
+  setSelectedCycloneEventId: (id: number | null) => void;
   /** Area data entry page (for area administrators) */
   dataEntryPageOpen: boolean;
   setDataEntryPageOpen: (v: boolean) => void;
@@ -95,6 +123,13 @@ export const useUiStore = create<UiState>()(
 
       selectedClimateModule: "",
       setSelectedClimateModule: (v) => set({ selectedClimateModule: v }),
+
+      activeRiskSource: null,
+      setActiveRiskSource: (v) =>
+        set({ activeRiskSource: v, ...(v === null ? { selectedCycloneEventId: null } : {}) }),
+
+      selectedCycloneEventId: null,
+      setSelectedCycloneEventId: (id) => set({ selectedCycloneEventId: id }),
 
       dataEntryPageOpen: false,
       setDataEntryPageOpen: (v) => set({ dataEntryPageOpen: v }),

@@ -23,6 +23,7 @@ class AuditLogAdmin(admin.ModelAdmin):
         'object_id',
         'field_name',
         'user',
+        'acting_organisation',
         'change_description',
     ]
     
@@ -30,6 +31,7 @@ class AuditLogAdmin(admin.ModelAdmin):
         'action',
         'content_type',
         'user',
+        'acting_organisation',
         'field_name',
         'timestamp',
     ]
@@ -51,6 +53,7 @@ class AuditLogAdmin(admin.ModelAdmin):
         'old_value',
         'new_value',
         'user',
+        'acting_organisation',
         'ip_address',
         'user_agent',
         'object_repr',

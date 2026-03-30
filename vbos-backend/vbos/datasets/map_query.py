@@ -61,25 +61,25 @@ def _openai_model() -> str:
     )
 
 
-def build_catalog() -> dict[str, Any]:
+def build_catalog(request=None) -> dict[str, Any]:
+    from vbos.datasets.publication import filter_queryset_for_public_api
+
     provinces = list(
         Province.objects.order_by("name").values_list("name", flat=True)
     )
     clusters_out: list[dict[str, Any]] = []
     for cluster in Cluster.objects.order_by("order", "name"):
         cname = cluster.name
-        tabular = list(
-            TabularDataset.objects.filter(
-                cluster=cluster,
-                publication_status=DatasetPublicationStatus.PUBLISHED,
-            ).values("id", "name", "type")
-        )
-        vector = list(
-            VectorDataset.objects.filter(
-                cluster=cluster,
-                publication_status=DatasetPublicationStatus.PUBLISHED,
-            ).values("id", "name", "type")
-        )
+        tab_qs = TabularDataset.objects.filter(cluster=cluster)
+        vec_qs = VectorDataset.objects.filter(cluster=cluster)
+        if request is not None:
+            tab_qs = filter_queryset_for_public_api(tab_qs, request)
+            vec_qs = filter_queryset_for_public_api(vec_qs, request)
+        else:
+            tab_qs = tab_qs.filter(publication_status=DatasetPublicationStatus.PUBLISHED)
+            vec_qs = vec_qs.filter(publication_status=DatasetPublicationStatus.PUBLISHED)
+        tabular = list(tab_qs.values("id", "name", "type"))
+        vector = list(vec_qs.values("id", "name", "type"))
         tabular_enriched = []
         for t in tabular:
             tid = t["id"]
@@ -157,7 +157,7 @@ def _normalize_plan(raw: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def validate_plan(plan: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
+def validate_plan(plan: dict[str, Any], request=None) -> tuple[dict[str, Any], list[str]]:
     """Cross-check ids against DB; fix cluster from tabular if needed."""
     warnings: list[str] = []
     cluster_name = plan.get("cluster")
@@ -175,14 +175,14 @@ def validate_plan(plan: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
             tid = None
             plan["tabular_dataset_id"] = None
         if tid is not None:
-            tab = (
-                TabularDataset.objects.filter(
-                    pk=tid,
-                    publication_status=DatasetPublicationStatus.PUBLISHED,
-                )
-                .select_related("cluster")
-                .first()
-            )
+            from vbos.datasets.publication import filter_queryset_for_public_api
+
+            tqs = TabularDataset.objects.filter(pk=tid)
+            if request is not None:
+                tqs = filter_queryset_for_public_api(tqs, request)
+            else:
+                tqs = tqs.filter(publication_status=DatasetPublicationStatus.PUBLISHED)
+            tab = tqs.select_related("cluster").first()
             if not tab:
                 warnings.append(f"Unknown tabular_dataset_id {tid}; cleared.")
                 plan["tabular_dataset_id"] = None
@@ -205,13 +205,14 @@ def validate_plan(plan: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
     plan["vector_layer_ids"] = vids
 
     if cluster_name and vids:
-        valid = set(
-            VectorDataset.objects.filter(
-                cluster__name__iexact=cluster_name,
-                pk__in=vids,
-                publication_status=DatasetPublicationStatus.PUBLISHED,
-            ).values_list("pk", flat=True)
-        )
+        from vbos.datasets.publication import filter_queryset_for_public_api
+
+        vqs = VectorDataset.objects.filter(cluster__name__iexact=cluster_name, pk__in=vids)
+        if request is not None:
+            vqs = filter_queryset_for_public_api(vqs, request)
+        else:
+            vqs = vqs.filter(publication_status=DatasetPublicationStatus.PUBLISHED)
+        valid = set(vqs.values_list("pk", flat=True))
         bad = [i for i in vids if i not in valid]
         if bad:
             warnings.append(f"Removed unknown vector ids for cluster: {bad}.")
@@ -278,11 +279,11 @@ def validate_plan(plan: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
     return plan, warnings
 
 
-def run_map_query(user_text: str) -> dict[str, Any]:
+def run_map_query(user_text: str, request=None) -> dict[str, Any]:
     if not _ai_enabled():
         raise RuntimeError("AI map query is not configured (missing API key).")
 
-    catalog = build_catalog()
+    catalog = build_catalog(request)
     catalog_json = json.dumps(catalog, ensure_ascii=False)
     system = (
         "You are a strict JSON planner for the Vanuatu DRMIS map application.\n"
@@ -292,5 +293,5 @@ def run_map_query(user_text: str) -> dict[str, Any]:
     )
     raw = _call_openai(system, f"User request:\n{user_text.strip()[:4000]}")
     plan = _normalize_plan(raw)
-    plan, warnings = validate_plan(plan)
+    plan, warnings = validate_plan(plan, request=request)
     return {"plan": plan, "warnings": warnings}

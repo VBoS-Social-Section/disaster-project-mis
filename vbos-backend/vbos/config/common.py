@@ -38,6 +38,7 @@ class Common(Configuration):
         "django_celery_results",
         # Your apps
         "vbos.users",
+        "vbos.organisations",
         # Audit must load before climate/datasets: vbos.audit.signals imports AuditLog from .models.
         "vbos.audit.apps.AuditConfig",
         "vbos.climate",
@@ -113,6 +114,13 @@ class Common(Configuration):
     AI_OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "") or os.getenv("AI_OPENAI_API_KEY", "")
     AI_MAP_QUERY_MODEL = os.getenv("AI_MAP_QUERY_MODEL", "gpt-4o-mini")
     APPEND_SLASH = False
+    # When True, API catalog visibility is restricted by User.organisation, owning_organisation, shares, and cluster access.
+    # Default False preserves pre–multi-tenant behaviour until organisations and rules are populated.
+    VBOS_ORGANISATION_SCOPING = os.getenv("VBOS_ORGANISATION_SCOPING", "").lower() in (
+        "1",
+        "true",
+        "yes",
+    )
     # Allow bulk delete and changelist edits for many items (TabularItems, VectorItems)
     DATA_UPLOAD_MAX_NUMBER_FIELDS = int(os.getenv("DATA_UPLOAD_MAX_NUMBER_FIELDS", 200000))
     TIME_ZONE = "UTC"
@@ -141,7 +149,12 @@ class Common(Configuration):
     TEMPLATES = [
         {
             "BACKEND": "django.template.backends.django.DjangoTemplates",
-            "DIRS": [os.path.join(BASE_DIR, "templates")],
+            # Project-level `vbos-backend/templates/` is listed first so overrides
+            # (e.g. unfold/helpers/app_list.html) win over django-unfold's packaged copy.
+            "DIRS": [
+                os.path.join(os.path.dirname(BASE_DIR), "templates"),
+                os.path.join(BASE_DIR, "templates"),
+            ],
             "APP_DIRS": True,
             "OPTIONS": {
                 "context_processors": [

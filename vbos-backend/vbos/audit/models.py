@@ -47,6 +47,16 @@ class AuditLog(models.Model):
         related_name="audit_logs",
         help_text="User who performed the action."
     )
+    acting_organisation = models.ForeignKey(
+        "organisations.Organisation",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+        help_text=_(
+            "User's organisation at action time (GGGI / MoCCA attribution for publication and sensitive edits)."
+        ),
+    )
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     
     # Field-level change tracking

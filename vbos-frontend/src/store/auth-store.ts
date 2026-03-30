@@ -3,6 +3,13 @@ import { persist } from "zustand/middleware";
 
 const AUTH_TOKEN_KEY = "vbos-auth-token";
 
+export interface AuthOrganisation {
+  id: number;
+  name: string;
+  slug: string;
+  short_name: string | null;
+}
+
 export interface AuthUser {
   id: string;
   username: string;
@@ -10,6 +17,8 @@ export interface AuthUser {
   last_name: string;
   email: string;
   avatar: string | null;
+  /** Ministry / partner org when backend assigns one (GGGI, MoCCA, …). */
+  organisation?: AuthOrganisation | null;
   role?: "admin" | "analyst" | "field_officer" | "read_only";
   is_staff: boolean;
   is_superuser: boolean;

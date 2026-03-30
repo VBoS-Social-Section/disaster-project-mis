@@ -565,44 +565,43 @@ provider.</p>
 </tr>
 <tr class="even">
 <td><strong>Scenario comparison</strong></td>
-<td>⚠️ Partial (Disaster vs Climate)</td>
-<td>✅ Yes – extend comparison mode</td>
+<td>⚠️ Partial — Compare mode: year swipe, raster curtain, tabular delta</td>
+<td>✅ Extend with saved scenarios / extra hazard dimensions</td>
 </tr>
 <tr class="odd">
 <td><strong>Time-based scenarios</strong></td>
-<td>⚠️ Limited (year filter)</td>
-<td>✅ Yes – add year/scenario toggles</td>
+<td>⚠️ Partial — global year + Compare years</td>
+<td>✅ Richer time controls, presets</td>
 </tr>
 <tr class="even">
 <td><strong>3D scenario viewer</strong></td>
-<td>❌ No</td>
-<td>✅ Implementable – React + MapLibre GL / Cesium; Django serves
-tiles</td>
+<td>⚠️ Partial — 3D toggle: MapLibre + terrain (not RE scenario studio)</td>
+<td>✅ Vanuatu DEM, authored layers, Cesium if needed</td>
 </tr>
 <tr class="odd">
 <td><strong>Isolation risk (road disruption)</strong></td>
-<td>❌ No</td>
-<td>✅ Implementable – road data + routing (pgRouting, OSRM)</td>
+<td>❌ No (roadmap note in Command Centre)</td>
+<td>✅ OSM roads + OSRM/pgRouting</td>
 </tr>
 <tr class="even">
 <td><strong>Cascading outages &amp; recovery</strong></td>
 <td>❌ No</td>
-<td>✅ Implementable – network model + failure logic</td>
+<td>✅ Network graph + failure logic</td>
 </tr>
 <tr class="odd">
 <td><strong>Asset-level direct risk</strong></td>
-<td>⚠️ Partial (vector points)</td>
-<td>✅ Yes – link assets to hazard layers</td>
+<td>⚠️ Partial — vectors + rasters; on-map hint; dashboard exposure</td>
+<td>✅ Pixel/sample exposure per asset</td>
 </tr>
 <tr class="even">
 <td><strong>Intervention testing</strong></td>
-<td>❌ No</td>
-<td>⚠️ Medium – scenario comparison logic</td>
+<td>⚠️ Partial — Simulate panel (sliders, cost readout)</td>
+<td>✅ Backend scenarios + validation</td>
 </tr>
 <tr class="odd">
 <td><strong>Custom risk registers</strong></td>
-<td>⚠️ Partial (tabular export)</td>
-<td>✅ Yes – templates and filters</td>
+<td>⚠️ Partial — Exports + dataset category filters</td>
+<td>✅ Saved templates, PDF layouts</td>
 </tr>
 </tbody>
 </table>
@@ -632,7 +631,7 @@ tiles</td>
 </tr>
 <tr class="odd">
 <td><strong>Maps</strong></td>
-<td>Leaflet, react-leaflet, protomaps-leaflet</td>
+<td>Leaflet, react-leaflet, protomaps-leaflet; MapLibre GL for 3D mode</td>
 </tr>
 <tr class="even">
 <td><strong>Raster tiles</strong></td>
@@ -644,9 +643,8 @@ tiles</td>
 </tr>
 </tbody>
 </table>
-<p>For 3D features, adding MapLibre GL JS or Cesium to the React
-frontend would be required; Django would serve tiles and data via
-API.</p>
+<p>3D mode uses MapLibre GL in-app; optional Vanuatu DEM or TiTiler
+endpoints can replace generic terrain when deployed.</p>
 <hr />
 </div>
 <div id="what-drmis-can-realistically-replicate" class="section level2">
@@ -684,10 +682,9 @@ sufficient time, data, and effort:</p>
 </thead>
 <tbody>
 <tr class="odd">
-<td><strong>3D scenario viewer</strong></td>
-<td>Add MapLibre GL JS or Cesium to React; Django serves terrain/3D
-tiles via TiTiler or custom endpoints. DEM (elevation) data for
-Vanuatu.</td>
+<td><strong>3D scenario viewer (RE parity)</strong></td>
+<td>MapLibre is in-app; upgrade path: Vanuatu DEM via TiTiler or
+terrain tiles, optional Cesium for full scene authoring.</td>
 <td>Implementable</td>
 </tr>
 <tr class="even">

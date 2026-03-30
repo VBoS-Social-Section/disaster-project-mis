@@ -35,11 +35,15 @@ const RightSidebar = () => {
     (!!selectedCluster && scenarioId !== "climate") ||
     (scenarioId === "climate" && !!selectedClimateModule);
 
+  // Show a dot on the collapsed icon bar when there's relevant context content.
+  const contextBadge = hasRelevantContent && context !== "empty" ? 1 : 0;
+
   return (
     <Sidebar
       direction="right"
       title="Context"
       collapseWhen={!hasRelevantContent}
+      badgeCount={contextBadge}
     >
       <div
         data-tour="area-filter"

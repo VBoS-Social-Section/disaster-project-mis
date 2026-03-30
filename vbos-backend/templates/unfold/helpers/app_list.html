@@ -27,6 +27,7 @@
                             {% include "unfold/helpers/app_list_badge.html" with item=group %}
 
                             {% if group.collapsible %}
+                                {# Ternary avoids `}}` after `{{ forloop.counter0 }}` — Django would emit `openIndex === 1}}` and break Alpine.js #}
                                 <span class="material-symbols-outlined ml-auto transition-all group-hover:text-primary-600 dark:group-hover:text-primary-500" x-bind:class="openIndex === {{ forloop.counter0 }} ? 'rotate-90' : ''">
                                     chevron_right
                                 </span>

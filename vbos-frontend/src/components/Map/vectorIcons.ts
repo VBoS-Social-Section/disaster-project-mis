@@ -237,6 +237,117 @@ export function buildVectorPinIconSvg(
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PIN_W} ${PIN_H}" width="${w}" height="${heightPx}" style="display:block;vertical-align:middle;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.18))">${buildPinLucideBody(color, iconKey)}</svg>`;
 }
 
+/**
+ * Builds a self-contained 3D perspective pin SVG for use in MapLibre symbol layers.
+ *
+ * Design language:
+ *  - Radial gradient on the bulb: bright highlight top-left, deep shade bottom-right
+ *  - Narrow tapered stem with depth shading
+ *  - Soft drop-shadow ellipse beneath the tip (ground shadow)
+ *  - Inner disc uses a gradient so the icon sits in a lit recess
+ *  - All in a single 56×72 viewBox (taller than 2D to give shadow room at base)
+ */
+export function build3DPinSvg(color: string, iconKey: VectorIconKey | string): string {
+  const W = 56;
+  const H = 72;
+  // Bulb center
+  const CX = 28;
+  const CY = 22;
+  const R = 19;           // bulb radius
+  const STEM_TIP_Y = 65;  // bottom of stem (tip)
+
+  // Derive shade / highlight colours from the category colour
+  const id = `pin3d-${color.replace(/[^a-zA-Z0-9]/g, "")}`;
+
+  // Bulb path: top arc + converging stem
+  const bulbPath = `
+    M${CX} ${CY - R}
+    A${R} ${R} 0 1 1 ${CX - 0.01} ${CY - R}
+    Z
+  `.trim();
+
+  // Stem: a narrow tapered triangle from bottom of bulb to tip
+  const stemPath = `
+    M${CX - 5.5} ${CY + R - 4}
+    Q${CX - 3} ${CY + R + 10} ${CX} ${STEM_TIP_Y}
+    Q${CX + 3} ${CY + R + 10} ${CX + 5.5} ${CY + R - 4}
+    Z
+  `.trim();
+
+  const glyph = (() => {
+    const path = VECTOR_ICON_PATHS[iconKey as VectorIconKey] ?? VECTOR_ICON_PATHS.circle;
+    const scale = 0.58;
+    return `<g transform="translate(${CX} ${CY}) scale(${scale}) translate(-12 -12)">${path.replace(/currentColor/g, "#fff")}</g>`;
+  })();
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+    viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="display:block" aria-hidden="true">
+  <defs>
+    <!-- Bulb 3D radial gradient: highlight top-left, shade bottom-right -->
+    <radialGradient id="${id}-bulb" cx="36%" cy="28%" r="65%" fx="36%" fy="28%">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="45%"  stop-color="${color}" stop-opacity="1"/>
+      <stop offset="100%" stop-color="${color}" stop-opacity="1">
+        <animate attributeName="stop-color" dur="0s" fill="freeze"/>
+      </stop>
+    </radialGradient>
+    <!-- Shade overlay: darkens the lower-right for depth -->
+    <radialGradient id="${id}-shade" cx="72%" cy="75%" r="60%">
+      <stop offset="0%"   stop-color="#000000" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Inner disc gradient: lit recess -->
+    <radialGradient id="${id}-disc" cx="40%" cy="35%" r="65%">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#f0f0f0" stop-opacity="0.85"/>
+    </radialGradient>
+    <!-- Stem gradient: lit left, dark right -->
+    <linearGradient id="${id}-stem" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.25"/>
+      <stop offset="40%"  stop-color="${color}" stop-opacity="1"/>
+      <stop offset="100%" stop-color="${color}" stop-opacity="1"/>
+    </linearGradient>
+    <!-- Drop shadow filter -->
+    <filter id="${id}-shadow" x="-30%" y="-20%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+
+  <!-- Ground shadow ellipse -->
+  <ellipse cx="${CX}" cy="${STEM_TIP_Y + 2}" rx="7" ry="3"
+    fill="#000000" fill-opacity="0.18"/>
+
+  <!-- Stem -->
+  <path d="${stemPath}"
+    fill="url(#${id}-stem)"
+    filter="url(#${id}-shadow)"/>
+  <!-- Stem right-edge darkening -->
+  <path d="${stemPath}"
+    fill="none" stroke="${color}" stroke-width="0.5" opacity="0.5"/>
+
+  <!-- Bulb base fill with category colour -->
+  <circle cx="${CX}" cy="${CY}" r="${R}"
+    fill="${color}"
+    filter="url(#${id}-shadow)"/>
+  <!-- Bulb 3D gradient overlay -->
+  <circle cx="${CX}" cy="${CY}" r="${R}"
+    fill="url(#${id}-bulb)"/>
+  <!-- Depth shade overlay -->
+  <circle cx="${CX}" cy="${CY}" r="${R}"
+    fill="url(#${id}-shade)"/>
+  <!-- Thin rim -->
+  <circle cx="${CX}" cy="${CY}" r="${R}"
+    fill="none" stroke="${color}" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- Inner lit disc -->
+  <circle cx="${CX}" cy="${CY}" r="${R * 0.54}"
+    fill="url(#${id}-disc)"/>
+
+  <!-- Category icon -->
+  ${glyph}
+</svg>`.trim();
+}
+
 /** Build Leaflet DivIcon HTML for a vector point marker (location pin + category icon) */
 export function buildVectorMarkerIcon(
   color: string,
