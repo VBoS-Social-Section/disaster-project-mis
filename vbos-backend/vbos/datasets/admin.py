@@ -7,13 +7,13 @@ from django import forms
 from django.contrib.admin import SimpleListFilter
 from django.db.models import Q
 from django.contrib import messages
+from django.contrib.admin import ModelAdmin
 from django.contrib.gis import admin
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.urls import reverse
 from django.utils.html import format_html
 from django.urls import path
-from unfold.admin import ModelAdmin as UnfoldModelAdmin
 
 from .forms import GeoJSONUploadForm, IconPickerWidget, VectorDatasetAdminForm
 from .widgets import VectorColorPickerWidget
@@ -181,21 +181,112 @@ class YearListFilter(SimpleListFilter):
 
 
 @admin.register(Cluster)
-class ClusterAdmin(SortableAdminMixin, UnfoldModelAdmin):
+class ClusterAdmin(SortableAdminMixin, ModelAdmin):
     list_display = ["id", "name"]
     search_fields = ["name"]
 
 
+def _location_fields_and_description(hazard_type: str) -> tuple[list[str], str]:
+    """Which Location & intensity fields apply per hazard (change view / validation)."""
+    C = CycloneEvent
+    mapping: dict[str, tuple[list[str], str]] = {
+        C.HAZARD_CYCLONE: (
+            ["magnitude"],
+            "Cyclone: maximum intensity (e.g. Saffir–Simpson category 1–5). "
+            "Epicentre and depth are not used for tropical cyclones.",
+        ),
+        C.HAZARD_EARTHQUAKE: (
+            ["magnitude", "epicentre_lat", "epicentre_lon", "depth_km"],
+            "Earthquake: magnitude (Richter or local scale), hypocentre latitude/longitude (decimal degrees), "
+            "and focal depth (km below surface).",
+        ),
+        C.HAZARD_VOLCANO: (
+            ["magnitude", "epicentre_lat", "epicentre_lon"],
+            "Volcano: VEI or alert level if applicable; vent or summit coordinates (decimal degrees). "
+            "Focal depth is not used.",
+        ),
+        C.HAZARD_TSUNAMI: (
+            ["magnitude", "epicentre_lat", "epicentre_lon", "depth_km"],
+            "Tsunami: source event magnitude and hypocentre (if driven by an earthquake), for context.",
+        ),
+        C.HAZARD_FLOOD: (
+            ["magnitude"],
+            "Flood: optional gauge level, return period, or peak depth if you record a single number. "
+            "Epicentre coordinates are not used.",
+        ),
+        C.HAZARD_DROUGHT: (
+            [],
+            "",
+        ),
+        C.HAZARD_OTHER: (
+            ["magnitude", "epicentre_lat", "epicentre_lon", "depth_km"],
+            "Record magnitude, coordinates, and depth as appropriate for this event.",
+        ),
+    }
+    return mapping.get(hazard_type, mapping[C.HAZARD_OTHER])
+
+
 @admin.register(CycloneEvent)
-class CycloneEventAdmin(UnfoldModelAdmin):
-    list_display = ["id", "name", "slug", "season_year", "is_archived", "updated_at"]
-    list_filter = ["season_year", "is_archived"]
+class CycloneEventAdmin(ModelAdmin):
+    list_display = ["id", "hazard_type_badge", "name", "slug", "season_year", "magnitude", "is_archived", "updated_at"]
+    list_filter = ["hazard_type", "season_year", "is_archived"]
     search_fields = ["name", "slug", "notes"]
     prepopulated_fields = {"slug": ("name", "season_year")}
 
+    class Media:
+        js = ("admin/js/hazard_event_form.js",)
+
+    def get_fieldsets(self, request, obj=None):
+        identity = (
+            "Event identity",
+            {"fields": ["hazard_type", "name", "slug", "season_year", "is_archived"]},
+        )
+        dates = ("Dates & notes", {"fields": ["started_on", "ended_on", "notes"]})
+        if obj is None:
+            # Add: render all optional fields; JS shows/hides rows when hazard type changes
+            return [
+                identity,
+                (
+                    "Location & intensity",
+                    {
+                        "fields": ["magnitude", "epicentre_lat", "epicentre_lon", "depth_km"],
+                        "description": (
+                            "Which fields apply depends on the hazard type above. "
+                            "For cyclones, only intensity category is used — not epicentre or depth."
+                        ),
+                    },
+                ),
+                dates,
+            ]
+        loc_fields, loc_desc = _location_fields_and_description(obj.hazard_type)
+        rows = [identity]
+        if loc_fields:
+            rows.append(("Location & intensity", {"fields": loc_fields, "description": loc_desc}))
+        rows.append(dates)
+        return rows
+
+    @admin.display(description="Type")
+    def hazard_type_badge(self, obj):
+        from django.utils.html import format_html
+        colours = {
+            "cyclone":    ("#eef2ff", "#4680ff"),
+            "earthquake": ("#fff8e6", "#f5a524"),
+            "volcano":    ("#fee7ef", "#f31260"),
+            "tsunami":    ("#e6fafd", "#06b7db"),
+            "flood":      ("#e8faf2", "#17c964"),
+            "drought":    ("#fff3e0", "#e65100"),
+            "other":      ("#f4f6fb", "#8c93b5"),
+        }
+        bg, fg = colours.get(obj.hazard_type, ("#f4f6fb", "#8c93b5"))
+        return format_html(
+            '<span style="background:{};color:{};padding:2px 10px;border-radius:99px;'
+            'font-size:11px;font-weight:700;letter-spacing:.04em;">{}</span>',
+            bg, fg, obj.get_hazard_type_display(),
+        )
+
 
 @admin.register(DisasterDatasetTag)
-class DisasterDatasetTagAdmin(UnfoldModelAdmin):
+class DisasterDatasetTagAdmin(ModelAdmin):
     """Names matched against dataset names for the Disaster overlay (cluster=disaster)."""
 
     list_display = ["id", "name", "order"]
@@ -204,13 +295,13 @@ class DisasterDatasetTagAdmin(UnfoldModelAdmin):
     search_fields = ["name"]
 
 
-class RasterFileAdmin(UnfoldModelAdmin):
+class RasterFileAdmin(ModelAdmin):
     """Base admin for RasterFile. Registered in climate app as ClimateRasterFileAdmin."""
     list_display = ["id", "name", "created", "file"]
 
 
 class RasterDatasetAdmin(
-    DatasetPublicationAdminMixin, DatasetAdminAuthorshipMixin, UnfoldModelAdmin
+    DatasetPublicationAdminMixin, DatasetAdminAuthorshipMixin, ModelAdmin
 ):
     """Base admin for RasterDataset. Registered in climate app as ClimateRasterDatasetAdmin."""
     list_display = [
@@ -273,7 +364,7 @@ class RasterDatasetAdmin(
 
 @admin.register(PMTilesDataset)
 class PMTilesDatasetAdmin(
-    DatasetPublicationAdminMixin, DatasetAdminAuthorshipMixin, UnfoldModelAdmin
+    DatasetPublicationAdminMixin, DatasetAdminAuthorshipMixin, ModelAdmin
 ):
     def get_queryset(self, request):
         from django.db.models import Q
@@ -289,7 +380,6 @@ class PMTilesDatasetAdmin(
         "updated",
     ]
     list_filter = ["cluster", "type", "climate_module", "publication_status", "owning_organisation"]
-    list_editable = ["climate_module"]
     actions = ["publish_selected_datasets", "archive_selected_datasets"]
 
     fieldsets = (
@@ -336,7 +426,7 @@ class PMTilesDatasetAdmin(
 
 @admin.register(VectorDataset)
 class VectorDatasetAdmin(
-    DatasetPublicationAdminMixin, DatasetAdminAuthorshipMixin, UnfoldModelAdmin
+    DatasetPublicationAdminMixin, DatasetAdminAuthorshipMixin, ModelAdmin
 ):
     form = VectorDatasetAdminForm
 
@@ -356,8 +446,6 @@ class VectorDatasetAdmin(
         "updated",
     ]
     list_filter = ["cluster", "type", "climate_module", "publication_status", "owning_organisation"]
-    # color uses VectorColorPickerWidget (not compatible with list_editable)
-    list_editable = ["climate_module", "icon"]
     actions = ["publish_selected_datasets", "archive_selected_datasets"]
     change_form_template = "admin/datasets/vectordataset/change_form.html"
     readonly_fields = ["view_on_map_link"]
@@ -424,7 +512,7 @@ class VectorDatasetAdmin(
 
 
 @admin.register(VectorItem)
-class VectorItemAdmin(admin.GISModelAdmin, UnfoldModelAdmin):
+class VectorItemAdmin(admin.GISModelAdmin, ModelAdmin):
     """Vector items for Disaster datasets only. Climate items are under Climate > Vector Items."""
 
     def get_queryset(self, request):
@@ -630,7 +718,7 @@ class VectorItemAdmin(admin.GISModelAdmin, UnfoldModelAdmin):
 
 @admin.register(TabularDataset)
 class TabularDatasetAdmin(
-    DatasetPublicationAdminMixin, DatasetAdminAuthorshipMixin, UnfoldModelAdmin
+    DatasetPublicationAdminMixin, DatasetAdminAuthorshipMixin, ModelAdmin
 ):
     list_display = [
         "id",
@@ -759,7 +847,7 @@ class TabularDatasetAdmin(
 
 
 @admin.register(TabularItem)
-class TabularItemAdmin(UnfoldModelAdmin):
+class TabularItemAdmin(ModelAdmin):
     list_display = [
         "id",
         "dataset",
@@ -928,7 +1016,7 @@ class TabularItemAdmin(UnfoldModelAdmin):
 
 
 @admin.register(MapSavedWorkspace)
-class MapSavedWorkspaceAdmin(UnfoldModelAdmin):
+class MapSavedWorkspaceAdmin(ModelAdmin):
     list_display = ("id", "name", "user", "updated_at")
     list_filter = ("updated_at",)
     search_fields = ("name", "user__username")

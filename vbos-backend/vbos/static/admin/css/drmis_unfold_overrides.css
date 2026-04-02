@@ -1,50 +1,538 @@
 /**
- * Unfold-specific spacing + card surfaces (loads via UNFOLD["STYLES"]).
- * Keeps one border color and subtle elevation for dashboard-style blocks.
+ * DRMIS Admin — Datta Able–inspired theme for Unfold.
+ * Loaded via UNFOLD["STYLES"].
+ *
+ * Design DNA: white sidebar, #f0f2f8 page bg, indigo-purple primary (#4680ff),
+ * borderless white cards with soft shadow, Inter/Nunito font, open spacing.
  */
+
+/* ════════════════════════════════════════
+   FONTS
+   ════════════════════════════════════════ */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap");
+
+/* ════════════════════════════════════════
+   DESIGN TOKENS
+   ════════════════════════════════════════ */
 :root {
-  --drmis-admin-border: #e2e6ee;
-  --drmis-admin-rule: #f1f3f7;
-  --drmis-admin-shadow: 0 1px 2px rgba(13, 16, 24, 0.05), 0 2px 8px rgba(13, 16, 24, 0.04);
-  --drmis-font-ui: "Segoe UI Variable", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
-  --drmis-font-mono: "Segoe UI Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
+  /* Palette */
+  --da-primary:       #4680ff;
+  --da-primary-light: #e8eeff;
+  --da-primary-dark:  #2152cc;
+
+  --da-success:  #2dce89;
+  --da-warning:  #fb6340;
+  --da-danger:   #f5365c;
+  --da-info:     #11cdef;
+
+  /* Surfaces */
+  --da-bg-page:    #f0f2f8;
+  --da-bg-sidebar: #ffffff;
+  --da-bg-card:    #ffffff;
+  --da-bg-header:  #ffffff;
+
+  /* Borders */
+  --da-border:       #e2e5f1;
+  --da-border-focus: #4680ff;
+
+  /* Text */
+  --da-text-heading: #1a1f36;
+  --da-text-body:    #3d4364;
+  --da-text-muted:   #8f96b3;
+
+  /* Shadows — Datta Able uses a light blue-tinted shadow */
+  --da-shadow-card: 0 2px 6px rgba(70, 128, 255, 0.08),
+                    0 0 1px  rgba(70, 128, 255, 0.04);
+  --da-shadow-hover: 0 6px 20px rgba(70, 128, 255, 0.14),
+                     0 2px  6px rgba(70, 128, 255, 0.06);
+  --da-shadow-sidebar: 1px 0 8px rgba(70, 128, 255, 0.06);
+
+  /* Shape */
+  --da-radius:    12px;
+  --da-radius-sm:  8px;
+  --da-radius-xs:  5px;
+
+  /* Typography */
+  --da-font:      "Inter", "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --da-font-mono: "JetBrains Mono", Consolas, ui-monospace, monospace;
 }
 
-html,
+/* ════════════════════════════════════════
+   BASE
+   ════════════════════════════════════════ */
+html, body {
+  font-family: var(--da-font) !important;
+  font-size: 13.5px;
+  color: var(--da-text-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
-  font-family: var(--drmis-font-ui);
+  background-color: var(--da-bg-page) !important;
 }
 
-/* Roomier changelist / inline tables */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--da-font) !important;
+  color: var(--da-text-heading) !important;
+  font-weight: 600 !important;
+}
+
+/* ════════════════════════════════════════
+   SIDEBAR  — white, subtle blue shadow
+   ════════════════════════════════════════ */
+aside,
+[class*="sidebar"],
+#nav-sidebar {
+  background-color: var(--da-bg-sidebar) !important;
+  border-right: none !important;
+  box-shadow: var(--da-shadow-sidebar) !important;
+}
+
+/* Sidebar nav links */
+[class*="sidebar"] a,
+[class*="sidebar"] li {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--da-text-body) !important;
+  border-radius: var(--da-radius-sm) !important;
+  transition: background 0.15s, color 0.15s !important;
+}
+
+/* Active / hover nav item — indigo pill */
+[class*="sidebar"] a:hover,
+[class*="sidebar"] li:hover,
+[class*="sidebar"] [aria-current],
+[class*="sidebar"] .active,
+[class*="sidebar"] [class*="active"] {
+  background-color: var(--da-primary-light) !important;
+  color: var(--da-primary) !important;
+}
+
+/* ════════════════════════════════════════
+   HEADER / TOP-BAR  — white, clean
+   ════════════════════════════════════════ */
+header,
+#header,
+[class*="topbar"],
+[class*="navbar"] {
+  background-color: var(--da-bg-header) !important;
+  border-bottom: 1px solid var(--da-border) !important;
+  box-shadow: 0 1px 4px rgba(70,128,255,0.06) !important;
+}
+
+/* ════════════════════════════════════════
+   BREADCRUMBS
+   ════════════════════════════════════════ */
+div.breadcrumbs {
+  background: var(--da-bg-header) !important;
+  border-bottom: 1px solid var(--da-border) !important;
+  padding: 12px 24px !important;
+  font-size: 12px !important;
+  color: var(--da-text-muted) !important;
+}
+
+div.breadcrumbs a {
+  color: var(--da-primary) !important;
+  font-weight: 500 !important;
+}
+
+/* ════════════════════════════════════════
+   CARDS / MODULES  — borderless white + tinted shadow
+   ════════════════════════════════════════ */
+.module,
+[class*="card"]:not(.drmis-dash-mode-pill) {
+  background: var(--da-bg-card) !important;
+  border: none !important;
+  border-radius: var(--da-radius) !important;
+  box-shadow: var(--da-shadow-card) !important;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.module:hover,
+[class*="card"]:not(.drmis-dash-mode-pill):hover {
+  box-shadow: var(--da-shadow-hover) !important;
+  transform: translateY(-1px);
+}
+
+/* Module headings */
+.module h2,
+.module caption {
+  background: transparent !important;
+  color: var(--da-text-heading) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  padding: 14px 20px !important;
+  border-bottom: 1px solid var(--da-border) !important;
+}
+
+/* ════════════════════════════════════════
+   CHANGELIST TABLE  — Datta Able clean rows
+   ════════════════════════════════════════ */
+#result_list,
+table {
+  border-radius: var(--da-radius) !important;
+  overflow: hidden !important;
+  border: none !important;
+  box-shadow: var(--da-shadow-card) !important;
+  background: var(--da-bg-card) !important;
+}
+
 #result_list thead th,
 table thead th {
-  padding: 11px 16px !important;
-  font-size: 10px !important;
-  letter-spacing: 0.08em !important;
+  padding: 12px 18px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.09em !important;
+  text-transform: uppercase !important;
+  background-color: #f6f8ff !important;
+  color: var(--da-text-muted) !important;
+  border-bottom: 2px solid var(--da-border) !important;
+  white-space: nowrap !important;
+}
+
+#result_list thead th a,
+table thead th a {
+  color: var(--da-text-muted) !important;
+  font-weight: 700 !important;
+}
+
+#result_list thead th a:hover,
+table thead th a:hover {
+  color: var(--da-primary) !important;
 }
 
 #result_list tbody td,
 table tbody td {
-  padding: 11px 16px !important;
-  font-size: 12px !important;
+  padding: 12px 18px !important;
+  font-size: 13px !important;
   vertical-align: middle !important;
+  border-bottom: 1px solid var(--da-border) !important;
+  color: var(--da-text-body) !important;
 }
 
-/* Unfold list tables inside main */
-[class*="results"] table thead th,
-[class*="changelist"] table thead th {
-  padding: 11px 16px !important;
-  font-size: 10px !important;
+#result_list tbody tr:last-child td,
+table tbody tr:last-child td {
+  border-bottom: none !important;
 }
 
-[class*="results"] table tbody td,
-[class*="changelist"] table tbody td {
-  padding: 11px 16px !important;
+#result_list tbody tr:hover td,
+table tbody tr:hover td {
+  background-color: #f6f8ff !important;
 }
 
-/* Card-like surfaces (modules, filter cards) */
-.module,
-[class*="card"]:not(.drmis-dash-mode-pill) {
-  box-shadow: var(--drmis-admin-shadow) !important;
-  border-color: var(--drmis-admin-border) !important;
+/* Striped zebra — optional subtle tint */
+#result_list tbody tr:nth-child(even) td {
+  background-color: #fafbff;
+}
+
+#result_list tbody tr:nth-child(even):hover td {
+  background-color: #f6f8ff !important;
+}
+
+/* ════════════════════════════════════════
+   FORM FIELDS
+   ════════════════════════════════════════ */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="url"],
+input[type="search"],
+select,
+textarea {
+  font-family: var(--da-font) !important;
+  font-size: 13px !important;
+  color: var(--da-text-body) !important;
+  background-color: #f6f8ff !important;
+  border: 1px solid var(--da-border) !important;
+  border-radius: var(--da-radius-sm) !important;
+  padding: 8px 12px !important;
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  background-color: #ffffff !important;
+  border-color: var(--da-primary) !important;
+  box-shadow: 0 0 0 3px rgba(70, 128, 255, 0.12) !important;
+  outline: none !important;
+}
+
+/* ════════════════════════════════════════
+   BUTTONS
+   ════════════════════════════════════════ */
+.button,
+input[type="submit"],
+input[type="button"],
+a.button {
+  font-family: var(--da-font) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border-radius: var(--da-radius-sm) !important;
+  padding: 8px 18px !important;
+  letter-spacing: 0.02em !important;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s !important;
+  cursor: pointer !important;
+}
+
+.button:hover,
+input[type="submit"]:hover,
+a.button:hover {
+  box-shadow: 0 4px 12px rgba(70, 128, 255, 0.30) !important;
+  transform: translateY(-1px) !important;
+  opacity: 0.92 !important;
+}
+
+.button:active,
+input[type="submit"]:active {
+  transform: translateY(0) !important;
+}
+
+/* ════════════════════════════════════════
+   SEARCH BAR — indigo button, not orange
+   ════════════════════════════════════════ */
+#changelist-search [type="submit"],
+#changelist-search button[type="submit"],
+form#changelist-search .button,
+[class*="search"] button[type="submit"],
+[class*="search"] input[type="submit"] {
+  background-color: var(--da-primary) !important;
+  border-color: var(--da-primary) !important;
+  color: #ffffff !important;
+  border-radius: var(--da-radius-sm) !important;
+}
+
+[class*="search"] button[type="submit"]:hover,
+[class*="search"] input[type="submit"]:hover {
+  background-color: var(--da-primary-dark) !important;
+  border-color: var(--da-primary-dark) !important;
+  box-shadow: 0 4px 12px rgba(70, 128, 255, 0.35) !important;
+}
+
+/* ════════════════════════════════════════
+   FIELDSETS
+   ════════════════════════════════════════ */
+fieldset {
+  background: var(--da-bg-card) !important;
+  border: 1px solid var(--da-border) !important;
+  border-radius: var(--da-radius) !important;
+  padding: 20px 24px !important;
+  margin-bottom: 20px !important;
+  box-shadow: var(--da-shadow-card) !important;
+}
+
+fieldset h2,
+fieldset legend {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--da-text-muted) !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid var(--da-border) !important;
+  width: 100% !important;
+}
+
+/* ════════════════════════════════════════
+   MESSAGES / TOAST ALERTS
+   ════════════════════════════════════════ */
+ul.messagelist li {
+  font-family: var(--da-font) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  border-radius: var(--da-radius-sm) !important;
+  padding: 12px 16px !important;
+  border: none !important;
+}
+
+ul.messagelist li.success {
+  background-color: #e8faf2 !important;
+  color: #1a7a53 !important;
+}
+
+ul.messagelist li.warning {
+  background-color: #fff3e8 !important;
+  color: #a3500a !important;
+}
+
+ul.messagelist li.error {
+  background-color: #ffeef1 !important;
+  color: #a31a35 !important;
+}
+
+/* ════════════════════════════════════════
+   PAGINATION
+   ════════════════════════════════════════ */
+.paginator {
+  font-family: var(--da-font) !important;
+  font-size: 13px !important;
+  color: var(--da-text-muted) !important;
+  padding: 12px 0 !important;
+}
+
+.paginator a {
+  color: var(--da-primary) !important;
+  font-weight: 500 !important;
+}
+
+.paginator .this-page {
+  background-color: var(--da-primary) !important;
+  color: #ffffff !important;
+  border-radius: var(--da-radius-xs) !important;
+  padding: 2px 8px !important;
+  font-weight: 700 !important;
+}
+
+/* ════════════════════════════════════════
+   ACTION BAR (bulk actions)
+   ════════════════════════════════════════ */
+#changelist .actions {
+  background: #f6f8ff !important;
+  border: 1px solid var(--da-border) !important;
+  border-radius: var(--da-radius-sm) !important;
+  padding: 8px 14px !important;
+  margin-bottom: 12px !important;
+}
+
+#changelist .actions select {
+  background-color: #ffffff !important;
+}
+
+/* ════════════════════════════════════════
+   FILTER SIDEBAR (list_filter panel)
+   ════════════════════════════════════════ */
+#changelist-filter {
+  background: var(--da-bg-card) !important;
+  border-left: none !important;
+  border-radius: var(--da-radius) !important;
+  box-shadow: var(--da-shadow-card) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+#changelist-filter h2 {
+  background: #f6f8ff !important;
+  color: var(--da-text-muted) !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid var(--da-border) !important;
+}
+
+#changelist-filter h3 {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: var(--da-text-heading) !important;
+  padding: 10px 16px 4px !important;
+  margin: 0 !important;
+}
+
+#changelist-filter ul {
+  padding: 4px 16px 12px !important;
+}
+
+#changelist-filter li a {
+  font-size: 13px !important;
+  color: var(--da-text-body) !important;
+  padding: 3px 0 !important;
+  display: block !important;
+  transition: color 0.12s !important;
+}
+
+#changelist-filter li a:hover,
+#changelist-filter li.selected a {
+  color: var(--da-primary) !important;
+  font-weight: 600 !important;
+}
+
+/* ════════════════════════════════════════
+   LINKS
+   ════════════════════════════════════════ */
+a {
+  color: var(--da-primary) !important;
+  transition: color 0.12s !important;
+}
+
+a:hover {
+  color: var(--da-primary-dark) !important;
+}
+
+/* ════════════════════════════════════════
+   HIDE inline-editable save row (no list_editable)
+   ════════════════════════════════════════ */
+#changelist-form .submit-row {
+  display: none !important;
+}
+
+/* ════════════════════════════════════════
+   CUSTOM DRMIS BADGES
+   ════════════════════════════════════════ */
+.drmis-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-family: var(--da-font);
+}
+
+/* ════════════════════════════════════════
+   DASHBOARD STAT CARDS (admin_dashboard.py)
+   ════════════════════════════════════════ */
+.da-stat-card {
+  background: var(--da-bg-card);
+  border-radius: var(--da-radius);
+  box-shadow: var(--da-shadow-card);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.da-stat-card:hover {
+  box-shadow: var(--da-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.da-stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--da-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.da-stat-icon.blue   { background: #e8eeff; color: var(--da-primary); }
+.da-stat-icon.green  { background: #e6faf3; color: var(--da-success); }
+.da-stat-icon.orange { background: #fff0ea; color: var(--da-warning); }
+.da-stat-icon.red    { background: #ffeef2; color: var(--da-danger); }
+.da-stat-icon.teal   { background: #e5fbfd; color: var(--da-info); }
+
+.da-stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--da-text-heading);
+  line-height: 1.2;
+}
+
+.da-stat-label {
+  font-size: 12px;
+  color: var(--da-text-muted);
+  font-weight: 500;
+  margin-top: 2px;
 }

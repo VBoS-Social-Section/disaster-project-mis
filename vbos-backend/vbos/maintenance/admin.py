@@ -2,15 +2,15 @@
 Register LogEntry (admin changelog) and BackupLog for viewing in admin.
 """
 from django.contrib import admin
+from django.contrib.admin import ModelAdmin
 from django.contrib.admin.models import LogEntry
 from django.utils.html import format_html
-from unfold.admin import ModelAdmin as UnfoldModelAdmin
 
 from .models import BackupLog
 
 
 @admin.register(BackupLog)
-class BackupLogAdmin(UnfoldModelAdmin):
+class BackupLogAdmin(ModelAdmin):
     """Read-only admin for backup history."""
 
     list_display = ["created_at", "backup_type", "get_size_display", "filename", "created_by"]
@@ -33,7 +33,7 @@ class BackupLogAdmin(UnfoldModelAdmin):
 
 
 @admin.register(LogEntry)
-class LogEntryAdmin(UnfoldModelAdmin):
+class LogEntryAdmin(ModelAdmin):
     """Read-only admin for Django admin action log (changelog)."""
 
     list_display = ["action_time", "user", "content_type", "object_repr", "action_flag_display", "get_change_message"]

@@ -1,11 +1,15 @@
 from django.contrib import admin
+from django.contrib.admin import ModelAdmin
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin, UserAdmin as BaseUserAdmin
+from django.contrib.auth.forms import (
+    AdminPasswordChangeForm,
+    UserChangeForm,
+    UserCreationForm,
+)
 from django.contrib.auth.models import Group
 from django import forms
 from django.shortcuts import redirect
 from django.urls import path, reverse
-from unfold.admin import ModelAdmin as UnfoldModelAdmin
-from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
 from .models import User, SMTPSettings
 
@@ -20,7 +24,7 @@ class Role(Group):
 
 
 @admin.register(User)
-class UserAdmin(BaseUserAdmin, UnfoldModelAdmin):
+class UserAdmin(BaseUserAdmin, ModelAdmin):
     form = UserChangeForm
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
@@ -36,7 +40,7 @@ admin.site.unregister(Group)
 
 
 @admin.register(Role)
-class RoleAdmin(BaseGroupAdmin, UnfoldModelAdmin):
+class RoleAdmin(BaseGroupAdmin, ModelAdmin):
     pass
 
 
@@ -73,7 +77,7 @@ class SMTPSettingsForm(forms.ModelForm):
 
 
 @admin.register(SMTPSettings)
-class SMTPSettingsAdmin(UnfoldModelAdmin):
+class SMTPSettingsAdmin(ModelAdmin):
     form = SMTPSettingsForm
     list_display = ["backend", "host", "port", "otp_required_for_all_logins", "from_email"]
     fieldsets = (

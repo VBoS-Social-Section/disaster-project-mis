@@ -1,6 +1,6 @@
 from django.contrib import admin
+from django.contrib.admin import ModelAdmin
 from django.utils import timezone
-from unfold.admin import ModelAdmin as UnfoldModelAdmin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -10,7 +10,7 @@ from .services import promote_submission_to_tabular
 
 
 @admin.register(AreaAdministrator)
-class AreaAdministratorAdmin(UnfoldModelAdmin):
+class AreaAdministratorAdmin(ModelAdmin):
     list_display = ["user", "areas_display", "updated"]
     filter_horizontal = ["area_councils", "provinces"]
     search_fields = ["user__username", "user__email"]
@@ -55,7 +55,7 @@ _reject_submission.short_description = "Reject selected submissions"
 
 
 @admin.register(AreaDataSubmission)
-class AreaDataSubmissionAdmin(UnfoldModelAdmin):
+class AreaDataSubmissionAdmin(ModelAdmin):
     list_display = [
         "id",
         "dataset",

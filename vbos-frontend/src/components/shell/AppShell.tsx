@@ -80,6 +80,11 @@ export function AppShell({
         setPrimaryWorkspace("command-centre");
         return;
       }
+      if (id === "field-checks") {
+        setShellNavId(id);
+        setPrimaryWorkspace("command-centre");
+        return;
+      }
       const placeholder = getShellNavPlaceholder(id);
       toast.info(
         placeholder?.title ?? "On the roadmap",

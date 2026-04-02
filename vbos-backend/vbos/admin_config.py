@@ -47,6 +47,11 @@ def get_navigation(request) -> list[dict[str, Any]]:
                     "icon": "notifications_active",
                 },
                 {
+                    "title": "Cyclone Events",
+                    "link": "/admin/datasets/cycloneevent/",
+                    "icon": "cyclone",
+                },
+                {
                     "title": "Incidents",
                     "link": "/admin/area_submissions/areadatasubmission/?status__exact=approved",
                     "icon": "report",
@@ -87,6 +92,7 @@ def get_navigation(request) -> list[dict[str, Any]]:
                 {"title": "Raster Datasets", "link": "/admin/datasets/rasterdataset/", "icon": "image"},
                 {"title": "Tabular Datasets", "link": "/admin/datasets/tabulardataset/", "icon": "table_chart"},
                 {"title": "Tabular Items", "link": "/admin/datasets/tabularitem/", "icon": "grid_on"},
+                {"title": "Saved Workspaces", "link": "/admin/datasets/mapsavedworkspace/", "icon": "bookmark"},
             ],
         },
         {
@@ -147,7 +153,8 @@ def get_navigation(request) -> list[dict[str, Any]]:
             "separator": True,
             "collapsible": True,
             "items": [
-                {"title": "Audit Log", "link": "/admin/admin/logentry/", "icon": "history"},
+                {"title": "DRMIS Audit Log", "link": "/admin/audit/auditlog/", "icon": "history"},
+                {"title": "Admin Action Log", "link": "/admin/admin/logentry/", "icon": "manage_search"},
                 {"title": "Backup & Restore", "link": "/admin/maintenance/", "icon": "backup"},
                 {"title": "Backup History", "link": "/admin/maintenance/backuplog/", "icon": "folder"},
             ],
@@ -160,6 +167,7 @@ def get_navigation(request) -> list[dict[str, Any]]:
             "items": [
                 {"title": "Users", "link": "/admin/users/user/", "icon": "people"},
                 {"title": "Roles", "link": "/admin/users/role/", "icon": "admin_panel_settings"},
+                {"title": "Organisations", "link": "/admin/organisations/organisation/", "icon": "corporate_fare"},
                 {"title": "SMTP Settings", "link": "/admin/users/smtpsettings/", "icon": "email"},
             ],
         },

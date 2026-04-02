@@ -1,0 +1,483 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}Dashboard — DRMIS Admin{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ── Layout ── */
+.dash-page { padding: 0 4px 40px; }
+.dash-grid { display: grid; gap: 18px; }
+.g-4col  { grid-template-columns: repeat(4,1fr); }
+.g-2col  { grid-template-columns: 1fr 1fr; }
+.g-3-1   { grid-template-columns: 3fr 1fr; }
+.g-2-1   { grid-template-columns: 2fr 1fr; }
+@media(max-width:1100px){ .g-4col{ grid-template-columns:repeat(2,1fr); } .g-3-1,.g-2-1{ grid-template-columns:1fr; } }
+@media(max-width:660px) { .g-4col,.g-2col{ grid-template-columns:1fr; } }
+
+.mb18 { margin-bottom: 18px; }
+
+/* ── Cards ── */
+.card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(70,128,255,.08);
+  border: none;
+  overflow: hidden;
+  transition: box-shadow .2s, transform .15s;
+}
+.card:hover { box-shadow: 0 6px 24px rgba(70,128,255,.14); }
+.card-head {
+  padding: 15px 20px 13px;
+  border-bottom: 1px solid #e8eaf2;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title {
+  font-size: 13.5px; font-weight: 700; color: #1e2438;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title i { color: #4680ff; font-size: 14px; }
+.card-body { padding: 20px; }
+
+/* ── KPI ── */
+.kpi {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: 0 2px 10px rgba(70,128,255,.08);
+  display: flex; align-items: center; gap: 16px;
+  transition: box-shadow .2s, transform .15s;
+  border: none;
+}
+.kpi:hover { box-shadow: 0 6px 24px rgba(70,128,255,.14); transform: translateY(-2px); }
+.kpi-ico {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.kpi-val  { font-size: 28px; font-weight: 800; color: #1e2438; line-height: 1.1; letter-spacing: -.02em; }
+.kpi-lbl  { font-size: 11.5px; font-weight: 600; color: #8c93b5; text-transform: uppercase; letter-spacing: .07em; margin-top: 2px; }
+.kpi-hint { font-size: 11.5px; color: #8c93b5; margin-top: 3px; }
+.kpi-hint b { font-weight: 700; }
+
+/* ── Section label ── */
+.sec-lbl {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: #b0b8d8; margin-bottom: 10px;
+}
+
+/* ── Stat boxes ── */
+.stat-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.stat-box {
+  flex: 1; min-width: 80px;
+  background: #f4f6fb; border-radius: 10px; padding: 11px 14px;
+}
+.stat-val { font-size: 20px; font-weight: 800; color: #1e2438; }
+.stat-lbl { font-size: 10.5px; color: #8c93b5; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+
+/* ── Progress ── */
+.prog-bar { height: 6px; border-radius: 99px; background: #e8eaf2; overflow: hidden; margin-top: 8px; }
+.prog-fill{ height: 100%; border-radius: 99px; }
+
+/* ── Dataset pills ── */
+.ds-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ds-pill {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 12px; border-radius: 9px; background: #f4f6fb;
+  font-size: 13px; font-weight: 500; color: #3d4464; text-decoration: none;
+  transition: background .15s;
+}
+.ds-pill:hover { background: #eef2ff; color: #4680ff; text-decoration: none; }
+.ds-pill-l { display: flex; align-items: center; gap: 9px; }
+.ds-ico { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.ds-n   { font-weight: 700; color: #1e2438; font-size: 13.5px; }
+
+/* ── Cyclone list ── */
+.ev-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 9px; background: #f4f6fb;
+  text-decoration: none; transition: background .15s; margin-bottom: 8px;
+}
+.ev-item:hover { background: #eef2ff; text-decoration: none; }
+.ev-item:last-child { margin-bottom: 0; }
+.ev-name { font-size: 13px; font-weight: 600; color: #1e2438; }
+.ev-year { font-size: 11px; color: #8c93b5; margin-left: auto; }
+
+/* ── Quick actions ── */
+.qa-wrap { display: flex; flex-wrap: wrap; gap: 9px; }
+.qa {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 9px; font-size: 12.5px; font-weight: 600;
+  background: #eef2ff; color: #4680ff; text-decoration: none;
+  transition: background .15s, box-shadow .15s; border: none;
+}
+.qa:hover { background: #4680ff; color: #fff !important; text-decoration: none; box-shadow: 0 4px 12px rgba(70,128,255,.28); }
+.qa-badge {
+  background: #f31260; color: #fff; border-radius: 99px;
+  padding: 1px 6px; font-size: 10px; margin-left: 2px;
+}
+
+/* ── Activity feed ── */
+.feed { display: flex; flex-direction: column; }
+.feed-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid #f0f2f8; font-size: 13px;
+}
+.feed-item:last-child { border-bottom: none; }
+.feed-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; flex-shrink: 0; margin-top: 1px;
+}
+.dot-create { background: #e8faf2; color: #17c964; }
+.dot-update { background: #eef2ff; color: #4680ff; }
+.dot-delete { background: #fee7ef; color: #f31260; }
+.feed-who   { font-weight: 600; color: #3d4464; }
+.feed-model { color: #4680ff; }
+.feed-ts    { font-size: 11px; color: #8c93b5; margin-top: 2px; }
+.feed-val   { font-size: 11.5px; color: #8c93b5; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
+{% endblock %}
+
+{% block content_title %}<h1 style="font-size:22px;font-weight:800;color:#1e2438;">Dashboard</h1>{% endblock %}
+
+{% block content %}
+<div class="dash-page">
+
+  {# ══ ROW 1 — KPI cards ══ #}
+  <div class="dash-grid g-4col mb18">
+
+    <div class="kpi">
+      <div class="kpi-ico" style="background:#eef2ff;"><i class="fas fa-database" style="color:#4680ff;"></i></div>
+      <div>
+        <div class="kpi-val">{{ total_datasets }}</div>
+        <div class="kpi-lbl">Datasets</div>
+        <div class="kpi-hint"><b style="color:#17c964;">{{ published_datasets }}</b> live &nbsp;·&nbsp; <b>{{ draft_datasets }}</b> draft</div>
+      </div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-ico" style="background:{% if active_alerts %}#fee7ef{% else %}#e8faf2{% endif %};">
+        <i class="fas fa-bell" style="color:{% if active_alerts %}#f31260{% else %}#17c964{% endif %};"></i>
+      </div>
+      <div>
+        <div class="kpi-val" style="color:{% if active_alerts %}#f31260{% else %}#17c964{% endif %};">{{ active_alerts }}</div>
+        <div class="kpi-lbl">Active Alerts</div>
+        <div class="kpi-hint"><b>{{ total_alerts }}</b> total &nbsp;·&nbsp; <b style="color:#f31260;">{{ critical_alerts }}</b> critical</div>
+      </div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-ico" style="background:{% if pending_submissions %}#fff8e6{% else %}#e8faf2{% endif %};">
+        <i class="fas fa-file-upload" style="color:{% if pending_submissions %}#f5a524{% else %}#17c964{% endif %};"></i>
+      </div>
+      <div>
+        <div class="kpi-val" style="color:{% if pending_submissions %}#f5a524{% else %}#1e2438{% endif %};">{{ pending_submissions }}</div>
+        <div class="kpi-lbl">Pending Review</div>
+        <div class="kpi-hint"><b style="color:#17c964;">{{ approved_submissions }}</b> approved &nbsp;·&nbsp; <b>{{ rejected_submissions }}</b> rejected</div>
+      </div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-ico" style="background:#eef2ff;"><i class="fas fa-users" style="color:#4680ff;"></i></div>
+      <div>
+        <div class="kpi-val">{{ active_users }}</div>
+        <div class="kpi-lbl">Active Users</div>
+        <div class="kpi-hint"><b>{{ total_users }}</b> registered</div>
+      </div>
+    </div>
+
+  </div>
+
+  {# ══ ROW 2 — Datasets + Right panel ══ #}
+  <div class="dash-grid g-2-1 mb18">
+
+    {# Left: Dataset breakdown #}
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><i class="fas fa-layer-group"></i> Datasets</div>
+        <a href="/admin/datasets/pmtilesdataset/add/" class="qa" style="font-size:11.5px;padding:5px 12px;"><i class="fas fa-plus"></i> Add</a>
+      </div>
+      <div class="card-body">
+
+        <div class="ds-grid" style="margin-bottom:20px;">
+          {% for ds in dataset_breakdown %}
+          <a href="{{ ds.url }}" class="ds-pill">
+            <div class="ds-pill-l">
+              <div class="ds-ico" style="background:{{ ds.color }}1a;">
+                <i class="{{ ds.icon }}" style="color:{{ ds.color }};"></i>
+              </div>
+              <span>{{ ds.label }}</span>
+            </div>
+            <span class="ds-n">{{ ds.count }}</span>
+          </a>
+          {% endfor %}
+        </div>
+
+        <div class="sec-lbl">Publication Status</div>
+        <div class="stat-row" style="margin-bottom:10px;">
+          <div class="stat-box"><div class="stat-val" style="color:#17c964;">{{ published_datasets }}</div><div class="stat-lbl">Published</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#f5a524;">{{ draft_datasets }}</div><div class="stat-lbl">Draft</div></div>
+          <div class="stat-box"><div class="stat-val">{{ total_datasets }}</div><div class="stat-lbl">Total</div></div>
+        </div>
+        {% if total_datasets %}
+        <div class="prog-bar"><div class="prog-fill" style="width:{% widthratio published_datasets total_datasets 100 %}%;background:#17c964;"></div></div>
+        <div style="font-size:11px;color:#8c93b5;margin-top:4px;">{% widthratio published_datasets total_datasets 100 %}% published</div>
+        {% endif %}
+
+        <div class="sec-lbl" style="margin-top:18px;">Data Items</div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-val" style="color:#4680ff;">{{ vector_items }}</div><div class="stat-lbl">Vector Items</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#06b7db;">{{ tabular_items }}</div><div class="stat-lbl">Tabular Items</div></div>
+          <div class="stat-box"><div class="stat-val">{{ climate_total }}</div><div class="stat-lbl">Climate Layers</div></div>
+          <div class="stat-box"><div class="stat-val">{{ total_clusters }}</div><div class="stat-lbl">Clusters</div></div>
+        </div>
+
+        <div class="sec-lbl" style="margin-top:18px;">Dataset Types</div>
+        <canvas id="datasetDonut" style="max-height:180px;"></canvas>
+      </div>
+    </div>
+
+    {# Right: Cyclone events + Quick actions #}
+    <div style="display:flex;flex-direction:column;gap:18px;">
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><i class="fas fa-wind"></i> Cyclone Events</div>
+          <a href="/admin/datasets/cycloneevent/add/" class="qa" style="font-size:11px;padding:4px 10px;"><i class="fas fa-plus"></i></a>
+        </div>
+        <div class="card-body" style="padding-top:12px;">
+          {% if cyclone_events %}
+            {% for ev in cyclone_events %}
+            <a href="/admin/datasets/cycloneevent/{{ ev.pk }}/change/" class="ev-item">
+              <i class="fas fa-wind" style="color:#4680ff;font-size:14px;flex-shrink:0;"></i>
+              <span class="ev-name">{{ ev.name }}</span>
+              <span class="ev-year">{{ ev.season_year }}</span>
+            </a>
+            {% endfor %}
+          {% else %}
+          <div style="text-align:center;color:#8c93b5;font-size:13px;padding:10px 0;">No events recorded</div>
+          {% endif %}
+          <a href="/admin/datasets/cycloneevent/" style="display:block;text-align:center;font-size:12px;color:#4680ff;font-weight:600;margin-top:10px;">View all →</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><i class="fas fa-bolt"></i> Quick Actions</div>
+        </div>
+        <div class="card-body" style="padding-top:14px;">
+          <div class="qa-wrap">
+            <a href="/admin/datasets/vectordataset/add/" class="qa"><i class="fas fa-draw-polygon"></i> Vector</a>
+            <a href="/admin/datasets/tabulardataset/add/" class="qa"><i class="fas fa-table"></i> Tabular</a>
+            <a href="/admin/datasets/rasterdataset/add/" class="qa"><i class="fas fa-image"></i> Raster</a>
+            <a href="/admin/datasets/pmtilesdataset/add/" class="qa"><i class="fas fa-map"></i> PMTiles</a>
+            <a href="/admin/rap-import/upload/" class="qa"><i class="fas fa-file-import"></i> RAP Import</a>
+            <a href="/admin/area_submissions/areadatasubmission/?status=submitted" class="qa">
+              <i class="fas fa-file-upload"></i> Submissions
+              {% if pending_submissions %}<span class="qa-badge">{{ pending_submissions }}</span>{% endif %}
+            </a>
+            <a href="/admin/datasets/cycloneevent/add/" class="qa"><i class="fas fa-wind"></i> Cyclone</a>
+            <a href="/admin/audit/auditlog/" class="qa"><i class="fas fa-history"></i> Audit Log</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><i class="fas fa-chart-bar"></i> Overview</div>
+        </div>
+        <div class="card-body">
+          <canvas id="overviewBar" style="max-height:180px;"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  {# ══ ROW 3 — Activity chart + Feed ══ #}
+  <div class="dash-grid g-2col mb18">
+
+    {# 7-day activity sparkline #}
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><i class="fas fa-chart-line"></i> Data Changes — Last 7 Days</div>
+      </div>
+      <div class="card-body">
+        <canvas id="activityLine" style="max-height:180px;"></canvas>
+      </div>
+    </div>
+
+    {# Submission breakdown #}
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><i class="fas fa-tasks"></i> Submissions Status</div>
+        <a href="/admin/area_submissions/areadatasubmission/" class="qa" style="font-size:11.5px;padding:5px 12px;">View all</a>
+      </div>
+      <div class="card-body">
+        <canvas id="submissionsDonut" style="max-height:160px;margin-bottom:16px;"></canvas>
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-val" style="color:#f5a524;">{{ pending_submissions }}</div><div class="stat-lbl">Pending</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#17c964;">{{ approved_submissions }}</div><div class="stat-lbl">Approved</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#f31260;">{{ rejected_submissions }}</div><div class="stat-lbl">Rejected</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  {# ══ ROW 4 — Recent audit feed ══ #}
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title"><i class="fas fa-history"></i> Recent Data Changes</div>
+      <a href="/admin/audit/auditlog/" class="qa" style="font-size:11.5px;padding:5px 12px;">View all</a>
+    </div>
+    <div class="card-body" style="padding-top:6px;">
+      {% if recent_audits %}
+      <div class="feed">
+        {% for log in recent_audits %}
+        <div class="feed-item">
+          <div class="feed-dot dot-{{ log.action }}">
+            {% if log.action == "create" %}<i class="fas fa-plus"></i>
+            {% elif log.action == "delete" %}<i class="fas fa-trash"></i>
+            {% else %}<i class="fas fa-pen"></i>{% endif %}
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div>
+              <span class="feed-who">{{ log.user.username|default:"System" }}</span>
+              <span style="color:#8c93b5;"> {% if log.action == "create" %}created{% elif log.action == "delete" %}deleted{% else %}edited{% endif %} </span>
+              <span class="feed-model">{{ log.content_type.model|title }}</span>
+              {% if log.field_name %}<span style="color:#b0b8d8;font-size:11.5px;"> · {{ log.field_name }}</span>{% endif %}
+            </div>
+            <div class="feed-ts">{{ log.timestamp|timesince }} ago</div>
+          </div>
+          {% if log.action == "update" and log.new_value %}
+          <span class="feed-val">{{ log.new_value|truncatechars:28 }}</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="text-align:center;color:#8c93b5;font-size:13px;padding:24px 0;">
+        <i class="fas fa-history" style="font-size:32px;display:block;margin-bottom:10px;color:#c7d7fe;"></i>
+        No data changes recorded yet
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var COLORS = { blue:"#4680ff", green:"#17c964", orange:"#f5a524", cyan:"#06b7db", red:"#f31260", muted:"#e8eaf2" };
+
+  // 1. Dataset donut
+  var dCtx = document.getElementById("datasetDonut");
+  if(dCtx){
+    new Chart(dCtx,{
+      type:"doughnut",
+      data:{
+        labels:[{% for ds in dataset_breakdown %}"{{ ds.label }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets:[{
+          data:[{% for ds in dataset_breakdown %}{{ ds.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+          backgroundColor:["#4680ff","#17c964","#f5a524","#06b7db"],
+          borderWidth:0, hoverOffset:6
+        }]
+      },
+      options:{
+        cutout:"68%",
+        plugins:{
+          legend:{ position:"bottom", labels:{ font:{size:11}, color:"#8c93b5", padding:14, boxWidth:10, boxHeight:10 }},
+          tooltip:{ callbacks:{ label:function(c){ return " "+c.label+": "+c.raw; }}}
+        },
+        animation:{ duration:700 }
+      }
+    });
+  }
+
+  // 2. Overview bar
+  var bCtx = document.getElementById("overviewBar");
+  if(bCtx){
+    new Chart(bCtx,{
+      type:"bar",
+      data:{
+        labels:["Datasets","Published","Alerts","Active","Users","RAP","Clusters"],
+        datasets:[{
+          data:[{{ total_datasets }},{{ published_datasets }},{{ total_alerts }},{{ active_alerts }},{{ total_users }},{{ total_rap }},{{ total_clusters }}],
+          backgroundColor:["#4680ff","#17c964","#f31260","#f5a524","#4680ff","#8c93b5","#a78bfa"],
+          borderRadius:6, borderWidth:0
+        }]
+      },
+      options:{
+        plugins:{ legend:{ display:false }},
+        scales:{
+          x:{ grid:{ display:false }, ticks:{ font:{size:10}, color:"#8c93b5" }},
+          y:{ grid:{ color:"#f0f2f8" }, ticks:{ font:{size:10}, color:"#8c93b5", precision:0 }, beginAtZero:true }
+        },
+        animation:{ duration:700 }
+      }
+    });
+  }
+
+  // 3. 7-day activity line
+  var lCtx = document.getElementById("activityLine");
+  if(lCtx){
+    var days   = {{ audit_days_json|safe }};
+    var counts = {{ audit_counts_json|safe }};
+    new Chart(lCtx,{
+      type:"line",
+      data:{
+        labels: days.length ? days : ["No data"],
+        datasets:[{
+          label:"Changes",
+          data: counts.length ? counts : [0],
+          borderColor:"#4680ff",
+          backgroundColor:"rgba(70,128,255,.08)",
+          fill:true,
+          tension:.4,
+          pointBackgroundColor:"#4680ff",
+          pointRadius:4,
+          borderWidth:2
+        }]
+      },
+      options:{
+        plugins:{ legend:{ display:false }},
+        scales:{
+          x:{ grid:{ display:false }, ticks:{ font:{size:10}, color:"#8c93b5" }},
+          y:{ grid:{ color:"#f0f2f8" }, ticks:{ font:{size:10}, color:"#8c93b5", precision:0 }, beginAtZero:true }
+        },
+        animation:{ duration:700 }
+      }
+    });
+  }
+
+  // 4. Submissions donut
+  var sCtx = document.getElementById("submissionsDonut");
+  if(sCtx){
+    new Chart(sCtx,{
+      type:"doughnut",
+      data:{
+        labels:["Pending","Approved","Rejected"],
+        datasets:[{
+          data:[{{ pending_submissions }},{{ approved_submissions }},{{ rejected_submissions }}],
+          backgroundColor:["#f5a524","#17c964","#f31260"],
+          borderWidth:0, hoverOffset:6
+        }]
+      },
+      options:{
+        cutout:"65%",
+        plugins:{
+          legend:{ position:"bottom", labels:{ font:{size:11}, color:"#8c93b5", padding:12, boxWidth:10, boxHeight:10 }},
+          tooltip:{ callbacks:{ label:function(c){ return " "+c.label+": "+c.raw; }}}
+        },
+        animation:{ duration:700 }
+      }
+    });
+  }
+
+})();
+</script>
+{% endblock %}

@@ -3,8 +3,6 @@ from os.path import join
 
 import dj_database_url
 from configurations import Configuration
-from django.templatetags.static import static
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -13,10 +11,7 @@ class Common(Configuration):
     DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
     INSTALLED_APPS = (
-        "unfold",
-        "unfold.contrib.filters",
-        "unfold.contrib.forms",
-        "unfold.contrib.inlines",
+        "jazzmin",               # must be before django.contrib.admin
         "django.contrib.admin",
         "django.contrib.gis",
         "vbos.auth_config.RolesAndPermissionsConfig",  # was django.contrib.auth
@@ -293,64 +288,384 @@ class Common(Configuration):
         "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     }
 
-    # Unfold admin — DRMIS light enterprise (red accent, white sidebar)
-    UNFOLD = {
-        "SITE_TITLE": "DRMIS Admin",
-        "SITE_HEADER": "Disaster Risk Management Information System",
-        "SITE_SUBHEADER": "Vanuatu — NDMO",
-        "SITE_URL": "/",
-        "SITE_ICON": None,
-        "SHOW_HISTORY": True,
-        "SHOW_VIEW_ON_SITE": True,
-        "THEME": "light",
-        "ENVIRONMENT": "vbos.admin_env.environment_callback",
-        # GeoDjango map widget + Unfold spacing/typography tweaks
-        "DASHBOARD_CALLBACK": "vbos.admin_dashboard.dashboard_callback",
-        "COLORS": {
-            "primary": {
-                "50": "255 241 238",
-                "100": "255 213 204",
-                "200": "255 160 140",
-                "300": "255 115 90",
-                "400": "255 75 43",
-                "500": "230 62 32",
-                "600": "200 50 25",
-                "700": "165 38 18",
-                "800": "130 28 12",
-                "900": "95 18 8",
-                "950": "60 10 4",
-            },
-            "base": {
-                "50": "245 246 248",
-                "100": "248 249 251",
-                "200": "226 230 238",
-                "300": "200 204 214",
-                "400": "154 165 184",
-                "500": "107 116 136",
-                "600": "74 85 104",
-                "700": "53 59 71",
-                "800": "33 38 48",
-                "900": "13 16 24",
-                "950": "8 10 14",
-            },
-            "font": {
-                "subtle-light": "154 165 184",
-                "default-light": "13 16 24",
-                "important-light": "13 16 24",
-                "subtle-dark": "154 165 184",
-                "default-dark": "13 16 24",
-                "important-dark": "13 16 24",
-            },
-        },
-        "SIDEBAR": {
-            "show_search": True,
-            "show_all_applications": False,
-            "navigation": "vbos.admin_config.get_navigation",
-        },
-        "STYLES": [
-            lambda request: static("admin/css/gis_fix.css"),
-            lambda request: static("admin/css/drmis_unfold_overrides.css"),
+    # ── Jazzmin admin (Bootstrap 4 / AdminLTE 3 — Datta Able inspired) ──────
+    JAZZMIN_SETTINGS = {
+        # Browser tab / header
+        "site_title": "DRMIS Admin",
+        "site_header": "DRMIS",
+        "site_brand": "DRMIS",
+        "site_logo": None,
+        "site_logo_classes": "img-circle",
+        "site_icon": None,
+        "welcome_sign": "Disaster Risk Management Information System — Vanuatu NDMO",
+        "copyright": "Vanuatu Bureau of Statistics / NDMO",
+        "search_model": [],
+
+        # Override admin index with custom dashboard
+        "custom_index": "admin/drmis_dashboard.html",
+
+        # Top nav links
+        "topmenu_links": [
+            {"name": "Live Map", "url": "/", "new_window": True, "icon": "fas fa-map"},
+            {"name": "API Docs", "url": "/api/schema/swagger-ui/", "new_window": True, "icon": "fas fa-book"},
         ],
+
+        # User menu
+        "usermenu_links": [
+            {"name": "Live Map", "url": "/", "new_window": True, "icon": "fas fa-map"},
+        ],
+
+        # Sidebar
+        "show_sidebar": True,
+        "navigation_expanded": False,
+        "hide_apps": [
+            "auth",
+            "admin",
+            "organisations",
+            "area_submissions",
+            "field_check",
+            "feedback",
+            "land_accounts",
+            "coastal_changes",
+            "maintenance",
+            "django_celery_beat",
+            "django_celery_results",
+            "authtoken",
+            "otp_totp",
+            "contenttypes",
+            "sessions",
+        ],
+        "hide_models": [
+            # native models hidden — shown via custom_links instead
+            "auth.group",
+            "auth.user",
+            "users.user",
+            "users.role",
+            "users.smtpsettings",
+            "datasets.cluster",
+            "datasets.cycloneevent",
+            "datasets.disasterdatasettag",
+            "datasets.pmtilesdataset",
+            "datasets.vectordataset",
+            "datasets.vectoritem",
+            "datasets.rasterdataset",
+            "datasets.tabulardataset",
+            "datasets.tabularitem",
+            "datasets.mapsavedworkspace",
+            "rap_import.rapimportbatch",
+            "rap_import.rapimportfile",
+            "alerts.alert",
+            "climate.climaterasterdataset",
+            "climate.climaterasterfile",
+            "climate.climatepmtilesdataset",
+            "climate.climatevectordataset",
+            "climate.climatevectoritem",
+            "integrations.integrationsource",
+            "integrations.integrationapikey",
+            "integrations.externaldatasource",
+            "audit.auditlog",
+            "admin.logentry",
+        ],
+        "order_with_respect_to": [
+            "users",
+            "datasets",
+            "rap_import",
+            "alerts",
+            "climate",
+            "integrations",
+            "audit",
+        ],
+
+        # Fully custom grouped sidebar navigation
+        "custom_links": {
+            "users": [
+                # ── Settings ──────────────────────────────
+                {
+                    "name": "Users",
+                    "url": "admin:users_user_changelist",
+                    "icon": "fas fa-user",
+                },
+                {
+                    "name": "Roles",
+                    "url": "admin:users_role_changelist",
+                    "icon": "fas fa-user-shield",
+                },
+                {
+                    "name": "Organisations",
+                    "url": "admin:organisations_organisation_changelist",
+                    "icon": "fas fa-sitemap",
+                },
+                {
+                    "name": "SMTP Settings",
+                    "url": "admin:users_smtpsettings_changelist",
+                    "icon": "fas fa-envelope",
+                },
+            ],
+            "datasets": [
+                # ── Disaster ──────────────────────────────
+                {
+                    "name": "Clusters",
+                    "url": "admin:datasets_cluster_changelist",
+                    "icon": "fas fa-layer-group",
+                },
+                {
+                    "name": "Hazard Events",
+                    "url": "admin:datasets_cycloneevent_changelist",
+                    "icon": "fas fa-bolt",
+                },
+                {
+                    "name": "Disaster Dataset Tags",
+                    "url": "admin:datasets_disasterdatasettag_changelist",
+                    "icon": "fas fa-tag",
+                },
+                {
+                    "name": "PMTiles Datasets",
+                    "url": "admin:datasets_pmtilesdataset_changelist",
+                    "icon": "fas fa-map",
+                },
+                {
+                    "name": "Vector Datasets",
+                    "url": "admin:datasets_vectordataset_changelist",
+                    "icon": "fas fa-draw-polygon",
+                },
+                {
+                    "name": "Vector Items",
+                    "url": "admin:datasets_vectoritem_changelist",
+                    "icon": "fas fa-map-marker-alt",
+                },
+                {
+                    "name": "Raster Datasets",
+                    "url": "admin:datasets_rasterdataset_changelist",
+                    "icon": "fas fa-image",
+                },
+                {
+                    "name": "Tabular Datasets",
+                    "url": "admin:datasets_tabulardataset_changelist",
+                    "icon": "fas fa-table",
+                },
+                {
+                    "name": "Tabular Items",
+                    "url": "admin:datasets_tabularitem_changelist",
+                    "icon": "fas fa-th",
+                },
+                {
+                    "name": "Saved Workspaces",
+                    "url": "admin:datasets_mapsavedworkspace_changelist",
+                    "icon": "fas fa-bookmark",
+                },
+            ],
+            "rap_import": [
+                {
+                    "name": "Import Batches",
+                    "url": "admin:rap_import_rapimportbatch_changelist",
+                    "icon": "fas fa-boxes",
+                },
+                {
+                    "name": "Compare RAP Batches",
+                    "url": "/admin/compare/event/",
+                    "icon": "fas fa-code-branch",
+                },
+            ],
+            "alerts": [
+                {
+                    "name": "Live Alerts",
+                    "url": "admin:alerts_alert_changelist",
+                    "icon": "fas fa-exclamation-triangle",
+                },
+                {
+                    "name": "Area Submissions",
+                    "url": "admin:area_submissions_areadatasubmission_changelist",
+                    "icon": "fas fa-file-upload",
+                },
+                {
+                    "name": "Field Checks",
+                    "url": "admin:field_check_fieldcheckrecord_changelist",
+                    "icon": "fas fa-clipboard-check",
+                },
+                {
+                    "name": "Feedback",
+                    "url": "admin:feedback_feedback_changelist",
+                    "icon": "fas fa-comment-dots",
+                },
+            ],
+            "climate": [
+                {
+                    "name": "PMTiles Datasets",
+                    "url": "admin:climate_climatepmtilesdataset_changelist",
+                    "icon": "fas fa-map",
+                },
+                {
+                    "name": "Raster Datasets",
+                    "url": "admin:climate_climaterasterdataset_changelist",
+                    "icon": "fas fa-image",
+                },
+                {
+                    "name": "Vector Datasets",
+                    "url": "admin:climate_climatevectordataset_changelist",
+                    "icon": "fas fa-draw-polygon",
+                },
+                {
+                    "name": "Vector Items",
+                    "url": "admin:climate_climatevectoritem_changelist",
+                    "icon": "fas fa-map-marker-alt",
+                },
+            ],
+            "integrations": [
+                {
+                    "name": "Integration Sources",
+                    "url": "admin:integrations_integrationsource_changelist",
+                    "icon": "fas fa-server",
+                },
+                {
+                    "name": "API Keys",
+                    "url": "admin:integrations_integrationapikey_changelist",
+                    "icon": "fas fa-key",
+                },
+                {
+                    "name": "External Data Sources",
+                    "url": "admin:integrations_externaldatasource_changelist",
+                    "icon": "fas fa-cloud-download-alt",
+                },
+            ],
+            "audit": [
+                {
+                    "name": "DRMIS Audit Log",
+                    "url": "admin:audit_auditlog_changelist",
+                    "icon": "fas fa-search",
+                },
+                {
+                    "name": "Admin Action Log",
+                    "url": "admin:admin_logentry_changelist",
+                    "icon": "fas fa-list-alt",
+                },
+                {
+                    "name": "Backup & Restore",
+                    "url": "/admin/maintenance/",
+                    "icon": "fas fa-tools",
+                },
+                {
+                    "name": "Backup History",
+                    "url": "admin:maintenance_backuplog_changelist",
+                    "icon": "fas fa-hdd",
+                },
+            ],
+        },
+
+        # Icons — Material/FontAwesome mapped to app/model
+        "icons": {
+            # App group icons (shown as collapsible section headers)
+            "auth":                     "fas fa-users-cog",
+            "users":                    "fas fa-users",
+            "organisations":            "fas fa-building",
+            "datasets":                 "fas fa-database",
+            "rap_import":               "fas fa-file-import",
+            "alerts":                   "fas fa-bell",
+            "area_submissions":         "fas fa-upload",
+            "field_check":              "fas fa-check-circle",
+            "feedback":                 "fas fa-comment-alt",
+            "climate":                  "fas fa-thermometer-half",
+            "land_accounts":            "fas fa-leaf",
+            "coastal_changes":          "fas fa-water",
+            "integrations":             "fas fa-plug",
+            "audit":                    "fas fa-history",
+            "maintenance":              "fas fa-tools",
+            # Models
+            "users.user":                           "fas fa-user",
+            "users.role":                           "fas fa-user-shield",
+            "users.smtpsettings":                   "fas fa-envelope",
+            "organisations.organisation":           "fas fa-sitemap",
+            "organisations.organisationclusteraccess": "fas fa-key",
+            "organisations.datasetorganisationshare":  "fas fa-share-alt",
+            "datasets.cluster":                     "fas fa-layer-group",
+            "datasets.cycloneevent":                "fas fa-bolt",
+            "datasets.pmtilesdataset":              "fas fa-map",
+            "datasets.vectordataset":               "fas fa-draw-polygon",
+            "datasets.vectoritem":                  "fas fa-map-marker-alt",
+            "datasets.rasterdataset":               "fas fa-image",
+            "datasets.tabulardataset":              "fas fa-table",
+            "datasets.tabularitem":                 "fas fa-th",
+            "datasets.mapsavedworkspace":           "fas fa-bookmark",
+            "datasets.disasterdatasettag":          "fas fa-tag",
+            "rap_import.rapimportbatch":            "fas fa-boxes",
+            "rap_import.rapimportfile":             "fas fa-file-excel",
+            "alerts.alert":                         "fas fa-exclamation-triangle",
+            "area_submissions.areadatasubmission":  "fas fa-file-upload",
+            "area_submissions.areaadministrator":   "fas fa-user-tie",
+            "field_check.fieldcheckrecord":         "fas fa-clipboard-check",
+            "feedback.feedback":                    "fas fa-comment-dots",
+            "climate.climaterasterdataset":         "fas fa-image",
+            "climate.climatepmtilesdataset":        "fas fa-map",
+            "climate.climatevectordataset":         "fas fa-draw-polygon",
+            "climate.climatevectoritem":            "fas fa-map-marker-alt",
+            "land_accounts.landaccountsdata":       "fas fa-seedling",
+            "coastal_changes.coastalchangesdata":   "fas fa-water",
+            "integrations.integrationsource":       "fas fa-server",
+            "integrations.integrationapikey":       "fas fa-key",
+            "integrations.externaldatasource":      "fas fa-cloud-download-alt",
+            "audit.auditlog":                       "fas fa-search",
+            "maintenance.backuplog":                "fas fa-hdd",
+            "admin.logentry":                       "fas fa-list-alt",
+        },
+
+        "default_icon_parents": "fas fa-chevron-right",
+        "default_icon_children": "fas fa-circle",
+
+        # Override the display names of the app groups in the sidebar
+        "apps_icons": {
+            "users":        "fas fa-cog",
+            "datasets":     "fas fa-database",
+            "rap_import":   "fas fa-file-import",
+            "alerts":       "fas fa-bell",
+            "climate":      "fas fa-thermometer-half",
+            "integrations": "fas fa-plug",
+            "audit":        "fas fa-history",
+        },
+
+        # UI tweaks
+        "related_modal_active": True,
+        "custom_css": "admin/css/drmis_jazzmin.css",
+        "custom_js": "admin/js/drmis_sidebar.js",
+        "use_google_fonts_cdn": True,
+        "show_ui_builder": False,
+        "changeform_format": "horizontal_tabs",
+        "changeform_format_overrides": {
+            "auth.user": "collapsible",
+            "auth.group": "vertical_tabs",
+        },
+        "language_chooser": False,
+    }
+
+    JAZZMIN_UI_TWEAKS = {
+        "navbar_small_text": False,
+        "footer_small_text": False,
+        "body_small_text": False,
+        "brand_small_text": False,
+        # Datta Able colour palette
+        "brand_colour": "navbar-primary",
+        "accent": "accent-primary",
+        "navbar": "navbar-white navbar-light",
+        "no_navbar_border": True,
+        "navbar_fixed": True,
+        "layout_boxed": False,
+        "footer_fixed": False,
+        "sidebar_fixed": True,
+        "sidebar": "sidebar-light-primary",
+        "sidebar_nav_small_text": False,
+        "sidebar_disable_expand": False,
+        "sidebar_nav_child_indent": True,
+        "sidebar_nav_compact_style": False,
+        "sidebar_nav_legacy_style": True,
+        "sidebar_nav_flat_style": False,
+        "theme": "default",
+        "dark_mode_theme": None,
+        "button_classes": {
+            "primary": "btn-primary",
+            "secondary": "btn-secondary",
+            "info": "btn-info",
+            "warning": "btn-warning",
+            "danger": "btn-danger",
+            "success": "btn-success",
+        },
     }
 
     # OpenAPI / Swagger — product-facing docs

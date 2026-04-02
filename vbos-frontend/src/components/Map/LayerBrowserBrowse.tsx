@@ -17,6 +17,7 @@ import {
   LuWaves,
   LuWind,
   LuX,
+  LuZap,
 } from "react-icons/lu";
 import type { IconType } from "react-icons";
 
@@ -56,6 +57,7 @@ const GLYPH_MAP: Record<NavGlyph, IconType> = {
   users: LuUsers,
   leaf: LuLeaf,
   columns2: LuColumns2,
+  zap: LuZap,
 };
 
 function NavGlyphIcon({
@@ -270,16 +272,25 @@ export function LayerBrowserBrowse({
                         </AccordionItem>
                       </Accordion>
                     ) : (
+                      <div key={entry.id} className="group/entry relative">
+                      {!entry.rapReady && (
+                        <span className="pointer-events-none absolute right-2 top-1/2 z-10 hidden -translate-y-1/2 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground shadow group-hover/entry:block whitespace-nowrap">
+                          Damage estimation not yet available
+                        </span>
+                      )}
                       <button
-                        key={entry.id}
                         type="button"
-                        className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-xs transition-colors hover:bg-muted/60"
+                        className={cn(
+                          "flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-xs transition-colors hover:bg-muted/60",
+                          !entry.rapReady && "opacity-50",
+                        )}
                         onClick={() => runNav(entry.target)}
                       >
                         <NavGlyphIcon glyph={entry.glyph} className="size-3.5" />
                         <span className="min-w-0 flex-1 font-medium">{entry.label}</span>
                         <LuChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
                       </button>
+                      </div>
                     ),
                   )}
                 </AccordionContent>

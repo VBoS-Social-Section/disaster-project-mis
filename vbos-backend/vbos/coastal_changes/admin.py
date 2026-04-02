@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.admin import ModelAdmin
 from django.shortcuts import redirect
-from unfold.admin import ModelAdmin as UnfoldModelAdmin
 
 from vbos.datasets.admin import PMTilesDatasetAdmin, VectorDatasetAdmin
 
@@ -27,7 +27,7 @@ class CoastalChangesDataForm(forms.ModelForm):
 
 
 @admin.register(CoastalChangesData)
-class CoastalChangesDataAdmin(UnfoldModelAdmin):
+class CoastalChangesDataAdmin(ModelAdmin):
     form = CoastalChangesDataForm
     list_display = ["id", "updated_display", "provinces_count"]
     readonly_fields = ["updated_at"]
