@@ -1,4 +1,4 @@
-"""Unfold admin for RAP import batches and files."""
+"""Admin for RAP import batches and files."""
 
 from __future__ import annotations
 
@@ -6,10 +6,9 @@ import csv
 import io
 
 from django.contrib import admin, messages
+from django.contrib.admin import ModelAdmin, TabularInline
 from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
-from unfold.admin import ModelAdmin, TabularInline
-from unfold.contrib.filters.admin import RangeDateFilter
 
 from .models import RAPImportBatch, RAPImportFile
 from .services import validate_rap_csv
@@ -73,9 +72,6 @@ class RAPImportFileInline(TabularInline):
 
 @admin.register(RAPImportBatch)
 class RAPImportBatchAdmin(ModelAdmin):
-    compressed_fields = True
-    list_filter_submit = True
-
     list_display = [
         "batch_ref",
         "cyclone_name",
@@ -87,11 +83,7 @@ class RAPImportBatchAdmin(ModelAdmin):
         "imported_by",
         "imported_at_fmt",
     ]
-    list_filter = [
-        "status",
-        "event_year",
-        ("imported_at", RangeDateFilter),
-    ]
+    list_filter = ["status", "event_year"]
     search_fields = ["batch_ref", "cyclone_name", "notes"]
     autocomplete_fields = ["cyclone_event"]
     readonly_fields = [
@@ -115,7 +107,6 @@ class RAPImportBatchAdmin(ModelAdmin):
                     ("event_year", "rendered_at"),
                     "status",
                 ),
-                "classes": ["tab"],
             },
         ),
         (
@@ -127,7 +118,6 @@ class RAPImportBatchAdmin(ModelAdmin):
                     "councils_affected",
                     "province_intensity_panel",
                 ),
-                "classes": ["tab"],
                 "description": "Auto-populated after hazard CSV is parsed.",
             },
         ),
@@ -135,7 +125,6 @@ class RAPImportBatchAdmin(ModelAdmin):
             "Status & Notes",
             {
                 "fields": ("notes", "imported_by", "imported_at"),
-                "classes": ["tab"],
             },
         ),
     )

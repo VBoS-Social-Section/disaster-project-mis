@@ -139,22 +139,76 @@ class Cluster(models.Model):
 
 class CycloneEvent(models.Model):
     """
-    Canonical cyclone / TC event for attributing RAP-style tabular outputs.
-    Operators create an event first; estimated damage, resources, and financial damage
-    datasets must reference this (or a RAP import batch) before publish-ready workflow.
+    Hazard event record for attributing RAP-style tabular outputs.
+    Originally cyclone-only; hazard_type now supports earthquake, volcano, tsunami, etc.
+    The model retains the name CycloneEvent for backwards compatibility with existing
+    RAP imports and tabular dataset foreign keys.
     """
 
+    HAZARD_CYCLONE    = "cyclone"
+    HAZARD_EARTHQUAKE = "earthquake"
+    HAZARD_VOLCANO    = "volcano"
+    HAZARD_TSUNAMI    = "tsunami"
+    HAZARD_FLOOD      = "flood"
+    HAZARD_DROUGHT    = "drought"
+    HAZARD_OTHER      = "other"
+
+    HAZARD_TYPE_CHOICES = [
+        (HAZARD_CYCLONE,    _("Cyclone / Tropical Storm")),
+        (HAZARD_EARTHQUAKE, _("Earthquake")),
+        (HAZARD_VOLCANO,    _("Volcano")),
+        (HAZARD_TSUNAMI,    _("Tsunami")),
+        (HAZARD_FLOOD,      _("Flood")),
+        (HAZARD_DROUGHT,    _("Drought")),
+        (HAZARD_OTHER,      _("Other")),
+    ]
+
+    hazard_type = models.CharField(
+        max_length=20,
+        choices=HAZARD_TYPE_CHOICES,
+        default=HAZARD_CYCLONE,
+        db_index=True,
+        help_text=_("Type of hazard event."),
+    )
     name = models.CharField(
         max_length=155,
-        help_text=_('Display label, e.g. "Cyclone Lola".'),
+        help_text=_('Display label, e.g. "Cyclone Lola", "Santo Earthquake 2026".'),
     )
     slug = models.SlugField(
         max_length=80,
         unique=True,
-        help_text=_("Stable key for APIs and URLs, e.g. lola-2023."),
+        help_text=_("Stable key for APIs and URLs, e.g. lola-2023, santo-eq-2026."),
     )
     season_year = models.PositiveSmallIntegerField(
-        help_text=_("Tropical cyclone season year (e.g. 2023)."),
+        help_text=_("Year the event occurred (e.g. 2026)."),
+    )
+    magnitude = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        help_text=_("Magnitude or intensity (e.g. Richter scale for earthquake, Category for cyclone)."),
+    )
+    epicentre_lat = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        help_text=_("Latitude of epicentre / landfall point (decimal degrees)."),
+    )
+    epicentre_lon = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        help_text=_("Longitude of epicentre / landfall point (decimal degrees)."),
+    )
+    depth_km = models.DecimalField(
+        max_digits=6,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        help_text=_("Depth in kilometres (earthquake only)."),
     )
     started_on = models.DateField(null=True, blank=True)
     ended_on = models.DateField(null=True, blank=True)
@@ -165,11 +219,11 @@ class CycloneEvent(models.Model):
 
     class Meta:
         ordering = ["-season_year", "slug"]
-        verbose_name = _("Cyclone event")
-        verbose_name_plural = _("Cyclone events")
+        verbose_name = _("Hazard event")
+        verbose_name_plural = _("Hazard events")
 
     def __str__(self):
-        return f"{self.name} ({self.season_year})"
+        return f"{self.get_hazard_type_display()} — {self.name} ({self.season_year})"
 
 
 def _invalidate_cluster_cache(sender, **kwargs):

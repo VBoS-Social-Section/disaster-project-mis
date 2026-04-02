@@ -40,6 +40,7 @@ import { DatasetsPage } from "./pages/DatasetsPage";
 import { ExportsPage } from "./pages/ExportsPage";
 import { AuditLogPage } from "./pages/AuditLogPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { FieldCheckAssignmentsPage } from "./pages/FieldCheckAssignmentsPage";
 import { useAlertNotificationCenter } from "./hooks/useAlertNotificationCenter";
 import { canAccessDataEntry, canAccessShellNav, getUserRole } from "@/lib/rbac";
 
@@ -185,7 +186,7 @@ function App() {
       >
         {primaryWorkspace === "command-centre" ? (
           navAllowed ? (
-            shellNavId === "datasets" ? <DatasetsPage /> : shellNavId === "exports" ? <ExportsPage /> : shellNavId === "audit" ? <AuditLogPage /> : shellNavId === "settings" ? <SettingsPage /> : <CommandCentre />
+            shellNavId === "datasets" ? <DatasetsPage /> : shellNavId === "exports" ? <ExportsPage /> : shellNavId === "audit" ? <AuditLogPage /> : shellNavId === "settings" ? <SettingsPage /> : shellNavId === "field-checks" ? <FieldCheckAssignmentsPage /> : <CommandCentre />
           ) : (
             <AccessDeniedView
               title="You don't have permission"

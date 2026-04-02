@@ -1,7 +1,7 @@
 import type { AuthUser } from "@/store/auth-store";
 
 export type AppRole = "admin" | "analyst" | "field_officer" | "read_only";
-export type ShellNavId = "dashboard" | "live-map" | "datasets" | "exports" | "audit" | "settings";
+export type ShellNavId = "dashboard" | "live-map" | "datasets" | "exports" | "audit" | "settings" | "field-checks";
 
 export function getUserRole(user: AuthUser | null | undefined): AppRole {
   if (!user) return "analyst";
@@ -21,7 +21,7 @@ export function getUserRole(user: AuthUser | null | undefined): AppRole {
 export function canAccessShellNav(role: AppRole, navId: string): navId is ShellNavId {
   if (navId === "live-map") return true;
   if (role === "admin") {
-    return ["dashboard", "live-map", "datasets", "exports", "audit", "settings"].includes(navId);
+    return ["dashboard", "live-map", "datasets", "exports", "audit", "settings", "field-checks"].includes(navId);
   }
   if (role === "analyst" || role === "read_only") {
     return ["dashboard", "live-map", "datasets", "exports", "audit"].includes(navId);

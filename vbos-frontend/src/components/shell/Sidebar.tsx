@@ -10,6 +10,7 @@ import {
   LuDownload,
   LuClipboardCheck,
   LuSettings2,
+  LuClipboardList,
 } from "react-icons/lu";
 
 export interface SidebarProps {
@@ -68,6 +69,14 @@ export function Sidebar({ activeId, onNavigate, className, alertCount = 0 }: Sid
             badge={alertCount > 0 ? alertCount : undefined}
             badgeVariant="red"
             onClick={() => onNavigate("live-map")}
+          />
+        )}
+        {canAccessShellNav(role, "field-checks") && (
+          <NavItem
+            label="Field Checks"
+            icon={<LuClipboardList />}
+            active={activeId === "field-checks"}
+            onClick={() => onNavigate("field-checks")}
           />
         )}
 

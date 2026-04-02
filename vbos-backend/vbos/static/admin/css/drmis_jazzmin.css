@@ -1,0 +1,864 @@
+/**
+ * DRMIS Admin — Datta Able inspired light theme for Jazzmin / AdminLTE 3
+ * Goal: white sidebar, soft blue-grey page, indigo primary, no black anywhere
+ */
+
+/* ── Fonts ── */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+/* ── Tokens ── */
+:root {
+  --da-primary:        #4680ff;
+  --da-primary-dark:   #2152cc;
+  --da-primary-light:  #eef2ff;
+  --da-primary-mid:    #c7d7fe;
+
+  --da-success:        #17c964;
+  --da-success-light:  #e8faf2;
+  --da-warning:        #f5a524;
+  --da-warning-light:  #fff8e6;
+  --da-danger:         #f31260;
+  --da-danger-light:   #fee7ef;
+  --da-info:           #06b7db;
+  --da-info-light:     #e6fafd;
+
+  --da-bg-page:        #f4f6fb;
+  --da-bg-card:        #ffffff;
+  --da-bg-sidebar:     #ffffff;
+  --da-bg-input:       #f8f9fc;
+
+  --da-border:         #e8eaf2;
+  --da-border-strong:  #c5cae9;
+
+  --da-text-dark:      #1e2438;
+  --da-text-body:      #3d4464;
+  --da-text-muted:     #8c93b5;
+  --da-text-light:     #b0b8d8;
+
+  --da-shadow-xs:  0 1px 2px rgba(70,128,255,.06);
+  --da-shadow-sm:  0 2px 8px rgba(70,128,255,.08), 0 0 1px rgba(70,128,255,.04);
+  --da-shadow-md:  0 6px 24px rgba(70,128,255,.12), 0 2px 6px rgba(70,128,255,.06);
+  --da-shadow-lg:  0 12px 40px rgba(70,128,255,.15), 0 4px 12px rgba(70,128,255,.08);
+
+  --da-radius:     12px;
+  --da-radius-sm:  8px;
+  --da-radius-xs:  5px;
+  --da-radius-pill: 999px;
+}
+
+/* ══════════════════════════════════════════
+   GLOBAL
+══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; }
+
+body,
+.wrapper,
+.content-wrapper {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 13.5px !important;
+  color: var(--da-text-body) !important;
+  background-color: var(--da-bg-page) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6,
+.content-header h1 {
+  font-family: "Inter", sans-serif !important;
+  font-weight: 700 !important;
+  color: var(--da-text-dark) !important;
+  letter-spacing: -0.01em !important;
+}
+
+a { color: var(--da-primary) !important; text-decoration: none !important; }
+a:hover { color: var(--da-primary-dark) !important; }
+
+/* ══════════════════════════════════════════
+   SIDEBAR  — pure white, no dark at all
+══════════════════════════════════════════ */
+.main-sidebar,
+.main-sidebar .sidebar,
+.sidebar-dark-primary,
+.sidebar-light-primary {
+  background-color: var(--da-bg-sidebar) !important;
+  box-shadow: 3px 0 12px rgba(70,128,255,.07) !important;
+  border-right: 1px solid var(--da-border) !important;
+}
+
+/* Brand bar */
+.brand-link,
+.brand-link:hover {
+  background-color: var(--da-bg-sidebar) !important;
+  border-bottom: 1px solid var(--da-border) !important;
+  padding: 14px 18px !important;
+}
+
+.brand-text {
+  font-size: 17px !important;
+  font-weight: 800 !important;
+  color: var(--da-primary) !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* User panel */
+.sidebar .user-panel {
+  border-bottom: 1px solid var(--da-border) !important;
+  padding: 12px 16px !important;
+  margin-bottom: 6px !important;
+}
+
+.sidebar .user-panel .info a,
+.sidebar .user-panel .info {
+  color: var(--da-text-body) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+/* ══════════════════════════════════════════
+   SIDEBAR NAV — using AdminLTE 3 selectors
+   (.sidebar-wrapper .sidebar-menu)
+══════════════════════════════════════════ */
+
+/* ── Top-level parent links: BOLD ── */
+.sidebar-wrapper .sidebar-menu > .nav-item > .nav-link {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: var(--da-text-dark) !important;
+  letter-spacing: -0.005em !important;
+  border-radius: var(--da-radius-sm) !important;
+  padding: 9px 12px !important;
+  transition: background 0.15s, color 0.15s !important;
+}
+
+/* Hover / focus on parent */
+.sidebar-wrapper .sidebar-menu > .nav-item > .nav-link:hover,
+.sidebar-wrapper .sidebar-menu > .nav-item > .nav-link:focus,
+.sidebar-wrapper .sidebar-menu > .nav-item:hover > .nav-link {
+  background-color: var(--da-primary-light) !important;
+  color: var(--da-primary) !important;
+}
+
+/* Open parent keeps highlight */
+.sidebar-wrapper .sidebar-menu > .nav-item.menu-open > .nav-link {
+  background-color: var(--da-primary-light) !important;
+  color: var(--da-primary) !important;
+}
+
+/* Active parent */
+.sidebar-wrapper .sidebar-menu > .nav-item > .nav-link.active,
+.sidebar-wrapper .sidebar-menu > .nav-item.menu-open > .nav-link.active {
+  background-color: var(--da-primary-light) !important;
+  color: var(--da-primary) !important;
+  font-weight: 700 !important;
+}
+
+/* ── Sub-menu links: NORMAL weight, muted ── */
+.sidebar-wrapper .nav-treeview > .nav-item > .nav-link {
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  color: var(--da-text-muted) !important;
+  padding: 6px 12px 6px 36px !important;
+  border-radius: var(--da-radius-sm) !important;
+  letter-spacing: 0 !important;
+}
+
+.sidebar-wrapper .nav-treeview > .nav-item > .nav-link:hover,
+.sidebar-wrapper .nav-treeview > .nav-item > .nav-link:focus {
+  font-weight: 500 !important;
+  color: var(--da-primary) !important;
+  background-color: var(--da-primary-light) !important;
+}
+
+.sidebar-wrapper .nav-treeview > .nav-item > .nav-link.active {
+  font-weight: 600 !important;
+  color: var(--da-primary) !important;
+  background-color: var(--da-primary-light) !important;
+}
+
+/* ── Icons ── */
+.sidebar-wrapper .sidebar-menu .nav-icon {
+  color: var(--da-text-muted) !important;
+  font-size: 14px !important;
+  width: 18px !important;
+  margin-right: 8px !important;
+}
+
+.sidebar-wrapper .sidebar-menu > .nav-item > .nav-link:hover .nav-icon,
+.sidebar-wrapper .sidebar-menu > .nav-item.menu-open > .nav-link .nav-icon,
+.sidebar-wrapper .sidebar-menu > .nav-item > .nav-link.active .nav-icon {
+  color: var(--da-primary) !important;
+}
+
+/* ── Chevron arrow ── */
+.sidebar-wrapper .sidebar-menu .nav-item > .nav-link .nav-arrow {
+  transition: transform 0.2s ease !important;
+}
+
+/* ── Legacy nav-sidebar selectors (Jazzmin fallback) ── */
+.nav-sidebar .nav-item {
+  padding: 1px 8px !important;
+}
+
+/* Section headers */
+.nav-sidebar .nav-header {
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--da-text-light) !important;
+  padding: 14px 20px 4px !important;
+}
+
+/* ══════════════════════════════════════════
+   TOP NAVBAR
+══════════════════════════════════════════ */
+.main-header.navbar,
+.navbar {
+  background-color: var(--da-bg-card) !important;
+  border-bottom: 1px solid var(--da-border) !important;
+  box-shadow: 0 1px 6px rgba(70,128,255,.06) !important;
+  min-height: 56px !important;
+}
+
+.navbar-light .navbar-nav .nav-link,
+.main-header .nav-link {
+  color: var(--da-text-body) !important;
+  font-weight: 500 !important;
+  font-size: 13.5px !important;
+}
+
+.navbar-light .navbar-nav .nav-link:hover {
+  color: var(--da-primary) !important;
+}
+
+/* Hamburger toggle */
+.nav-link[data-widget="pushmenu"] {
+  color: var(--da-text-muted) !important;
+}
+
+/* ══════════════════════════════════════════
+   CONTENT AREA
+══════════════════════════════════════════ */
+.content-header {
+  padding: 20px 28px 10px !important;
+  background: transparent !important;
+}
+
+.content-header h1 {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: var(--da-text-dark) !important;
+  margin: 0 !important;
+}
+
+.content {
+  padding: 0 28px 28px !important;
+}
+
+/* Breadcrumb */
+.breadcrumb-item + .breadcrumb-item::before { color: var(--da-text-light) !important; }
+
+.breadcrumb {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 12px !important;
+}
+
+.breadcrumb-item a { color: var(--da-primary) !important; font-weight: 500 !important; }
+.breadcrumb-item.active { color: var(--da-text-muted) !important; }
+
+/* ══════════════════════════════════════════
+   CARDS
+══════════════════════════════════════════ */
+.card {
+  border: none !important;
+  border-radius: var(--da-radius) !important;
+  box-shadow: var(--da-shadow-sm) !important;
+  background: var(--da-bg-card) !important;
+  margin-bottom: 20px !important;
+  transition: box-shadow 0.2s ease, transform 0.15s ease !important;
+}
+
+.card:hover { box-shadow: var(--da-shadow-md) !important; }
+
+.card-header {
+  background: var(--da-bg-card) !important;
+  border-bottom: 1px solid var(--da-border) !important;
+  padding: 16px 22px !important;
+  border-radius: var(--da-radius) var(--da-radius) 0 0 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: var(--da-text-dark) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.card-body { padding: 22px !important; }
+.card-footer {
+  background: var(--da-bg-card) !important;
+  border-top: 1px solid var(--da-border) !important;
+  padding: 14px 22px !important;
+  border-radius: 0 0 var(--da-radius) var(--da-radius) !important;
+}
+
+/* ══════════════════════════════════════════
+   BUTTONS  — indigo primary everywhere
+══════════════════════════════════════════ */
+.btn {
+  font-family: "Inter", sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border-radius: var(--da-radius-sm) !important;
+  padding: 7px 16px !important;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s !important;
+  letter-spacing: 0.01em !important;
+  border: none !important;
+}
+
+.btn:hover { transform: translateY(-1px) !important; }
+.btn:active { transform: translateY(0) !important; }
+
+/* Primary */
+.btn-primary, .btn-info, .bg-info {
+  background-color: var(--da-primary) !important;
+  border-color: var(--da-primary) !important;
+  color: #fff !important;
+}
+.btn-primary:hover, .btn-info:hover {
+  background-color: var(--da-primary-dark) !important;
+  box-shadow: 0 4px 14px rgba(70,128,255,.35) !important;
+  color: #fff !important;
+}
+
+/* Success */
+.btn-success {
+  background-color: var(--da-success) !important;
+  border-color: var(--da-success) !important;
+  color: #fff !important;
+}
+.btn-success:hover { background-color: #13a854 !important; box-shadow: 0 4px 14px rgba(23,201,100,.3) !important; color: #fff !important; }
+
+/* Warning */
+.btn-warning {
+  background-color: var(--da-warning) !important;
+  border-color: var(--da-warning) !important;
+  color: #fff !important;
+}
+.btn-warning:hover { background-color: #d48917 !important; color: #fff !important; }
+
+/* Danger */
+.btn-danger {
+  background-color: var(--da-danger) !important;
+  border-color: var(--da-danger) !important;
+  color: #fff !important;
+}
+.btn-danger:hover { background-color: #c40e4e !important; color: #fff !important; }
+
+/* Secondary / default */
+.btn-secondary, .btn-default {
+  background-color: var(--da-primary-light) !important;
+  border-color: var(--da-primary-mid) !important;
+  color: var(--da-primary) !important;
+}
+.btn-secondary:hover, .btn-default:hover {
+  background-color: var(--da-primary-mid) !important;
+  color: var(--da-primary-dark) !important;
+}
+
+/* Add button (top right of changelist) */
+.btn-success.float-right,
+a.addlink {
+  background-color: var(--da-primary) !important;
+  border-color: var(--da-primary) !important;
+  color: #fff !important;
+  border-radius: var(--da-radius-sm) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  padding: 8px 18px !important;
+}
+
+/* ══════════════════════════════════════════
+   TABLES
+══════════════════════════════════════════ */
+.table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  background: var(--da-bg-card) !important;
+}
+
+.table thead th {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.09em !important;
+  text-transform: uppercase !important;
+  background-color: var(--da-primary-light) !important;
+  color: var(--da-primary) !important;
+  border-bottom: 2px solid var(--da-primary-mid) !important;
+  border-top: none !important;
+  padding: 12px 18px !important;
+  white-space: nowrap !important;
+}
+
+.table thead th a {
+  color: var(--da-primary) !important;
+  font-weight: 700 !important;
+}
+
+.table thead th a:hover { color: var(--da-primary-dark) !important; }
+
+.table tbody td {
+  padding: 11px 18px !important;
+  font-size: 13px !important;
+  vertical-align: middle !important;
+  color: var(--da-text-body) !important;
+  border-color: var(--da-border) !important;
+  border-top: none !important;
+  border-bottom: 1px solid var(--da-border) !important;
+}
+
+.table tbody tr:last-child td { border-bottom: none !important; }
+
+.table-hover tbody tr:hover td {
+  background-color: var(--da-primary-light) !important;
+}
+
+/* Sortable drag handle rows (clusters) */
+.table tbody tr td:first-child {
+  color: var(--da-text-muted) !important;
+}
+
+/* ══════════════════════════════════════════
+   FORM CONTROLS
+══════════════════════════════════════════ */
+.form-control,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="url"],
+input[type="search"],
+select,
+textarea {
+  font-family: "Inter", sans-serif !important;
+  font-size: 13px !important;
+  color: var(--da-text-body) !important;
+  background-color: var(--da-bg-input) !important;
+  border: 1.5px solid var(--da-border) !important;
+  border-radius: var(--da-radius-sm) !important;
+  padding: 9px 13px !important;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s !important;
+  box-shadow: none !important;
+}
+
+.form-control:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  background-color: #fff !important;
+  border-color: var(--da-primary) !important;
+  box-shadow: 0 0 0 3px rgba(70,128,255,.12) !important;
+  outline: none !important;
+  color: var(--da-text-dark) !important;
+}
+
+select.form-control { background-color: var(--da-bg-input) !important; }
+
+/* Labels */
+label, .form-label {
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: var(--da-text-body) !important;
+  margin-bottom: 5px !important;
+}
+
+/* Help text */
+.help-block, .form-text {
+  font-size: 11.5px !important;
+  color: var(--da-text-muted) !important;
+  margin-top: 4px !important;
+}
+
+/* ══════════════════════════════════════════
+   FIELDSETS
+══════════════════════════════════════════ */
+fieldset {
+  background: var(--da-bg-card) !important;
+  border: 1.5px solid var(--da-border) !important;
+  border-radius: var(--da-radius) !important;
+  padding: 20px 24px !important;
+  margin-bottom: 20px !important;
+}
+
+fieldset legend,
+fieldset h2 {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: var(--da-primary) !important;
+  background: var(--da-primary-light) !important;
+  padding: 4px 10px !important;
+  border-radius: var(--da-radius-xs) !important;
+  border-bottom: none !important;
+  display: inline-block !important;
+  margin-bottom: 16px !important;
+}
+
+/* ══════════════════════════════════════════
+   CHANGELIST FILTER SIDEBAR
+══════════════════════════════════════════ */
+#changelist-filter {
+  background: var(--da-bg-card) !important;
+  border: none !important;
+  border-radius: var(--da-radius) !important;
+  box-shadow: var(--da-shadow-sm) !important;
+  margin-left: 16px !important;
+  overflow: hidden !important;
+}
+
+#changelist-filter h2 {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: var(--da-primary) !important;
+  background: var(--da-primary-light) !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid var(--da-primary-mid) !important;
+  margin: 0 !important;
+}
+
+#changelist-filter h3 {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: var(--da-text-dark) !important;
+  padding: 12px 16px 4px !important;
+  margin: 0 !important;
+}
+
+#changelist-filter ul { padding: 4px 16px 12px !important; margin: 0 !important; list-style: none !important; }
+#changelist-filter li { margin: 2px 0 !important; }
+
+#changelist-filter li a {
+  font-size: 13px !important;
+  color: var(--da-text-body) !important;
+  padding: 4px 0 !important;
+  display: block !important;
+  border-radius: var(--da-radius-xs) !important;
+  transition: color 0.12s !important;
+}
+
+#changelist-filter li.selected a,
+#changelist-filter li a:hover {
+  color: var(--da-primary) !important;
+  font-weight: 600 !important;
+}
+
+/* ══════════════════════════════════════════
+   ACTION BAR
+══════════════════════════════════════════ */
+.actions, #changelist .actions {
+  background: var(--da-primary-light) !important;
+  border: 1.5px solid var(--da-primary-mid) !important;
+  border-radius: var(--da-radius-sm) !important;
+  padding: 10px 16px !important;
+  margin-bottom: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.actions label { color: var(--da-text-muted) !important; font-size: 12.5px !important; margin: 0 !important; }
+
+.actions select {
+  border-radius: var(--da-radius-xs) !important;
+  font-size: 13px !important;
+  padding: 5px 10px !important;
+  border-color: var(--da-primary-mid) !important;
+  background: #fff !important;
+}
+
+/* ══════════════════════════════════════════
+   PAGINATION
+══════════════════════════════════════════ */
+.pagination .page-link {
+  border-radius: var(--da-radius-xs) !important;
+  color: var(--da-primary) !important;
+  border: 1.5px solid var(--da-border) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 5px 11px !important;
+  margin: 0 2px !important;
+  transition: all 0.15s !important;
+}
+
+.pagination .page-link:hover {
+  background-color: var(--da-primary-light) !important;
+  border-color: var(--da-primary) !important;
+  color: var(--da-primary) !important;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--da-primary) !important;
+  border-color: var(--da-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(70,128,255,.35) !important;
+}
+
+/* ══════════════════════════════════════════
+   ALERTS / MESSAGES
+══════════════════════════════════════════ */
+.alert {
+  border: none !important;
+  border-radius: var(--da-radius-sm) !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  padding: 12px 18px !important;
+  border-left: 4px solid transparent !important;
+}
+
+.alert-success {
+  background-color: var(--da-success-light) !important;
+  color: #0a6640 !important;
+  border-left-color: var(--da-success) !important;
+}
+
+.alert-warning {
+  background-color: var(--da-warning-light) !important;
+  color: #7c4a00 !important;
+  border-left-color: var(--da-warning) !important;
+}
+
+.alert-danger, .alert-error {
+  background-color: var(--da-danger-light) !important;
+  color: #8c0832 !important;
+  border-left-color: var(--da-danger) !important;
+}
+
+.alert-info {
+  background-color: var(--da-info-light) !important;
+  color: #055a6b !important;
+  border-left-color: var(--da-info) !important;
+}
+
+/* ══════════════════════════════════════════
+   BADGES
+══════════════════════════════════════════ */
+.badge {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  border-radius: var(--da-radius-pill) !important;
+  padding: 3px 9px !important;
+  letter-spacing: 0.03em !important;
+}
+
+.badge-primary, .badge-info { background-color: var(--da-primary) !important; }
+.badge-success { background-color: var(--da-success) !important; }
+.badge-warning { background-color: var(--da-warning) !important; }
+.badge-danger  { background-color: var(--da-danger) !important; }
+
+/* ══════════════════════════════════════════
+   SEARCH BOX
+══════════════════════════════════════════ */
+#changelist-search input[type="text"],
+#searchbar {
+  border-radius: var(--da-radius-sm) !important;
+  border: 1.5px solid var(--da-border) !important;
+  background: #fff !important;
+  font-size: 13px !important;
+  padding: 8px 14px !important;
+  color: var(--da-text-body) !important;
+}
+
+#changelist-search input[type="submit"],
+#changelist-search button[type="submit"] {
+  background-color: var(--da-primary) !important;
+  border-color: var(--da-primary) !important;
+  color: #fff !important;
+  border-radius: var(--da-radius-sm) !important;
+  font-weight: 600 !important;
+  padding: 8px 18px !important;
+  transition: background 0.15s, box-shadow 0.15s !important;
+}
+
+#changelist-search input[type="submit"]:hover,
+#changelist-search button[type="submit"]:hover {
+  background-color: var(--da-primary-dark) !important;
+  box-shadow: 0 4px 12px rgba(70,128,255,.35) !important;
+}
+
+/* ══════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════ */
+.main-footer {
+  background: var(--da-bg-card) !important;
+  border-top: 1px solid var(--da-border) !important;
+  color: var(--da-text-muted) !important;
+  font-size: 12px !important;
+  padding: 12px 24px !important;
+}
+
+/* ══════════════════════════════════════════
+   DASHBOARD MODULE BLOCKS
+══════════════════════════════════════════ */
+.module {
+  background: var(--da-bg-card) !important;
+  border: none !important;
+  border-radius: var(--da-radius) !important;
+  box-shadow: var(--da-shadow-sm) !important;
+  overflow: hidden !important;
+}
+
+.module caption, .module h2 {
+  background: var(--da-primary-light) !important;
+  color: var(--da-primary) !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  padding: 10px 16px !important;
+  border-bottom: 1px solid var(--da-primary-mid) !important;
+}
+
+.module table tr td a { color: var(--da-primary) !important; font-weight: 500 !important; }
+
+/* Add/Change pill buttons on dashboard */
+.module table .addlink,
+.module table .changelink {
+  font-size: 11px !important;
+  padding: 3px 10px !important;
+  border-radius: var(--da-radius-pill) !important;
+  font-weight: 600 !important;
+}
+
+/* ══════════════════════════════════════════
+   RECENT ACTIONS PANEL
+══════════════════════════════════════════ */
+#recent-actions-module .actionlist li {
+  padding: 8px 0 !important;
+  border-bottom: 1px solid var(--da-border) !important;
+  font-size: 13px !important;
+}
+
+#recent-actions-module .actionlist li:last-child { border-bottom: none !important; }
+
+#recent-actions-module .actionlist a { color: var(--da-primary) !important; font-weight: 500 !important; }
+
+#recent-actions-module .actionlist .mini {
+  font-size: 11px !important;
+  color: var(--da-text-muted) !important;
+}
+
+/* ══════════════════════════════════════════
+   SUBMIT ROW
+══════════════════════════════════════════ */
+.submit-row {
+  background: var(--da-bg-card) !important;
+  border-top: 1.5px solid var(--da-border) !important;
+  border-radius: 0 0 var(--da-radius) var(--da-radius) !important;
+  padding: 14px 22px !important;
+  display: flex !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+/* ══════════════════════════════════════════
+   TABS (changeform horizontal_tabs)
+══════════════════════════════════════════ */
+.nav-tabs .nav-link {
+  color: var(--da-text-muted) !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  padding: 10px 18px !important;
+  transition: color 0.15s, border-color 0.15s !important;
+  background: transparent !important;
+}
+
+.nav-tabs .nav-link:hover { color: var(--da-primary) !important; }
+
+.nav-tabs .nav-link.active {
+  color: var(--da-primary) !important;
+  font-weight: 700 !important;
+  border-bottom: 2px solid var(--da-primary) !important;
+  background: transparent !important;
+}
+
+.nav-tabs { border-bottom: 1px solid var(--da-border) !important; }
+
+/* ══════════════════════════════════════════
+   POPUPS / MODALS
+══════════════════════════════════════════ */
+.modal-content {
+  border: none !important;
+  border-radius: var(--da-radius) !important;
+  box-shadow: var(--da-shadow-lg) !important;
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--da-border) !important;
+  padding: 16px 22px !important;
+}
+
+.modal-title {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: var(--da-text-dark) !important;
+}
+
+/* ══════════════════════════════════════════
+   MISC CLEANUP
+══════════════════════════════════════════ */
+
+/* Remove AdminLTE default blue tints on body */
+.wrapper { background-color: var(--da-bg-page) !important; }
+
+/* Fix any remaining teal/cyan on info elements */
+.text-info { color: var(--da-primary) !important; }
+.bg-info { background-color: var(--da-primary) !important; }
+.border-info { border-color: var(--da-primary-mid) !important; }
+
+/* Object tools (top right on changelist) */
+ul.object-tools li a {
+  background-color: var(--da-primary) !important;
+  border-radius: var(--da-radius-sm) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 7px 14px !important;
+  color: #fff !important;
+  transition: background 0.15s, box-shadow 0.15s !important;
+}
+
+ul.object-tools li a:hover {
+  background-color: var(--da-primary-dark) !important;
+  box-shadow: 0 4px 12px rgba(70,128,255,.35) !important;
+}
+
+/* Inline delete buttons */
+.inline-deletelink { color: var(--da-danger) !important; }
+
+/* Checkboxes */
+input[type="checkbox"] { accent-color: var(--da-primary) !important; }
+
+/* Select2 */
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple {
+  border: 1.5px solid var(--da-border) !important;
+  border-radius: var(--da-radius-sm) !important;
+  background: var(--da-bg-input) !important;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single,
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+  border-color: var(--da-primary) !important;
+  box-shadow: 0 0 0 3px rgba(70,128,255,.12) !important;
+}
+
+.select2-container--default .select2-results__option--highlighted {
+  background-color: var(--da-primary) !important;
+}

@@ -62,13 +62,20 @@ export type NavGlyph =
   | "mapPinned"
   | "users"
   | "leaf"
-  | "columns2";
+  | "columns2"
+  | "zap";
 
 export type RiskSourceEntry = {
   id: string;
   label: string;
   glyph: NavGlyph;
   target: RiskNavTarget;
+  /**
+   * true  = RAP damage estimation is available (Cyclone only for now).
+   * false = data layers available but no RAP damage estimation yet.
+   * Omitted = treated as false.
+   */
+  rapReady?: boolean;
 };
 
 export type RiskSourceGroup = {
@@ -88,6 +95,7 @@ export const RISK_SOURCE_GROUPS: RiskSourceGroup[] = [
         id: "acidification",
         label: "Acidification",
         glyph: "waves",
+        rapReady: false,
         target: { type: "climate", moduleId: "marine_heat" },
       },
     ],
@@ -105,10 +113,9 @@ export const RISK_SOURCE_GROUPS: RiskSourceGroup[] = [
       },
       {
         id: "cyclone",
-        // Expands into a sub-list of cyclone events from the API.
-        // Each event sets activeRiskSource: "cyclone" + selectedCycloneEventId.
         label: "Cyclone",
         glyph: "wind",
+        rapReady: true,
         target: {
           type: "cyclone_event_picker",
           clusterNames: [
@@ -135,6 +142,16 @@ export const RISK_SOURCE_GROUPS: RiskSourceGroup[] = [
         target: {
           type: "disaster",
           clusterNames: ["Logistics", "Energy", "Emergency Telecommunications"],
+          viewType: null,
+        },
+      },
+      {
+        id: "earthquake",
+        label: "Earthquake",
+        glyph: "zap",
+        target: {
+          type: "disaster",
+          clusterNames: ["Logistics", "Health", "Shelter", "Emergency Telecommunications"],
           viewType: null,
         },
       },

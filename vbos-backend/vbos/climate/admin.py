@@ -4,8 +4,8 @@ import json
 
 from django import forms
 from django.contrib import admin
+from django.contrib.admin import ModelAdmin
 from django.contrib.gis import admin as gis_admin
-from unfold.admin import ModelAdmin as UnfoldModelAdmin
 from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import redirect, render
@@ -238,7 +238,7 @@ def _climate_vector_dataset_queryset():
 
 
 @admin.register(ClimateVectorItem)
-class ClimateVectorItemAdmin(gis_admin.GISModelAdmin, UnfoldModelAdmin):
+class ClimateVectorItemAdmin(gis_admin.GISModelAdmin, ModelAdmin):
     """Vector items for Climate datasets. Lists items, Add vector item, Import File (GeoJSON)."""
 
     list_display = [

@@ -2,7 +2,7 @@
 Admin for Integration API keys and sources.
 """
 from django.contrib import admin
-from unfold.admin import ModelAdmin as UnfoldModelAdmin
+from django.contrib.admin import ModelAdmin
 from django.shortcuts import redirect, render
 from django.urls import path, reverse
 from django.utils.html import format_html
@@ -10,7 +10,7 @@ from .models import IntegrationAPIKey, IntegrationSource, ExternalDataSource
 
 
 @admin.register(IntegrationSource)
-class IntegrationSourceAdmin(UnfoldModelAdmin):
+class IntegrationSourceAdmin(ModelAdmin):
     list_display = ["name", "contact_email", "is_active", "generate_key_link", "created"]
     list_filter = ["is_active"]
     search_fields = ["name", "description"]
@@ -56,7 +56,7 @@ class IntegrationSourceAdmin(UnfoldModelAdmin):
 
 
 @admin.register(IntegrationAPIKey)
-class IntegrationAPIKeyAdmin(UnfoldModelAdmin):
+class IntegrationAPIKeyAdmin(ModelAdmin):
     list_display = ["name", "source", "key_display", "is_active", "last_used", "created"]
     list_filter = ["is_active", "source"]
     search_fields = ["name"]
@@ -69,7 +69,7 @@ class IntegrationAPIKeyAdmin(UnfoldModelAdmin):
 
 
 @admin.register(ExternalDataSource)
-class ExternalDataSourceAdmin(UnfoldModelAdmin):
+class ExternalDataSourceAdmin(ModelAdmin):
     list_display = ["name", "target_dataset", "url_short", "auth_type", "is_active", "last_sync", "last_sync_status"]
     list_filter = ["is_active", "auth_type"]
     search_fields = ["name", "url"]

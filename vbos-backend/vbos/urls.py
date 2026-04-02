@@ -6,6 +6,7 @@ from django.urls import include, path, re_path
 from django.views.generic import RedirectView
 
 from vbos.datasets.admin_views import icon_picker
+from vbos.admin_dashboard import dashboard_view
 from vbos.datasets.tile_serve import serve_tile
 from vbos.land_accounts.admin_views import (
     add_land_accounts,
@@ -146,6 +147,7 @@ urlpatterns = [
     path("admin/maintenance/", admin.site.admin_view(backup_restore_dashboard), name="admin_maintenance_backup_restore"),
     path("admin/maintenance/backup/", admin.site.admin_view(backup_download), name="admin_maintenance_backup"),
     path("admin/maintenance/restore/", admin.site.admin_view(restore_upload), name="admin_maintenance_restore"),
+    path("admin/dashboard/", admin.site.admin_view(dashboard_view), name="admin_dashboard"),
     path("admin/", admin.site.urls),
     path("", include(api_urls)),
     path("api-token-auth/", obtain_auth_token),

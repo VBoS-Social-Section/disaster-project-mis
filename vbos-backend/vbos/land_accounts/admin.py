@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.admin import ModelAdmin
 from django.contrib.gis import admin as gis_admin
-from unfold.admin import ModelAdmin as UnfoldModelAdmin
 from django.shortcuts import redirect
 from django.urls import reverse
 
@@ -25,7 +25,7 @@ class LandAccountsDataForm(forms.ModelForm):
 
 
 @admin.register(LandAccountsData)
-class LandAccountsDataAdmin(UnfoldModelAdmin):
+class LandAccountsDataAdmin(ModelAdmin):
     form = LandAccountsDataForm
     list_display = ["id", "updated_display", "provinces_count"]
     readonly_fields = ["updated_at"]
