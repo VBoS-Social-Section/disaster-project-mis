@@ -7,7 +7,7 @@ from django import forms
 from django.contrib.admin import SimpleListFilter
 from django.contrib import messages
 from django.contrib.gis import admin
-from django.contrib.gis.geos.geometry import GEOSGeometry
+from django.db import transaction
 from django.shortcuts import redirect, render, reverse
 from django.urls import path
 
@@ -30,6 +30,7 @@ from .utils import (
     clean_redundant_tabular_items,
     create_tabular_item,
     import_wide_format_csv,
+    vector_item_fields,
 )
 
 
@@ -215,55 +216,15 @@ class VectorItemAdmin(admin.GISModelAdmin):
 
                     first_error = None
                     for item in geojson_content["features"]:
-                        props = item.get("properties") or {}
-                        metadata = GeoJSONProperties(props.copy())
                         try:
-                            province_name = str(metadata.province or "").strip()
-                            province = (
-                                Province.objects.filter(name__iexact=province_name).first()
-                                if province_name
-                                else None
-                            )
-                            ac_name = str(metadata.area_council or "").strip()
-                            area_council = (
-                                AreaCouncil.objects.filter(name__iexact=ac_name).first()
-                                if ac_name
-                                else None
-                            )
-                            attribute = (
-                                str(metadata.attribute or "").strip() or None
-                            )
-                            name = str(metadata.name or "").strip() or None
-                            ref = str(metadata.ref or "").strip() or None
-                            if ref and len(ref) > 50:
-                                ref = ref[:50]
-
-                            geom = item.get("geometry")
-                            if not geom:
-                                raise ValueError("Feature has no geometry")
-
-                            geos_geom = GEOSGeometry(json.dumps(geom))
-                            # Simplify polygon geometries to prevent browser crash (heavy coastlines)
-                            if geos_geom.geom_type in ("Polygon", "MultiPolygon"):
-                                try:
-                                    n = geos_geom.num_coords
-                                except (AttributeError, TypeError):
-                                    n = 0
-                                if n > 500:
-                                    geos_geom = geos_geom.simplify(
-                                        tolerance=0.01, preserve_topology=True
-                                    )
-
-                            VectorItem.objects.create(
-                                dataset=dataset,
-                                metadata=metadata.properties,
-                                name=name,
-                                ref=ref,
-                                attribute=attribute,
-                                province=province,
-                                area_council=area_council,
-                                geometry=geos_geom,
-                            )
+                            # Savepoint so one bad feature does not abort the rest
+                            with transaction.atomic():
+                                VectorItem.objects.create(
+                                    dataset=dataset,
+                                    **vector_item_fields(
+                                        item.get("properties"), item.get("geometry")
+                                    ),
+                                )
                             created_count += 1
                         except Exception as e:
                             error_count += 1

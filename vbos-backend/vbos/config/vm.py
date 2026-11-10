@@ -17,12 +17,13 @@ class Vm(Common):
     # Media files: Docker mounts vbos-backend/media to /app/media (see docker-compose volume)
     MEDIA_ROOT = "/app/media"
 
-    # Allow cookies over HTTP for VM (no HTTPS)
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
-
     # Allow VM host in CSRF (set DJANGO_VM_HOST or default to common IPs)
-    _vm_host = os.getenv("DJANGO_VM_HOST", "http://10.252.0.158")
+    _vm_host = os.getenv("DJANGO_VM_HOST", "http://10.252.0.158").rstrip("/")
+    _use_https = _vm_host.startswith("https://")
+
+    # Cookies are HTTPS-only when the site is served over HTTPS; plain HTTP on a LAN still works
+    SESSION_COOKIE_SECURE = _use_https
+    CSRF_COOKIE_SECURE = _use_https
     CSRF_TRUSTED_ORIGINS = list(Common.CSRF_TRUSTED_ORIGINS) + [
         _vm_host,
         f"{_vm_host}:8000",
@@ -39,4 +40,4 @@ class Vm(Common):
     
     # Ensure we trust the proxy (Nginx)
     USE_X_FORWARDED_HOST = True
-    SECURE_PROXY_SSL_HEADER = None # Disable SSL check for VM (HTTP)
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https") if _use_https else None

@@ -25,6 +25,9 @@ django-storages==1.14.6
 boto3==1.40.26
 whitenoise
 
+# Cache (shared between gunicorn workers)
+redis==5.2.1
+
 # Admin
 django-admin-sortable2==2.2.6
 

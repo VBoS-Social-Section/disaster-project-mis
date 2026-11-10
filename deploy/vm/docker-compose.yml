@@ -40,11 +40,14 @@ services:
       POSTGRES_DB: vbos
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      # Shared cache so every gunicorn worker sees the same data
+      DJANGO_CACHE_BACKEND: django.core.cache.backends.redis.RedisCache
+      DJANGO_CACHE_LOCATION: redis://redis:6379/1
     command: >
       bash -c "python3 wait_for_postgres.py &&
                ./manage.py migrate &&
                ./manage.py collectstatic --noinput &&
-               gunicorn --bind 0.0.0.0:8000 --access-logfile - vbos.wsgi:application"
+               gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 120 --access-logfile - vbos.wsgi:application"
     volumes:
       # Source mount removed for production – code comes from image (faster)
       # - ../../vbos-backend:/app
@@ -53,10 +56,17 @@ services:
       # Path is relative to this compose file: deploy/vm/../../vbos-backend/media
       - ../../vbos-backend/media:/app/media
     ports:
-      - "8000:8000"
+      # Reachable from the server itself only; the public route is nginx on 443
+      - "127.0.0.1:8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
+    restart: always
+
+  redis:
+    image: redis:7-alpine
     restart: always
 
   titiler:
@@ -76,7 +86,7 @@ services:
       PYTHONWARNINGS: ignore
       WEB_CONCURRENCY: 4
     ports:
-      - "8002:8000"
+      - "127.0.0.1:8002:8000"
     volumes:
       - ../../vbos-backend/raster_data:/data
     restart: unless-stopped
