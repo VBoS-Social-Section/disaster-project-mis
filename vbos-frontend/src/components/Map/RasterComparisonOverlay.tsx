@@ -1,6 +1,6 @@
 /**
  * Interactive swipe (curtain) comparison: drag handle to compare Before (yearLeft) vs After (yearRight).
- * Renders when Compare years is on, Climate mode, and a raster layer is active.
+ * Renders when Compare years is on and a raster layer is active.
  */
 import { useEffect, useRef } from "react";
 import { useMap } from "react-leaflet";
@@ -8,7 +8,6 @@ import L from "leaflet";
 import "leaflet-side-by-side";
 import { useComparisonStore } from "@/store/comparison-store";
 import { useLayerStore } from "@/store/layer-store";
-import { useScenario } from "@/hooks/useScenario";
 import { useOpacityStore } from "@/store/opacity-store";
 import { useLandCoverRaster } from "@/hooks/useLandCoverRaster";
 import { useLandCoverFilterStore } from "@/store/land-cover-filter-store";
@@ -69,7 +68,6 @@ export function RasterComparisonOverlay() {
   const rightLayerRef = useRef<L.TileLayer | null>(null);
 
   const { comparisonMode, yearLeft, yearRight } = useComparisonStore();
-  const scenario = useScenario();
   const { layers, getLayerMetadata } = useLayerStore();
   const { getOpacity } = useOpacityStore();
 
@@ -95,7 +93,7 @@ export function RasterComparisonOverlay() {
   const opacity = rasterId ? (getOpacity(rasterId) ?? 100) / 100 : 1;
 
   useEffect(() => {
-    if (!scenario.uiConfig.showComparison || !comparisonMode || !hasRasterLayer || !metadata || !sideBySide) return;
+    if (!comparisonMode || !hasRasterLayer || !metadata || !sideBySide) return;
     if (isPrecomputed ? !precomputedUrl : !datasetUrlId) return;
 
     const apiHost = import.meta.env.VITE_API_HOST ?? "";
@@ -141,7 +139,6 @@ export function RasterComparisonOverlay() {
       rightLayerRef.current = null;
     };
   }, [
-    scenario,
     comparisonMode,
     hasRasterLayer,
     map,

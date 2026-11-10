@@ -6,6 +6,7 @@ import { usePanelContext } from "@/hooks/usePanelContext";
 import { useScenario } from "@/hooks/useScenario";
 import { useAreaStore } from "@/store/area-store";
 import { useUiStore } from "@/store/ui-store";
+import { useLandCoverActive } from "@/hooks/useLandCoverActive";
 import { ClimateLayout } from "@/components/RightSidebar/ClimateLayout";
 import { ComparisonMode } from "@/components/RightSidebar/ComparisonMode";
 import { LandCoverTotalsChart } from "@/components/RightSidebar/LandCoverTotalsChart";
@@ -25,6 +26,45 @@ function EmptyState() {
       <p className="max-w-[200px] text-xs leading-relaxed text-muted-foreground">
         Enable a data layer from the left panel to see charts, legend, and analysis here.
       </p>
+    </div>
+  );
+}
+
+/**
+ * Land cover tools (formerly the separate Climate view): year comparison, totals by class
+ * and the land accounts dashboard. Rendered only while the land cover layer is switched on.
+ */
+function CompareYearsCard() {
+  const rightSidebarExpanded = useUiStore((s) => s.rightSidebarExpanded);
+  return (
+    <div
+      className={cn(
+        "rounded-lg border border-border bg-muted/30 px-3 py-3",
+        rightSidebarExpanded && "rounded-xl border-border/50 bg-card/80 px-4 py-4 shadow-sm",
+      )}
+    >
+      <p className="mb-2 text-xs text-muted-foreground">
+        Compare years (swipe or delta heatmap)
+      </p>
+      <ComparisonMode />
+    </div>
+  );
+}
+
+function LandCoverTools({ showCompare = true }: { showCompare?: boolean }) {
+  const { active } = useLandCoverActive();
+  if (!active) return null;
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Land cover
+        </h3>
+        <div className="h-px flex-1 bg-border/60" />
+      </div>
+      {showCompare && <CompareYearsCard />}
+      <LandCoverTotalsChart />
+      <ClimateLayout />
     </div>
   );
 }
@@ -65,7 +105,10 @@ export function ContextPanelContent() {
             <div className="h-px flex-1 bg-border/60" />
           </div>
         )}
+        <ImpactModeCard />
+        <CompareYearsCard />
         <Stats />
+        <LandCoverTools showCompare={false} />
       </div>
     );
   }
@@ -79,27 +122,7 @@ export function ContextPanelContent() {
             Legend and opacity controls are on the map. Use the legend at the bottom-left to adjust layers.
           </p>
         </div>
-      </div>
-    );
-  }
-
-  if (context === "climate") {
-    return (
-      <div className="space-y-4">
-        <ImpactModeCard />
-        <div
-          className={cn(
-            "rounded-lg border border-border bg-muted/30 px-3 py-3",
-            rightSidebarExpanded && "rounded-xl border-border/50 bg-card/80 px-4 py-4 shadow-sm",
-          )}
-        >
-          <p className="mb-2 text-xs text-muted-foreground">
-            Compare years (swipe or delta heatmap)
-          </p>
-          <ComparisonMode />
-        </div>
-        <LandCoverTotalsChart />
-        <ClimateLayout />
+        <LandCoverTools />
       </div>
     );
   }

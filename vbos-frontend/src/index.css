@@ -624,3 +624,43 @@ html {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(6px);
 }
+
+/* ============================================================================
+   Appearance panel (store/appearance-store.ts sets these attributes on <html>)
+   ============================================================================ */
+
+/* Colour themes: override the brand colour; "drmis-blue" is the :root default above. */
+html[data-theme="ocean"]    { --brand: #006699; }
+html[data-theme="violet"]   { --brand: #7c3aed; }
+html[data-theme="emerald"]  { --brand: #059669; }
+html[data-theme="teal"]     { --brand: #0f766e; }
+html[data-theme="amber"]    { --brand: #c2410c; }
+html[data-theme="rose"]     { --brand: #e11d48; }
+html[data-theme="graphite"] { --brand: #334155; }
+/* Lighter tints for dark mode, where the brand colour sits on dark surfaces */
+html.dark[data-theme="ocean"]    { --brand: #4fb3d9; }
+html.dark[data-theme="violet"]   { --brand: #a78bfa; }
+html.dark[data-theme="emerald"]  { --brand: #34d399; }
+html.dark[data-theme="teal"]     { --brand: #2dd4bf; }
+html.dark[data-theme="amber"]    { --brand: #fb923c; }
+html.dark[data-theme="rose"]     { --brand: #fb7185; }
+html.dark[data-theme="graphite"] { --brand: #94a3b8; }
+
+html[data-theme]:not([data-theme="drmis-blue"]) {
+  --primary: var(--brand);
+  --ring: var(--brand);
+  --accent-interactive: var(--brand);
+  --accent-viz: var(--brand);
+  --chart-1: var(--brand);
+  --sidebar-primary: var(--brand);
+  --sidebar-ring: var(--brand);
+}
+
+/* Corners */
+html[data-corners="sharp"]   { --radius: 0.125rem; }
+html[data-corners="rounded"] { --radius: 0.75rem; }
+
+/* Text size: the interface is sized in rem, so scaling the root scales everything */
+html[data-font-size="small"]  { font-size: 87.5%; }
+html[data-font-size="large"]  { font-size: 112.5%; }
+html[data-font-size="xlarge"] { font-size: 125%; }

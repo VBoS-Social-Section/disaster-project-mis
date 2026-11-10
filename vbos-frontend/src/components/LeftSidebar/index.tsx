@@ -7,21 +7,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sidebar } from "../Sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClusters } from "@/hooks/useClusters";
 import { useLayerStore } from "@/store/layer-store";
-import { useScenario } from "@/hooks/useScenario";
 import { useUiStore } from "@/store/ui-store";
 import { SelectedClusterPanel } from "./SelectedClusterPanel";
-import { DriversSection } from "./DriversSection";
+import { RasterSection } from "./RasterSection";
 import { DisasterSection } from "./DisasterSection";
 import { CycloneNameBanner } from "./CycloneNameBanner";
 import { ActiveLayersList } from "./ActiveLayersList";
 import { DISASTER_VIEW_TYPES } from "@/store/ui-store";
 
 const LeftSidebar = () => {
-  const scenario = useScenario();
   const rightSidebarExpanded = useUiStore((s) => s.rightSidebarExpanded);
   const {
     data: clusters,
@@ -40,17 +39,6 @@ const LeftSidebar = () => {
       setSelectedCluster(clusters[0].name);
     }
   }, [clusters, selectedCluster, setSelectedCluster]);
-
-  const collapsedIcons = (onExpand: () => void) => (
-    <button
-      type="button"
-      onClick={onExpand}
-      className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      aria-label="Open data layers"
-    >
-      <LuLayers className="size-4" />
-    </button>
-  );
 
   if (clustersError) {
     return (
@@ -80,16 +68,9 @@ const LeftSidebar = () => {
     );
   }
 
-  return (
-    <Sidebar
-      direction="left"
-      title="Data Layers"
-      badgeCount={activeLayerCount}
-      subtitle={scenario.uiConfig.sidebarLayout === "climate" ? "Baseline datasets only" : undefined}
-      collapsedIcons={collapsedIcons}
-      transparent
-      collapseWhen={rightSidebarExpanded}
-    >
+  // Shared by the expanded sidebar and the collapsed-bar flyout (never mounted together)
+  const layersBody = (
+    <>
       <div className="border-b border-border px-4 py-3 md:px-5 md:py-3">
         <Select value={selectedCluster} onValueChange={setSelectedCluster}>
           <SelectTrigger className="w-full rounded-md border-border bg-muted/50">
@@ -109,9 +90,8 @@ const LeftSidebar = () => {
         {selectedCluster ? (
           <>
             <SelectedClusterPanel clusterName={selectedCluster} />
-            {scenario.uiConfig.sidebarLayout === "climate" && <DriversSection />}
-            {scenario.uiConfig.sidebarLayout !== "climate" &&
-              selectedViewType &&
+            <RasterSection clusterName={selectedCluster} />
+            {selectedViewType &&
               DISASTER_VIEW_TYPES.includes(selectedViewType) && <DisasterSection />}
           </>
         ) : (
@@ -132,6 +112,56 @@ const LeftSidebar = () => {
           <span>User manual</span>
         </a>
       </div>
+    </>
+  );
+
+  // Collapsed bar: the layers icon opens the same content in a floating card over the map,
+  // so the sidebar can stay collapsed. Closes on outside click or Esc.
+  const collapsedIcons = () => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="relative flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground data-[state=open]:bg-muted data-[state=open]:text-foreground"
+          aria-label="Show data layers"
+          title="Data layers"
+        >
+          <LuLayers className="size-4" />
+          {activeLayerCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold leading-none text-primary-foreground">
+              {activeLayerCount}
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        side="right"
+        align="start"
+        sideOffset={12}
+        collisionPadding={8}
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        className="flex max-h-[calc(100vh-5rem)] w-80 flex-col overflow-hidden rounded-xl p-0"
+      >
+        <div className="flex h-10 shrink-0 items-center border-b border-border bg-muted px-4">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Data Layers
+          </span>
+        </div>
+        {layersBody}
+      </PopoverContent>
+    </Popover>
+  );
+
+  return (
+    <Sidebar
+      direction="left"
+      title="Data Layers"
+      badgeCount={activeLayerCount}
+      collapsedIcons={collapsedIcons}
+      transparent
+      collapseWhen={rightSidebarExpanded}
+    >
+      {layersBody}
     </Sidebar>
   );
 };

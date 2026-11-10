@@ -36,6 +36,22 @@ import { TabularDeltaOverlay } from "./TabularDeltaOverlay";
 import { LandCoverLegend } from "./LandCoverLegend";
 import { CycloneNameMapOverlay } from "./CycloneNameMapOverlay";
 
+// Browsers leave hairline gaps between map tiles when the page is scaled (e.g. Windows
+// display scaling at 125%). Leaflet's known workaround: draw every tile 1px larger so
+// neighbouring tiles overlap and no background shows through.
+type GridLayerInternals = {
+  _initTile: (this: L.GridLayer, tile: HTMLElement) => void;
+};
+const gridLayerProto = L.GridLayer.prototype as unknown as GridLayerInternals;
+const originalInitTile = gridLayerProto._initTile;
+gridLayerProto._initTile = function (this: L.GridLayer, tile: HTMLElement) {
+  originalInitTile.call(this, tile);
+  const size = this.getTileSize();
+  tile.style.width = `${size.x + 1}px`;
+  tile.style.height = `${size.y + 1}px`;
+};
+
+
 export interface PopupInfo {
   latitude: number;
   longitude: number;
@@ -75,6 +91,13 @@ function MapReady({
     onMapReady(map);
     return () => onMapReady(null);
   }, [map, onMapReady]);
+  // Leaflet only re-measures on window resize; sidebars opening or collapsing change the
+  // map's width without one, so watch the container and tell Leaflet to fill it.
+  useEffect(() => {
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(map.getContainer());
+    return () => observer.disconnect();
+  }, [map]);
   return <>{children}</>;
 }
 
@@ -235,7 +258,20 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
         {...("subdomains" in currentStyle && {
           subdomains: [...(currentStyle.subdomains as readonly string[])],
         })}
+        {...("maxNativeZoom" in currentStyle && {
+          maxNativeZoom: currentStyle.maxNativeZoom,
+        })}
       />
+      {"labelsUrl" in currentStyle && (
+        <TileLayer
+          key={`${currentStyle.id}-labels`}
+          url={currentStyle.labelsUrl}
+          zIndex={2}
+          {...("maxNativeZoom" in currentStyle && {
+            maxNativeZoom: currentStyle.maxNativeZoom,
+          })}
+        />
+      )}
       <MapReady onMapReady={setMap}>
         <MapEventHandler
           onMove={onMove}

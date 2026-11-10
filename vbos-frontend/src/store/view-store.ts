@@ -16,7 +16,7 @@ const VIEW_PARAM = "view";
 
 /** Maps URL view param to scenarioId. Only disaster/climate in URL for now. */
 function viewParamToScenario(view: string | null): ScenarioId {
-  if (view === "climate") return "climate";
+  // Climate is merged into the single dashboard; old ?view=climate links open it.
   if (view === "forecast" || view === "risk" || view === "planning") return view;
   return "disaster";
 }

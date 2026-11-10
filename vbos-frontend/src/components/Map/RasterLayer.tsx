@@ -5,7 +5,6 @@ import { useLayerStore } from "@/store/layer-store";
 import { useOpacityStore } from "@/store/opacity-store";
 import { useFocusStore } from "@/store/focus-store";
 import { useDateStore } from "@/store/date-store";
-import { useScenario } from "@/hooks/useScenario";
 import { useComparisonStore } from "@/store/comparison-store";
 import { useCheckRasterLayer } from "@/hooks/useCheckRasterLayer";
 import { useLandCoverRaster } from "@/hooks/useLandCoverRaster";
@@ -14,11 +13,9 @@ import { getLandCoverColormap, LAND_COVER_COLORMAP } from "../colors";
 
 export function RasterLayers() {
   const { layers } = useLayerStore();
-  const scenario = useScenario();
   const { comparisonMode } = useComparisonStore();
   const hasRaster = layers.split(",").some((l) => l.startsWith("r"));
-  const hideForRasterComparison =
-    scenario.uiConfig.showComparison && comparisonMode && hasRaster;
+  const hideForRasterComparison = comparisonMode && hasRaster;
 
   const rasterLayers = layers
     .split(",")

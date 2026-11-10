@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ColorModeButton } from "@/components/ui/color-mode";
+import { AppearanceButton } from "@/components/AppearancePanel";
 import {
   LuCircleHelp,
   LuLockKeyhole,
@@ -31,12 +32,8 @@ import {
   LuUser,
   LuCopy,
   LuCheck,
-  LuShield,
-  LuLeaf,
 } from "react-icons/lu";
 import { useAuthStore } from "@/store/auth-store";
-import { useViewStore } from "@/store/view-store";
-import { useComparisonStore } from "@/store/comparison-store";
 import { useLockStore } from "@/store/lock-store";
 import { ProfileSettingsDialog } from "@/components/ProfileSettingsDialog";
 import { toast } from "@/utils/toast";
@@ -47,8 +44,6 @@ export const Header = () => {
   const [profileDialogIsOpen, setProfileDialogIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, clearAuth } = useAuthStore();
-  const { scenarioId, setScenario } = useViewStore();
-  const setComparisonMode = useComparisonStore((s) => s.setComparisonMode);
   const { lock, pinHash, resetLockOnLogout } = useLockStore();
 
   const handleLogout = () => {
@@ -95,52 +90,10 @@ export const Header = () => {
         </div>
       </div>
 
-      {/* Center: View mode toggle (Disaster vs Climate) */}
-      <div
-        className="flex shrink-0 items-center gap-1 rounded-md border border-border bg-muted/50 p-0.5"
-        role="tablist"
-        aria-label="View mode"
-      >
-        <Button
-          variant={scenarioId === "disaster" ? "secondary" : "ghost"}
-          size="sm"
-          className={cn(
-            "h-7 gap-1.5 px-2.5 text-xs transition-all duration-200",
-            scenarioId === "disaster" && "ring-1 ring-primary/30",
-          )}
-          onClick={() => {
-            setScenario("disaster");
-            setComparisonMode(false);
-          }}
-          title="Disaster & preparedness"
-          role="tab"
-          aria-selected={scenarioId === "disaster"}
-          aria-current={scenarioId === "disaster" ? "page" : undefined}
-        >
-          <LuShield className="size-3.5" />
-          Disaster
-        </Button>
-        <Button
-          variant={scenarioId === "climate" ? "secondary" : "ghost"}
-          size="sm"
-          className={cn(
-            "h-7 gap-1.5 px-2.5 text-xs transition-all duration-200",
-            scenarioId === "climate" && "ring-1 ring-primary/30",
-          )}
-          onClick={() => setScenario("climate")}
-          title="Climate change: land cover, raster maps, year comparison"
-          role="tab"
-          aria-selected={scenarioId === "climate"}
-          aria-current={scenarioId === "climate" ? "page" : undefined}
-        >
-          <LuLeaf className="size-3.5" />
-          Climate
-        </Button>
-      </div>
-
       {/* Right: Theme, Avatar */}
       <div className="ml-auto flex shrink-0 items-center gap-1">
         <ColorModeButton aria-label="Toggle light/dark theme" />
+        <AppearanceButton />
 
         <DropdownMenu>
           <DropdownMenuTrigger

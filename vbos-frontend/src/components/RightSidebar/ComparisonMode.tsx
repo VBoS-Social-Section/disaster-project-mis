@@ -1,6 +1,6 @@
 /**
  * Toggle and year selectors for side-by-side comparison mode.
- * In Climate mode, defaults to 2020/2023 for land cover comparison.
+ * While the land cover layer is on, defaults to 2020/2023 for land cover comparison.
  */
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -12,13 +12,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useComparisonStore } from "@/store/comparison-store";
-import { useScenario } from "@/hooks/useScenario";
+import { useLandCoverActive } from "@/hooks/useLandCoverActive";
 import { LuGitCompare, LuSlidersHorizontal, LuFlame } from "react-icons/lu";
 
 const LAND_COVER_YEARS = ["2020", "2023"];
 
 export function ComparisonMode() {
-  const scenario = useScenario();
+  const { active: landCoverActive } = useLandCoverActive();
   const {
     comparisonMode,
     comparisonView,
@@ -34,13 +34,13 @@ export function ComparisonMode() {
 
   const handleComparisonToggle = (enabled: boolean) => {
     setComparisonMode(enabled);
-    if (enabled && scenario.uiConfig.showComparison) {
+    if (enabled && landCoverActive) {
       setYearLeft("2020");
       setYearRight("2023");
     }
   };
 
-  const years = scenario.uiConfig.showComparison
+  const years = landCoverActive
       ? LAND_COVER_YEARS
       : Array.from(
           { length: maxYear - minYear + 1 },
