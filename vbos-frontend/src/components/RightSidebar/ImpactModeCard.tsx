@@ -1,7 +1,6 @@
 /**
  * Impact Mode: Estimated affected population card.
  */
-import { useScenario } from "@/hooks/useScenario";
 import { useImpactModeStore } from "@/store/impact-mode-store";
 import { useEstimatedAffectedPopulation } from "@/hooks/useEstimatedAffectedPopulation";
 import { Switch } from "@/components/ui/switch";
@@ -10,11 +9,8 @@ import { LuUsers, LuZap } from "react-icons/lu";
 import { formatCompactNumber } from "@/utils/formatCharts";
 
 export function ImpactModeCard() {
-  const scenario = useScenario();
   const { enabled, setEnabled } = useImpactModeStore();
   const result = useEstimatedAffectedPopulation();
-
-  if (scenario.id !== "climate") return null;
 
   const canCompute = result !== null;
   const showCard = enabled && canCompute;

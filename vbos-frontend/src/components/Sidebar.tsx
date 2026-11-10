@@ -111,7 +111,7 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
           !sideBarVisible && iconMode && "md:w-12",
           !sideBarVisible && !iconMode && "md:w-0",
           sideBarVisible && isLeftSidebar && "md:w-80",
-          sideBarVisible && !isLeftSidebar && "md:min-w-0 md:w-full",
+          sideBarVisible && !isLeftSidebar && (isOverlay ? "md:w-full" : "md:w-[28rem]"),
         )}
       >
         {(sideBarVisible || (iconMode && !isMobile && !sideBarVisible)) && (
@@ -184,13 +184,13 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
                     )}
                     {!isMobile && !(!isLeftSidebar && rightSidebarExpanded) && (
                       <AppTooltip
-                        content={iconMode ? "Expand to full panel" : "Collapse to icon bar"}
+                        content={sideBarVisible ? "Collapse to icon bar" : "Expand to full panel"}
                         positioning={{ placement: "bottom" }}
                       >
                         <Button
                           variant="ghost"
                           size="icon-xs"
-                          aria-label={iconMode ? "Expand panel" : "Collapse to icon bar"}
+                          aria-label={sideBarVisible ? "Collapse to icon bar" : "Expand panel"}
                           onClick={() => {
                             if (sideBarVisible) {
                               setIconMode(true);

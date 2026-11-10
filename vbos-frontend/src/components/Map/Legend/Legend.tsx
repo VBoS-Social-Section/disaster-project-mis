@@ -5,7 +5,6 @@ import { Tooltip } from "@/components/ui";
 import { useLayerStore } from "@/store/layer-store";
 import { useOpacityStore } from "@/store/opacity-store";
 import { useComparisonStore } from "@/store/comparison-store";
-import { useScenario } from "@/hooks/useScenario";
 import { useLegendLayers } from "@/components/Map/Legend/hooks/useLegendLayers";
 import { useLandCoverRaster } from "@/hooks/useLandCoverRaster";
 import { LayerEntry } from "./LayerEntry";
@@ -23,7 +22,6 @@ export function Legend({ embedded = false }: LegendProps = {}) {
   const { switchLayer, reorderLayers, layers } = useLayerStore();
   const { setOpacity } = useOpacityStore();
   const { comparisonMode, comparisonView, yearLeft, yearRight } = useComparisonStore();
-  const scenario = useScenario();
   const legendLayers = useLegendLayers();
   const landCover = useLandCoverRaster();
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -31,7 +29,8 @@ export function Legend({ embedded = false }: LegendProps = {}) {
   const [collapsed, setCollapsed] = useState(false);
 
   const hasLandCoverRaster = landCover && layers.split(",").includes(landCover.layerId);
-  const hideWhenLandCoverDominates = scenario.id === "climate" && hasLandCoverRaster;
+  // Land cover has its own class legend; hide this one only when nothing else is on the map
+  const hideWhenLandCoverDominates = hasLandCoverRaster && legendLayers.length === 1;
 
   const handleDragStart = useCallback((index: number) => {
     setDraggedIndex(index);

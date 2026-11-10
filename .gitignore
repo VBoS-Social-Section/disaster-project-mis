@@ -2,3 +2,7 @@
 Land_Accounts*.xlsx
 *.tar
 vbos-backend/59K_*.tif
+
+# Deployment secrets and build caches
+deploy/vm/.env
+vbos-frontend/.pnpm-store/

@@ -29,7 +29,8 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
   disaster: {
     id: "disaster",
     label: "Disaster",
-    allowedLayerTypes: ["tabular", "vector"],
+    // Single dashboard: land cover and other rasters are enabled alongside disaster data
+    allowedLayerTypes: ["tabular", "vector", "raster"],
     allowedClusterTypes: [],
     uiConfig: {
       showStats: true,
@@ -83,8 +84,8 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
   },
 };
 
-/** Scenarios shown in the header toggle (currently Disaster + Climate). */
-export const ACTIVE_SCENARIOS: ScenarioId[] = ["disaster", "climate"];
+/** Climate was merged into the single (Disaster) dashboard, so there is no header toggle. */
+export const ACTIVE_SCENARIOS: ScenarioId[] = ["disaster"];
 
 export function getScenario(id: ScenarioId): Scenario {
   return SCENARIOS[id];

@@ -1,11 +1,10 @@
 /**
  * Displays datasets for a chosen cluster. Shown below the cluster dropdown.
- * In Climate mode, shows Land Cover | Datasets tabs.
+ * Raster layers (land cover) are listed once in RasterSection, not per cluster.
  */
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Accordion } from "@/components/ui/accordion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatasetSection } from "./DatasetSection";
 import { useClusterDatasets } from "@/hooks/useClusters";
 import { useScenario } from "@/hooks/useScenario";
@@ -17,7 +16,6 @@ type SelectedClusterPanelProps = {
 
 export function SelectedClusterPanel({ clusterName }: SelectedClusterPanelProps) {
   const scenario = useScenario();
-  const [layerTab, setLayerTab] = useState<"land_cover" | "datasets">("land_cover");
   const { data: clusterDatasets, isPending, error } = useClusterDatasets(
     clusterName,
     { enabled: true },
@@ -31,23 +29,11 @@ export function SelectedClusterPanel({ clusterName }: SelectedClusterPanelProps)
         ...tg,
         datasets: tg.datasets
           .filter((d) => isLayerAllowed(scenario, d.dataType))
-          .filter((d) => d.dataType !== "tabular"),
+          .filter((d) => d.dataType !== "tabular" && d.dataType !== "raster"),
       }))
       .filter((tg) => tg.datasets.length > 0);
     return result;
   }, [clusterDatasets, scenario]);
-
-  const isClimate = scenario.uiConfig.sidebarLayout === "climate";
-  const rasterGroups = useMemo(
-    () => filteredTypeGroups.filter((tg) => tg.datasets.some((d) => d.dataType === "raster")),
-    [filteredTypeGroups],
-  );
-  const otherGroups = useMemo(
-    () => filteredTypeGroups.filter((tg) => !tg.datasets.some((d) => d.dataType === "raster")),
-    [filteredTypeGroups],
-  );
-  const displayGroups =
-    isClimate && layerTab === "land_cover" ? rasterGroups : isClimate && layerTab === "datasets" ? otherGroups : filteredTypeGroups;
 
   return (
     <div className="rounded-lg border border-border bg-card shadow-sm">
@@ -74,24 +60,8 @@ export function SelectedClusterPanel({ clusterName }: SelectedClusterPanelProps)
           </p>
         ) : (
           <>
-            {isClimate && (
-              <Tabs
-                value={layerTab}
-                onValueChange={(v) => setLayerTab(v as "land_cover" | "datasets")}
-                className="mb-3"
-              >
-                <TabsList className="h-8 w-full bg-muted/50 p-0.5">
-                  <TabsTrigger value="land_cover" className="flex-1 text-xs">
-                    Land cover
-                  </TabsTrigger>
-                  <TabsTrigger value="datasets" className="flex-1 text-xs">
-                    Datasets
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            )}
             <Accordion type="multiple" defaultValue={filteredTypeGroups?.map((t) => t.type) ?? []} className="space-y-1">
-            {displayGroups?.map((item) => (
+            {filteredTypeGroups?.map((item) => (
               <DatasetSection
                 key={item.type}
                 title={item.type}

@@ -84,9 +84,12 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "80:80"  # App at http://10.252.0.158/ (use 8080:80 if port 80 is in use)
+      - "80:80"
+      - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx-https.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
       - ../../vbos-frontend/dist:/usr/share/nginx/html:ro
       - static_volume:/static:ro
     depends_on:

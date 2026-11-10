@@ -1,11 +1,10 @@
 /**
- * Dedicated legend for land cover raster in Climate mode.
+ * Dedicated legend for the land cover raster (shown while that layer is on).
  * Shows 9 classes with color swatch, name, and short description.
  * Click a class to toggle its visibility on the map.
  * Includes opacity control when land cover raster is active.
  */
-import { useScenario } from "@/hooks/useScenario";
-import { useLayerStore } from "@/store/layer-store";
+import { useLandCoverActive } from "@/hooks/useLandCoverActive";
 import { useOpacityStore } from "@/store/opacity-store";
 import { useLandCoverFilterStore } from "@/store/land-cover-filter-store";
 import { LAND_COVER_COLORS } from "../colors";
@@ -27,18 +26,15 @@ const LAND_COVER_DESCRIPTIONS: Record<string, string> = {
 };
 
 export function LandCoverLegend() {
-  const scenario = useScenario();
-  const { layers } = useLayerStore();
+  const { active, layerId: rasterLayerId } = useLandCoverActive();
   const { getOpacity, setOpacity } = useOpacityStore();
   const { isVisible, toggleClass } = useLandCoverFilterStore();
   const { colorMode } = useColorMode();
 
-  const rasterLayerId = layers.split(",").find((l) => l.startsWith("r"));
-  const hasRasterLayer = !!rasterLayerId;
-  if (scenario.uiConfig.sidebarLayout !== "climate" || !hasRasterLayer) return null;
+  if (!active || !rasterLayerId) return null;
 
   const palette = LAND_COVER_COLORS[colorMode === "dark" ? "dark" : "light"];
-  const opacity = rasterLayerId ? (getOpacity(rasterLayerId) ?? 100) : 100;
+  const opacity = getOpacity(rasterLayerId) ?? 100;
 
   return (
     <div

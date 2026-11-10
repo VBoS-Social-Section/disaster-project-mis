@@ -12,8 +12,7 @@ import { useColorMode } from "@/components/ui/color-mode";
 import { useDeferredArea } from "@/hooks/useDeferredArea";
 import { useDateStore } from "@/store/date-store";
 import { useHighchartsTheme } from "@/hooks/useHighchartsTheme";
-import { useLayerStore } from "@/store/layer-store";
-import { useScenario } from "@/hooks/useScenario";
+import { useLandCoverActive } from "@/hooks/useLandCoverActive";
 
 const LAND_COVER_COLORMAP_ORDER = LAND_COVER_TYPES;
 
@@ -22,11 +21,7 @@ export function LandCoverTotalsChart() {
   const { province } = useDeferredArea();
   const { year } = useDateStore();
   const { colorMode } = useColorMode();
-  const { layers } = useLayerStore();
-  const scenario = useScenario();
-
-  const hasRasterLayer = layers.split(",").some((l) => l.startsWith("r"));
-  const isClimate = scenario.uiConfig.sidebarLayout === "climate";
+  const { active: landCoverActive } = useLandCoverActive();
 
   const { data, total } = useMemo(() => {
     const provinces = province ? [province] : [...PROVINCES];
@@ -106,7 +101,7 @@ export function LandCoverTotalsChart() {
     });
   }, [theme, data, palette]);
 
-  if (!isClimate || !hasRasterLayer) return null;
+  if (!landCoverActive) return null;
 
   return (
     <Card className="overflow-hidden border-border/60 bg-card/50">
