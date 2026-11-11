@@ -1,3 +1,4 @@
+import { startTransition } from "react";
 import { GeoJSON } from "react-leaflet";
 import { useUiStore } from "@/store/ui-store";
 import { featureCollection } from "@turf/helpers";
@@ -16,6 +17,7 @@ import { abbreviateUnit } from "@/utils/abbreviateUnit";
 import { useColorMode } from "../ui/color-mode";
 import type { AreaCouncilGeoJSON, ProvincesGeoJSON } from "@/types/data";
 import type { PopupInfo } from "./index";
+import { toProvinceName } from "@/config/provinces";
 
 type AdminAreaMapLayersProps = {
   setPopupInfo: (info: PopupInfo | null) => void;
@@ -101,11 +103,15 @@ export function AdminAreaMapLayers({
     const show =
       provinces.length === 0 ||
       (name && provinces.some((p) => name.toUpperCase() === p.toUpperCase()));
+    const selected =
+      !!name && provinces.some((p) => name.toUpperCase() === p.toUpperCase());
     return {
       color: mapPalette.provinceBorder,
       weight: acList.length > 0 ? 1 : 2,
       opacity: acList.length > 0 ? 0.5 : show ? 1 : 0,
-      fill: false,
+      // An invisible fill makes the whole province clickable (see onEachProvinceFeature).
+      // Selected provinces get no fill so the area councils underneath stay hoverable.
+      fill: !selected,
       fillOpacity: 0,
     };
   };
@@ -209,6 +215,44 @@ export function AdminAreaMapLayers({
     layer.on(hoverHandlers);
   };
 
+  // Clicking a province selects it, the same as picking it in the Province dropdown.
+  // Ctrl/Cmd/Shift-click adds it to the current selection instead of replacing it.
+  // Handlers are bound once per feature, so they read the current selection from the store.
+  const onEachProvinceFeature = (feature: GeoJSON.Feature, layer: L.Layer) => {
+    const provinceName = toProvinceName(feature.properties?.name);
+    (layer as L.Path).bindTooltip(
+      () => {
+        const label = `<strong>${provinceName ?? feature.properties?.name ?? "Area"}</strong>`;
+        const isSelected =
+          !!provinceName && useAreaStore.getState().provinces.includes(provinceName);
+        return provinceName && !isSelected ? `${label}<br/>Click to select` : label;
+      },
+      {
+        permanent: false,
+        direction: "top",
+        className: "admin-area-tooltip",
+        offset: [0, -4],
+        opacity: 0.95,
+        interactive: false,
+        sticky: true,
+      },
+    );
+    layer.on({
+      ...hoverHandlers,
+      click: (e: L.LeafletMouseEvent) => {
+        if (!provinceName) return;
+        const { provinces: current, setProvinces } = useAreaStore.getState();
+        if (current.includes(provinceName)) return;
+        L.DomEvent.stopPropagation(e);
+        const { ctrlKey, metaKey, shiftKey } = e.originalEvent;
+        const add = ctrlKey || metaKey || shiftKey;
+        startTransition(() =>
+          setProvinces(add ? [...current, provinceName] : [provinceName]),
+        );
+      },
+    });
+  };
+
   return (
     <>
       {acGeoJSON && (
@@ -224,7 +268,7 @@ export function AdminAreaMapLayers({
           key="provinces"
           data={provincesGeojson}
           style={getProvinceStyle}
-          onEachFeature={(feat, layer) => onEachBoundaryFeature(feat, layer)}
+          onEachFeature={(feat, layer) => onEachProvinceFeature(feat, layer)}
         />
       )}
       {!comparisonMode &&

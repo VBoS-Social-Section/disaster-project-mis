@@ -34,6 +34,34 @@ export interface BaseDataset {
   source_layer?: string;
   /** Name of cyclone/event (e.g. Cyclone Lola). Shown when layer is active. */
   cyclone_name?: string | null;
+  /** Id of the disaster event this dataset belongs to; null/undefined for baseline data. */
+  event?: number | null;
+}
+
+export type HazardType =
+  | "cyclone"
+  | "volcano"
+  | "flood"
+  | "earthquake"
+  | "tsunami"
+  | "landslide"
+  | "drought"
+  | "wildfire";
+
+/** A disaster (dated) or a modelled scenario (undated, offered in every year). */
+export interface DisasterEvent {
+  id: number;
+  name: string;
+  hazard_type: HazardType;
+  hazard_type_label: string;
+  start_date: string | null;
+  end_date: string | null;
+  year: number | null;
+  is_scenario: boolean;
+  description: string;
+  source: string;
+  /** Hazard footprint layers, ids in layer-store format (e.g. "p12", "v3"). */
+  layers: { id: string; name: string }[];
 }
 
 export interface TabularDataset extends BaseDataset {

@@ -82,7 +82,7 @@ export function AppearanceButton() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label="Appearance" title="Appearance">
+        <Button variant="ghost" size="icon-sm" aria-label="Appearance: theme, light or dark mode, text size" title="Appearance: theme, light/dark mode, text size">
           <LuPalette className="size-5 icon-interactive" />
         </Button>
       </SheetTrigger>

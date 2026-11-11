@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DatasetSection } from "./DatasetSection";
 import { useClusterDatasets } from "@/hooks/useClusters";
 import { useScenario } from "@/hooks/useScenario";
+import { isDatasetInEvent } from "@/hooks/useEvents";
+import { useEventStore } from "@/store/event-store";
 import { isLayerAllowed, isClusterTypeAllowed } from "@/config/scenarios";
 
 type SelectedClusterPanelProps = {
@@ -16,6 +18,7 @@ type SelectedClusterPanelProps = {
 
 export function SelectedClusterPanel({ clusterName }: SelectedClusterPanelProps) {
   const scenario = useScenario();
+  const eventId = useEventStore((s) => s.eventId);
   const { data: clusterDatasets, isPending, error } = useClusterDatasets(
     clusterName,
     { enabled: true },
@@ -29,11 +32,12 @@ export function SelectedClusterPanel({ clusterName }: SelectedClusterPanelProps)
         ...tg,
         datasets: tg.datasets
           .filter((d) => isLayerAllowed(scenario, d.dataType))
-          .filter((d) => d.dataType !== "tabular" && d.dataType !== "raster"),
+          .filter((d) => d.dataType !== "tabular" && d.dataType !== "raster")
+          .filter((d) => isDatasetInEvent(d, eventId)),
       }))
       .filter((tg) => tg.datasets.length > 0);
     return result;
-  }, [clusterDatasets, scenario]);
+  }, [clusterDatasets, scenario, eventId]);
 
   return (
     <div className="rounded-lg border border-border bg-card shadow-sm">
@@ -56,7 +60,7 @@ export function SelectedClusterPanel({ clusterName }: SelectedClusterPanelProps)
           </div>
         ) : filteredTypeGroups?.length === 0 ? (
           <p className="px-2 py-4 text-xs text-muted-foreground">
-            No map layers in this cluster. Tabular data appears in the right panel.
+            No map layers in this sector. Its figures appear in the right panel.
           </p>
         ) : (
           <>

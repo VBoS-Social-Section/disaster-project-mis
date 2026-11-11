@@ -10,6 +10,8 @@ import { DatasetSection } from "./DatasetSection";
 import { useClusterDatasets } from "@/hooks/useClusters";
 import { useActiveLayerCount } from "@/hooks/useActiveLayerCount";
 import { useScenario } from "@/hooks/useScenario";
+import { isDatasetInEvent } from "@/hooks/useEvents";
+import { useEventStore } from "@/store/event-store";
 import { isLayerAllowed, isClusterTypeAllowed } from "@/config/scenarios";
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
@@ -24,6 +26,7 @@ type ClusterProps = {
 const Cluster = ({ name, id, isExpanded, searchQuery = "" }: ClusterProps) => {
   const isSearching = !!searchQuery.trim();
   const scenario = useScenario();
+  const eventId = useEventStore((s) => s.eventId);
   const { data: clusterDatasets, isPending, error } = useClusterDatasets(name, {
     enabled: isExpanded || isSearching,
   });
@@ -43,7 +46,8 @@ const Cluster = ({ name, id, isExpanded, searchQuery = "" }: ClusterProps) => {
           ...tg,
           datasets: tg.datasets
             .filter((d) => isLayerAllowed(scenario, d.dataType))
-            .filter((d) => d.dataType !== "tabular" && d.dataType !== "raster"),
+            .filter((d) => d.dataType !== "tabular" && d.dataType !== "raster")
+          .filter((d) => isDatasetInEvent(d, eventId)),
         }))
         .filter((tg) => tg.datasets.length > 0);
     }
@@ -62,7 +66,7 @@ const Cluster = ({ name, id, isExpanded, searchQuery = "" }: ClusterProps) => {
         .filter((tg) => tg.datasets.length > 0);
     }
     return result;
-  }, [clusterDatasets, searchQuery, scenario]);
+  }, [clusterDatasets, searchQuery, scenario, eventId]);
 
   const activeLayerCount = useActiveLayerCount(allDatasets);
 

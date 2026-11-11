@@ -11,6 +11,7 @@ urlpatterns = [
         name="pmtiles-serve",
     ),
     path("cluster/", views.ClusterListView.as_view(), name="cluster-list"),
+    path("events/", views.DisasterEventListView.as_view(), name="event-list"),
     path(
         "datasets/",
         views.ClusterDatasetsView.as_view(),

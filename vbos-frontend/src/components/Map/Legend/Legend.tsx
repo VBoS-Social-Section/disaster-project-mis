@@ -65,7 +65,7 @@ export function Legend({ embedded = false }: LegendProps = {}) {
       role="list"
     >
       <div className="flex items-center justify-between gap-1 border-b border-border px-2 py-1.5">
-        <h2 className="text-xs font-semibold">Legend</h2>
+        <h2 className="text-sm font-semibold">Legend</h2>
         <Button
           variant="ghost"
           size="icon-xs"

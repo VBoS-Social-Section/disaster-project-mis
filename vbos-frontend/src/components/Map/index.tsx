@@ -7,7 +7,9 @@ import {
   useState,
 } from "react";
 import {
+  AttributionControl,
   MapContainer,
+  ScaleControl,
   TileLayer,
   useMap,
   useMapEvents,
@@ -17,7 +19,7 @@ import "leaflet/dist/leaflet.css";
 import type { Feature } from "geojson";
 import { bbox } from "@turf/bbox";
 import { featureCollection } from "@turf/helpers";
-import { useMapStore, BASEMAP_STYLES } from "@/store/map-store";
+import { useMapStore, BASEMAP_STYLES, VANUATU_BOUNDS } from "@/store/map-store";
 import { useAreaStore } from "@/store/area-store";
 import useProvinces from "@/hooks/useProvinces";
 import { useColorMode } from "@/components/ui/color-mode";
@@ -35,10 +37,13 @@ import { RasterComparisonOverlay } from "./RasterComparisonOverlay";
 import { TabularDeltaOverlay } from "./TabularDeltaOverlay";
 import { LandCoverLegend } from "./LandCoverLegend";
 import { CycloneNameMapOverlay } from "./CycloneNameMapOverlay";
+import { PlaceLabels } from "./PlaceLabels";
 
 // Browsers leave hairline gaps between map tiles when the page is scaled (e.g. Windows
 // display scaling at 125%). Leaflet's known workaround: draw every tile 1px larger so
-// neighbouring tiles overlap and no background shows through.
+// neighbouring tiles overlap and no background shows through. This relies on tiles using
+// normal blending (set in index.css): Leaflet's default plus-lighter blend would brighten
+// the overlapping strip into a visible grid line.
 type GridLayerInternals = {
   _initTile: (this: L.GridLayer, tile: HTMLElement) => void;
 };
@@ -208,14 +213,14 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
       map.fitBounds(bounds, { animate: true });
     };
 
-    const VANUATU_BOUNDS: L.LatLngBoundsExpression = [
-      [-20.50641, -194.18335] as L.LatLngTuple,
-      [-12.84665, -189.9646] as L.LatLngTuple,
+    const nationalBounds: L.LatLngBoundsExpression = [
+      [VANUATU_BOUNDS.south, VANUATU_BOUNDS.west] as L.LatLngTuple,
+      [VANUATU_BOUNDS.north, VANUATU_BOUNDS.east] as L.LatLngTuple,
     ];
 
     if (provinces.length === 0) {
       const id = requestAnimationFrame(() => {
-        map.fitBounds(VANUATU_BOUNDS, { animate: true });
+        map.fitBounds(nationalBounds, { animate: true });
       });
       return () => cancelAnimationFrame(id);
     }
@@ -272,12 +277,15 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
           })}
         />
       )}
+      <ScaleControl position="bottomright" imperial={false} maxWidth={120} />
+      <AttributionControl position="bottomright" prefix={false} />
       <MapReady onMapReady={setMap}>
         <MapEventHandler
           onMove={onMove}
           onMoveEnd={onMoveEnd}
           onClick={onClick}
         />
+        {"labelsUrl" in currentStyle && <PlaceLabels />}
         <AdminAreaMapLayers
           setPopupInfo={setPopupInfo}
           activeFeatureName={
@@ -294,7 +302,7 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
         <Legend />
         <CycloneNameMapOverlay />
         <MapControlsCluster map={mapRefAdapter} />
-        {popupInfo && <MapPopup {...popupInfo} />}
+        {popupInfo && <MapPopup {...popupInfo} onClose={() => setPopupInfo(null)} />}
       </MapReady>
     </MapContainer>
   );

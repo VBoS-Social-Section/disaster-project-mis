@@ -17,6 +17,8 @@ import { useLayerStore } from "@/store/layer-store";
 import { useUiStore } from "@/store/ui-store";
 import { useViewStore } from "@/store/view-store";
 import { useScenario } from "@/hooks/useScenario";
+import { isDatasetInEvent } from "@/hooks/useEvents";
+import { useEventStore } from "@/store/event-store";
 
 /** Shorter labels for tab buttons */
 const VIEW_TYPE_LABELS: Record<DatasetType, string> = {
@@ -45,6 +47,7 @@ export function TabularDatasetSelect() {
   const scenarioId = useViewStore((s) => s.scenarioId);
   const selectedCluster = useUiStore((s) => s.selectedCluster);
   const setSelectedViewType = useUiStore((s) => s.setSelectedViewType);
+  const eventId = useEventStore((s) => s.eventId);
 
   const currentTabularId = layers
     .split(",")
@@ -59,7 +62,10 @@ export function TabularDatasetSelect() {
     const fromCluster = allDatasets.filter(
       (d) =>
         d.dataType === "tabular" &&
-        clusterMatches(d.cluster, selectedCluster),
+        clusterMatches(d.cluster, selectedCluster) &&
+        // Damage, response and financial tables belong to an event and are only
+        // offered while that event is selected
+        isDatasetInEvent(d, eventId),
     );
     // Only include activeTabularMeta from another source when it's in the selected cluster
     // (e.g. Damage tab from same cluster). Never include when switching clusters — avoids
@@ -67,12 +73,13 @@ export function TabularDatasetSelect() {
     if (
       activeTabularMeta &&
       !fromCluster.some((d) => d.id === activeTabularMeta.id) &&
-      clusterMatches(activeTabularMeta.cluster, selectedCluster)
+      clusterMatches(activeTabularMeta.cluster, selectedCluster) &&
+      isDatasetInEvent(activeTabularMeta, eventId)
     ) {
       return [...fromCluster, activeTabularMeta];
     }
     return fromCluster;
-  }, [allDatasets, selectedCluster, activeTabularMeta]);
+  }, [allDatasets, selectedCluster, activeTabularMeta, eventId]);
 
   const datasetsByType = useMemo(() => {
     const map = new Map<DatasetType, typeof tabularDatasets>();
@@ -97,6 +104,13 @@ export function TabularDatasetSelect() {
     }
     const clusterChanged = prevClusterRef.current !== selectedCluster;
     prevClusterRef.current = selectedCluster;
+    // The active table belongs to an event that is no longer selected: fall back to the
+    // first table still on offer (switching replaces the active table)
+    const leftItsEvent = !!activeTabularMeta && !isDatasetInEvent(activeTabularMeta, eventId);
+    if (leftItsEvent) {
+      startTransition(() => switchLayer(`t${tabularDatasets[0].id}`));
+      return;
+    }
     if (!clusterChanged) return;
     const inCluster =
       currentDataset && clusterMatches(currentDataset.cluster, selectedCluster);
@@ -107,7 +121,7 @@ export function TabularDatasetSelect() {
       if (firstFromCluster)
         startTransition(() => switchLayer(`t${firstFromCluster.id}`));
     }
-  }, [selectedCluster, tabularDatasets, currentDataset, currentTabularId, switchLayer]);
+  }, [selectedCluster, tabularDatasets, currentDataset, currentTabularId, switchLayer, activeTabularMeta, eventId]);
 
   const typesWithData = VIEW_TYPE_ORDER.filter(
     (t) => (datasetsByType.get(t)?.length ?? 0) > 0,

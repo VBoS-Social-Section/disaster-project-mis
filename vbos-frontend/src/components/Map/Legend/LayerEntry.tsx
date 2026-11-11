@@ -52,7 +52,7 @@ export function LayerEntry(props: LayerEntryProps) {
     <>
       <div className="flex w-full flex-col items-start gap-2">
         <div className="flex w-full flex-shrink-0">
-          <p className="mr-auto line-clamp-1 text-sm font-medium">
+          <p className="mr-auto line-clamp-1 text-sm font-semibold leading-snug">
             {name}
           </p>
           <div className="flex shrink-0 gap-0">
@@ -93,7 +93,7 @@ export function LayerEntry(props: LayerEntryProps) {
           </div>
         </div>
         <div className="flex w-full min-w-[60px] flex-1 items-center gap-2">
-          <span className="shrink-0 text-[10px] text-muted-foreground">
+          <span className="shrink-0 text-xs text-muted-foreground">
             Opacity
           </span>
           <Slider
@@ -103,7 +103,7 @@ export function LayerEntry(props: LayerEntryProps) {
             max={100}
             className="min-w-[60px] flex-1"
           />
-          <span className="w-8 shrink-0 text-[10px] text-muted-foreground">
+          <span className="w-9 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
             {opacity}%
           </span>
         </div>
@@ -205,7 +205,7 @@ function VectorEntry(props: VectorLegendLayer) {
                 className="h-3 w-4 shrink-0 rounded-sm border border-border/60"
                 style={{ backgroundColor: c }}
               />
-              <span className="text-xs text-muted-foreground">{label}</span>
+              <span className="text-[13px] leading-tight text-foreground/80">{label}</span>
             </div>
           ))}
         </div>

@@ -23,6 +23,7 @@ from vbos.datasets.filters import (
 from .models import (
     AreaCouncil,
     Cluster,
+    DisasterEvent,
     PMTilesDataset,
     Province,
     RasterDataset,
@@ -39,6 +40,7 @@ from .pagination import (
 from .serializers import (
     AreaCouncilSerializer,
     ClusterSerializer,
+    DisasterEventSerializer,
     PMTilesDatasetSerializer,
     ProvinceSerializer,
     RasterDatasetSerializer,
@@ -141,9 +143,29 @@ class ClusterDatasetsView(APIView):
         })
 
 
+class DisasterEventListView(ListAPIView):
+    """All disaster events and scenarios, newest first. Optional ?year=YYYY keeps the
+    events that started in that year, plus every scenario (scenarios have no year)."""
+
+    serializer_class = DisasterEventSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = None
+
+    def get_queryset(self):
+        qs = DisasterEvent.objects.prefetch_related("pmtilesdatasets", "vectordatasets")
+        year = self.request.query_params.get("year")
+        if year and year.isdigit():
+            from django.db.models import Q
+
+            qs = qs.filter(Q(start_date__year=int(year)) | Q(is_scenario=True))
+        return qs
+
+
 @method_decorator(cache_page(60 * 15), name="dispatch")  # 15 min cache
 class ClusterListView(ListAPIView):
-    queryset = Cluster.objects.all().order_by("order")
+    # "Disaster" is not a sector: its layers are reached through the event picker
+    # (see DisasterEventListView), so it is left out of the sector list.
+    queryset = Cluster.objects.exclude(name__iexact="Disaster").order_by("order")
     serializer_class = ClusterSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination

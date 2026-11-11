@@ -7,6 +7,7 @@ import { useLayerStore } from "@/store/layer-store";
 import { useAreaStore } from "@/store/area-store";
 import { getDatasetData, getPmtilesIntensity } from "@/api/getDatasets";
 import { getHighestIntensity } from "@/config/disaster";
+import { useSelectedEvent } from "@/hooks/useEvents";
 
 export type IntensityRow = {
   areaCouncil: string;
@@ -47,6 +48,7 @@ export function useCycloneIntensityData(): {
 } | null {
   const { layers, getLayerMetadata } = useLayerStore();
   const { provinces, acList } = useAreaStore();
+  const selectedEvent = useSelectedEvent();
 
   // Compute derived values without early returns (hooks must run unconditionally)
   const hasAreaSelected = provinces.length > 0 || acList.length > 0;
@@ -92,7 +94,9 @@ export function useCycloneIntensityData(): {
   const isPending = vectorEnabled ? vectorQuery.isPending : pmtilesQuery.isPending;
   const error = vectorEnabled ? vectorQuery.error : pmtilesQuery.error;
 
-  const cycloneName = (metadata.cyclone_name || metadata.name || "") as string;
+  const eventName =
+    selectedEvent && metadata.event === selectedEvent.id ? selectedEvent.name : "";
+  const cycloneName = (eventName || metadata.cyclone_name || metadata.name || "") as string;
 
   if (error || !data) {
     return {

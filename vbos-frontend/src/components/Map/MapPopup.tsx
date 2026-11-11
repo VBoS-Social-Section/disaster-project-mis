@@ -3,6 +3,8 @@ import L from "leaflet";
 import "@/Theme/popup.css";
 import { toSentenceCase } from "@/utils/format";
 import type { PopupInfo } from "./index";
+import { useAreaStore } from "@/store/area-store";
+import { toProvinceName } from "@/config/provinces";
 
 const transparentIcon = L.divIcon({
   className: "leaflet-transparent-marker",
@@ -10,8 +12,13 @@ const transparentIcon = L.divIcon({
   iconAnchor: [0, 0],
 });
 
-export function MapPopup(popupInfo: PopupInfo) {
-  const { latitude, longitude, datasetName, properties, featureId } = popupInfo;
+export function MapPopup(popupInfo: PopupInfo & { onClose?: () => void }) {
+  const { latitude, longitude, datasetName, properties, featureId, onClose } = popupInfo;
+  const provinces = useAreaStore((s) => s.provinces);
+  const setProvinces = useAreaStore((s) => s.setProvinces);
+  // A province clicked in the national view can be opened to its area councils
+  const provinceName = toProvinceName(properties.name);
+  const canDrillDown = !!provinceName && !provinces.includes(provinceName);
   const coords = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
   return (
     <Marker
@@ -57,6 +64,18 @@ export function MapPopup(popupInfo: PopupInfo) {
               );
             })}
           </dl>
+          {canDrillDown && (
+            <button
+              type="button"
+              className="mt-3 w-full rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
+              onClick={() => {
+                setProvinces([provinceName]);
+                onClose?.();
+              }}
+            >
+              View {provinceName} by area council
+            </button>
+          )}
         </div>
       </Popup>
     </Marker>

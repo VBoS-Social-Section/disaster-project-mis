@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { LuBookOpen, LuLayers } from "react-icons/lu";
 import {
   Select,
@@ -15,27 +15,31 @@ import { useLayerStore } from "@/store/layer-store";
 import { useUiStore } from "@/store/ui-store";
 import { SelectedClusterPanel } from "./SelectedClusterPanel";
 import { RasterSection } from "./RasterSection";
-import { DisasterSection } from "./DisasterSection";
-import { CycloneNameBanner } from "./CycloneNameBanner";
+import { EventLayers } from "./EventLayers";
 import { ActiveLayersList } from "./ActiveLayersList";
-import { DISASTER_VIEW_TYPES } from "@/store/ui-store";
 
 const LeftSidebar = () => {
   const rightSidebarExpanded = useUiStore((s) => s.rightSidebarExpanded);
   const {
-    data: clusters,
+    data: allClusters,
     isPending: clustersLoading,
     error: clustersError,
   } = useClusters();
+  // "Disaster" is not a sector: its layers are reached through the event picker in the header
+  const clusters = useMemo(
+    () => allClusters?.filter((c) => c.name.toLowerCase() !== "disaster"),
+    [allClusters],
+  );
   const { layers } = useLayerStore();
   const selectedCluster = useUiStore((s) => s.selectedCluster);
   const setSelectedCluster = useUiStore((s) => s.setSelectedCluster);
-  const selectedViewType = useUiStore((s) => s.selectedViewType);
 
   const activeLayerCount = layers ? layers.split(",").filter(Boolean).length : 0;
 
   useEffect(() => {
-    if (clusters?.length && !selectedCluster) {
+    if (!clusters?.length) return;
+    // Also covers a sector that no longer exists, e.g. "Disaster" from an older session
+    if (!clusters.some((c) => c.name === selectedCluster)) {
       setSelectedCluster(clusters[0].name);
     }
   }, [clusters, selectedCluster, setSelectedCluster]);
@@ -74,7 +78,7 @@ const LeftSidebar = () => {
       <div className="border-b border-border px-4 py-3 md:px-5 md:py-3">
         <Select value={selectedCluster} onValueChange={setSelectedCluster}>
           <SelectTrigger className="w-full rounded-md border-border bg-muted/50">
-            <SelectValue placeholder="Select cluster..." />
+            <SelectValue placeholder="Select sector..." />
           </SelectTrigger>
           <SelectContent>
             {clusters?.map((cluster) => (
@@ -86,17 +90,15 @@ const LeftSidebar = () => {
         </Select>
       </div>
       <div className="scrollbar-thin flex-1 overflow-y-auto py-3 px-4 md:py-4 md:px-5">
-        <CycloneNameBanner />
+        <EventLayers />
         {selectedCluster ? (
           <>
             <SelectedClusterPanel clusterName={selectedCluster} />
             <RasterSection clusterName={selectedCluster} />
-            {selectedViewType &&
-              DISASTER_VIEW_TYPES.includes(selectedViewType) && <DisasterSection />}
           </>
         ) : (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            Select a cluster above to view datasets
+            Select a sector above to view datasets
           </p>
         )}
       </div>

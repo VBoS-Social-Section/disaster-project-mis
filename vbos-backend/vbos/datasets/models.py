@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.gis.db import models
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.db.models.fields.files import default_storage
 from django.db.models.signals import post_delete, post_save, pre_delete
@@ -15,6 +16,66 @@ TYPE_CHOICES = {
     "aid_resources_needed": _("Immediate Response Resources"),
     "estimate_financial_damage": _("Estimated Financial Damage"),
 }
+
+HAZARD_TYPE_CHOICES = {
+    "cyclone": _("Cyclone"),
+    "volcano": _("Volcano"),
+    "flood": _("Flood"),
+    "earthquake": _("Earthquake"),
+    "tsunami": _("Tsunami"),
+    "landslide": _("Landslide"),
+    "drought": _("Drought"),
+    "wildfire": _("Wildfire"),
+}
+
+
+class DisasterEvent(models.Model):
+    """A single disaster (e.g. Cyclone Lola, October 2023) or a modelled scenario.
+
+    The dashboard is driven by events: the user picks a year, then one of that year's
+    events, and the event's hazard footprint layers are switched on. Scenarios have no
+    place in the calendar, so they are offered in every year.
+    """
+
+    name = models.CharField(
+        max_length=155, help_text="Name shown in the dashboard, e.g. Cyclone Lola."
+    )
+    hazard_type = models.CharField(
+        max_length=20, choices=HAZARD_TYPE_CHOICES, default="cyclone"
+    )
+    start_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="First day of the event. Decides which year it is listed under.",
+    )
+    end_date = models.DateField(null=True, blank=True)
+    is_scenario = models.BooleanField(
+        default=False,
+        help_text="Tick for a modelled or exercise scenario rather than a real event. "
+        "Scenarios are listed under every year.",
+    )
+    description = models.TextField(max_length=2000, blank=True, default="")
+    source = models.CharField(max_length=155, blank=True, default="")
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        if self.is_scenario:
+            return f"{self.name} (scenario)"
+        return f"{self.name} ({self.start_date.year})" if self.start_date else self.name
+
+    def clean(self):
+        super().clean()
+        if not self.is_scenario and not self.start_date:
+            raise ValidationError(
+                {"start_date": "A real event needs a start date (or tick 'is scenario')."}
+            )
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValidationError({"end_date": "End date is before the start date."})
+
+    class Meta:
+        ordering = ["-start_date", "name"]
+        verbose_name = "Disaster event"
 
 
 class Cluster(models.Model):
@@ -199,6 +260,15 @@ class VectorDataset(models.Model):
         null=True,
         help_text="Name of the cyclone/event (e.g. Cyclone Lola). Shown when layer is active.",
     )
+    event = models.ForeignKey(
+        "DisasterEvent",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="%(class)ss",
+        help_text="Disaster event this layer is the hazard footprint of. "
+        "The layer is switched on when the event is chosen in the dashboard.",
+    )
 
     def __str__(self):
         return f"{self.name} - {self.cluster} / {self.type}"
@@ -226,6 +296,15 @@ class PMTilesDataset(models.Model):
         blank=True,
         null=True,
         help_text="Name of the cyclone/event (e.g. Cyclone Lola). Shown when layer is active.",
+    )
+    event = models.ForeignKey(
+        "DisasterEvent",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="%(class)ss",
+        help_text="Disaster event this layer is the hazard footprint of. "
+        "The layer is switched on when the event is chosen in the dashboard.",
     )
     intensity_data = models.JSONField(
         blank=True,
@@ -274,6 +353,16 @@ class TabularDataset(models.Model):
     type = models.CharField(max_length=55, choices=TYPE_CHOICES, default="baseline")
     source = models.CharField(max_length=155, blank=True, null=True)
     unit = models.CharField(max_length=50, blank=True, null=True)
+    event = models.ForeignKey(
+        "DisasterEvent",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="%(class)ss",
+        help_text="Disaster event these figures belong to (damage, response resources, "
+        "financial damage). Leave empty for baseline data. Figures linked to an event "
+        "are only shown while that event is selected.",
+    )
 
     def __str__(self):
         return f"{self.name} - {self.cluster} / {self.type}"

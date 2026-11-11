@@ -14,7 +14,6 @@ import { AreaSelect } from "./AreaSelect";
 import { CycloneSummaryBanner } from "./CycloneSummaryBanner";
 import { AttributeFilterSelect } from "./AttributeFilterSelect";
 import { TabularDatasetSelect } from "./TabularDatasetSelect";
-import { YearSelect } from "./YearSelect";
 import { ContextPanelContent } from "../ContextPanel/ContextPanelContent";
 import { DownloadDataDialog } from "./DownloadDataDialog";
 import { useState } from "react";
@@ -66,15 +65,14 @@ const RightSidebar = () => {
           selectedCluster &&
           scenarioId !== "climate" && (
             <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
-              This cluster has no tabular dataset. Select province and area
-              council to filter map layers.
+              This sector has no figures for the current selection. Select a
+              province and area council to filter its map layers.
             </p>
           )}
         {rightSidebarExpanded ? (
           <div className="w-full space-y-6">
             <div className="flex flex-wrap items-end gap-6 rounded-xl border border-border/40 bg-card/95 p-5 shadow-sm">
               <TabularDatasetSelect />
-              {scenarioId === "climate" ? null : <YearSelect />}
             </div>
             <AttributeFilterSelect />
             <Suspense fallback={null}>
@@ -86,7 +84,6 @@ const RightSidebar = () => {
           <>
             <TabularDatasetSelect />
             <AttributeFilterSelect />
-            {scenarioId === "climate" ? null : <YearSelect />}
             <Suspense fallback={null}>
               <FloatingKpiCards />
             </Suspense>
@@ -96,7 +93,9 @@ const RightSidebar = () => {
       </div>
       <div
         className={cn(
-          "sticky bottom-0 mt-auto border-t border-border bg-card",
+          // The fade above the bar hints that the panel content scrolls underneath it
+          "sticky bottom-0 mt-auto border-t border-border bg-card relative",
+          "before:pointer-events-none before:absolute before:inset-x-0 before:-top-8 before:h-8 before:bg-gradient-to-t before:from-card before:to-transparent",
           rightSidebarExpanded ? "px-6 py-4" : "px-5 py-4 md:px-6 md:py-4",
         )}
       >
@@ -117,6 +116,11 @@ const RightSidebar = () => {
             Download Data
           </Button>
         </Tooltip>
+        <p className="mt-2 text-center text-[11px] leading-snug text-muted-foreground">
+          {hasActiveLayers
+            ? "Active layers for the selected area and year. Tables as Excel, map layers as GeoJSON."
+            : "Switch on a data layer to download it."}
+        </p>
       </div>
       <DownloadDataDialog
         isOpen={downloadDialogIsOpen}

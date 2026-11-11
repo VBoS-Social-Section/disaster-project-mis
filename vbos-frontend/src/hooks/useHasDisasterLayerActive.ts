@@ -6,10 +6,11 @@ import { useLayerStore } from "@/store/layer-store";
 import { DISASTER_LAYER_NAMES } from "@/config/disaster";
 
 function isDisasterLayer(
-  metadata: { name?: string; cyclone_name?: string | null } | undefined,
+  metadata: { name?: string; cyclone_name?: string | null; event?: number | null } | undefined,
 ): boolean {
   if (!metadata) return false;
   const name = (metadata.name ?? "").trim();
+  if (metadata.event != null) return true;
   if (metadata.cyclone_name?.trim()) return true;
   return DISASTER_LAYER_NAMES.some(
     (d) => name.toLowerCase().includes(d.toLowerCase()),

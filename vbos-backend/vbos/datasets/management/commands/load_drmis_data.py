@@ -23,6 +23,7 @@ from django.db import transaction
 
 from ...models import (
     Cluster,
+    DisasterEvent,
     PMTilesDataset,
     TabularDataset,
     TabularItem,
@@ -181,7 +182,19 @@ class Command(BaseCommand):
         ds.source_layer = "councils"
         ds.source = "RAP cyclone scenario (Ex_hazard_areas.csv)"
         ds.intensity_data = intensity
+        # The RAP output is a modelled scenario, not a dated event
+        if ds.event is None:
+            ds.event, _ = DisasterEvent.objects.get_or_create(
+                name="Cyclone scenario",
+                is_scenario=True,
+                defaults={"hazard_type": "cyclone", "source": ds.source},
+            )
         ds.save()
+        # The RAP damage, response and financial tables describe this same scenario
+        TabularDataset.objects.filter(
+            type__in=["estimated_damage", "aid_resources_needed", "estimate_financial_damage"],
+            event__isnull=True,
+        ).update(event=ds.event)
         if not dry_run:
             os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
             shutil.copyfile(pmtiles, os.path.join(settings.MEDIA_ROOT, "area_councils_intensity.pmtiles"))
