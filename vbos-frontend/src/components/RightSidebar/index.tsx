@@ -10,7 +10,6 @@ import { Sidebar } from "../Sidebar";
 import { Button } from "@/components/ui/button";
 import { Tooltip } from "@/components/ui";
 import { LuDownload } from "react-icons/lu";
-import { AreaSelect } from "./AreaSelect";
 import { CycloneSummaryBanner } from "./CycloneSummaryBanner";
 import { ImpactSummary } from "./ImpactSummary";
 import { SituationReportButton } from "@/components/SituationReport";
@@ -50,15 +49,6 @@ const RightSidebar = () => {
     >
       <div
         className={cn(
-          "space-y-3 border-b border-border bg-card",
-          rightSidebarExpanded ? "px-6 py-4" : "px-5 py-4 md:px-6 md:py-4",
-        )}
-      >
-        <AreaSelect />
-        <CycloneSummaryBanner />
-      </div>
-      <div
-        className={cn(
           "scrollbar-thin flex-1 overflow-auto bg-card",
           rightSidebarExpanded
             ? "min-h-0 bg-gradient-to-b from-muted/20 to-background px-6 py-6"
@@ -74,7 +64,10 @@ const RightSidebar = () => {
             </p>
           )}
         {/* Inside the scrolling area so it moves with the charts instead of pinning them out */}
-        <ImpactSummary className={rightSidebarExpanded ? "mb-6" : undefined} />
+        <div className={cn("space-y-4 empty:hidden", rightSidebarExpanded && "mb-6")}>
+          <CycloneSummaryBanner />
+          <ImpactSummary />
+        </div>
         {rightSidebarExpanded ? (
           <div className="w-full space-y-6">
             <div className="flex flex-wrap items-end gap-6 rounded-xl border border-border/40 bg-card/95 p-5 shadow-sm">

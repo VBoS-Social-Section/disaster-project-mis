@@ -33,6 +33,15 @@ export const en = {
   "picker.yearScenarioHint":
     "Scenarios are not tied to a year. The year still selects which baseline figures are shown.",
 
+  "area.groupLabel": "Province and area council",
+  "area.province": "Province",
+  "area.council": "Area council",
+  "area.allProvinces": "All provinces",
+  "area.allCouncils": "All area councils",
+  "area.nProvinces": "{n} provinces",
+  "area.nCouncils": "{n} area councils",
+  "area.chooseProvinceFirst": "Choose a province first",
+
   "panel.dataLayers": "Data layers",
   "panel.context": "Context",
   "panel.selectSector": "Select sector…",
@@ -125,6 +134,15 @@ export const fr: Messages = {
   "picker.yearScenarioHint":
     "Les scénarios ne sont pas liés à une année. L’année détermine toujours les données de référence affichées.",
 
+  "area.groupLabel": "Province et conseil de zone",
+  "area.province": "Province",
+  "area.council": "Conseil de zone",
+  "area.allProvinces": "Toutes les provinces",
+  "area.allCouncils": "Tous les conseils de zone",
+  "area.nProvinces": "{n} provinces",
+  "area.nCouncils": "{n} conseils de zone",
+  "area.chooseProvinceFirst": "Choisissez d’abord une province",
+
   "panel.dataLayers": "Couches de données",
   "panel.context": "Contexte",
   "panel.selectSector": "Choisir un secteur…",
@@ -215,6 +233,15 @@ export const bi: Messages = {
   "picker.manyEvents": "{n} disasta",
   "picker.yearScenarioHint":
     "Senario i no blong wan yia. Yia i stap jusum nomol data we i soa.",
+
+  "area.groupLabel": "Provins mo eria kaonsel",
+  "area.province": "Provins",
+  "area.council": "Eria kaonsel",
+  "area.allProvinces": "Evri provins",
+  "area.allCouncils": "Evri eria kaonsel",
+  "area.nProvinces": "{n} provins",
+  "area.nCouncils": "{n} eria kaonsel",
+  "area.chooseProvinceFirst": "Jusum wan provins fastaem",
 
   "panel.dataLayers": "Ol leya blong data",
   "panel.context": "Infomesen",
