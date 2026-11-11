@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { AppearanceButton } from "@/components/AppearancePanel";
 import { EventPicker } from "@/components/EventPicker";
+import { AreaPicker } from "@/components/AreaPicker";
 import {
   LuCircleHelp,
   LuLanguages,
@@ -106,9 +107,11 @@ export const Header = () => {
         </div>
       </div>
 
-      {/* Middle: the dashboard's starting point: year, then disaster event */}
-      <div className="order-last flex min-w-0 basis-full justify-center md:order-none md:flex-1 md:basis-auto">
+      {/* Middle: the four global filters. When: year and event. Where: province and area council. */}
+      <div className="order-last flex min-w-0 basis-full flex-wrap items-center justify-center gap-2 md:order-none md:flex-1 md:basis-auto md:flex-nowrap">
         <EventPicker />
+        <span className="hidden h-5 w-px shrink-0 bg-border md:block" aria-hidden />
+        <AreaPicker />
       </div>
 
       {/* Right: Appearance (theme, light/dark, text size), Avatar */}

@@ -120,7 +120,7 @@ export function EventPicker() {
           aria-label={t("picker.year")}
           title={scenarioSelected ? t("picker.yearScenarioHint") : t("picker.year")}
         >
-          <span className="hidden text-xs text-muted-foreground sm:inline">{t("picker.year")}</span>
+          <span className="hidden text-xs text-muted-foreground xl:inline">{t("picker.year")}</span>
           {/* Plain text rather than SelectValue, which would repeat the event-count badge */}
           <span>{year}</span>
         </SelectTrigger>
@@ -147,11 +147,11 @@ export function EventPicker() {
       >
         <SelectTrigger
           size="sm"
-          className="min-w-0 max-w-[11rem] bg-background/60 sm:max-w-[18rem]"
+          className="min-w-0 max-w-[11rem] bg-background/60 xl:max-w-[16rem]"
           aria-label={t("picker.event")}
           title={error ? t("picker.loadError") : t("picker.event")}
         >
-          <span className="hidden text-xs text-muted-foreground sm:inline">{t("picker.event")}</span>
+          <span className="hidden text-xs text-muted-foreground xl:inline">{t("picker.event")}</span>
           {/* The trigger shows a compact label; the list items carry dates as well */}
           <span className="flex min-w-0 items-center gap-1.5">
             {SelectedIcon && <SelectedIcon className="size-4 shrink-0 !text-foreground" />}
