@@ -21,6 +21,7 @@ import { MapCursorRing } from "./components/Map/MapCursorRing";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { LayerAnnouncer } from "./components/LayerAnnouncer";
 import { AppFooter } from "./components/AppFooter";
+import { AppPrompt } from "./components/AppPrompt";
 import { ScenarioTag } from "./components/Map/ScenarioTag";
 import { ReportBody, ReportHeader } from "./components/SituationReport";
 import { useT } from "@/i18n";
@@ -119,6 +120,7 @@ function App() {
       </a>
       {isLocked && <LockScreen />}
       <OfflineIndicator />
+      <AppPrompt />
       <LayerAnnouncer />
       <Header />
       <div

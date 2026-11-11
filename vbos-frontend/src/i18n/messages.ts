@@ -84,6 +84,12 @@ export const en = {
   "report.disclaimer":
     "Figures are estimates from the data loaded in DRMIS at the time of printing and should be verified before operational use.",
 
+  "pwa.install": "Install app",
+  "pwa.installHint": "Add DRMIS to this device for quicker access and offline use.",
+  "pwa.reload": "Reload page",
+  "pwa.updateReady": "A new version of DRMIS is ready.",
+  "pwa.dismiss": "Not now",
+
   "footer.dataAsOf": "Data as of {date}",
   "footer.sources": "Sources",
 } as const;
@@ -172,6 +178,13 @@ export const fr: Messages = {
   "report.disclaimer":
     "Les chiffres sont des estimations issues des données chargées dans le DRMIS au moment de l’impression et doivent être vérifiés avant tout usage opérationnel.",
 
+  "pwa.install": "Installer l’application",
+  "pwa.installHint":
+    "Ajoutez le DRMIS à cet appareil pour un accès plus rapide et une utilisation hors ligne.",
+  "pwa.reload": "Recharger la page",
+  "pwa.updateReady": "Une nouvelle version du DRMIS est prête.",
+  "pwa.dismiss": "Plus tard",
+
   "footer.dataAsOf": "Données au {date}",
   "footer.sources": "Sources",
 };
@@ -253,6 +266,12 @@ export const bi: Messages = {
   "report.noEvent": "No gat disasta we yu jusum (nomol data)",
   "report.disclaimer":
     "Ol namba ia oli wan estimet nomo long data we i stap long DRMIS taem yu print, mo oli mas jekem bifo oli yusum.",
+
+  "pwa.install": "Instolem ap",
+  "pwa.installHint": "Putum DRMIS long fon o kompiuta ia blong openem kwik mo yusum taem i no gat intanet.",
+  "pwa.reload": "Lodem pej bakegen",
+  "pwa.updateReady": "Wan niu vesen blong DRMIS i redi.",
+  "pwa.dismiss": "I no naoia",
 
   "footer.dataAsOf": "Data long {date}",
   "footer.sources": "Data i kam long",

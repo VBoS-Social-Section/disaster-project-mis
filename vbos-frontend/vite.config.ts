@@ -23,6 +23,8 @@ export default defineConfig({
     tsconfigPaths(),
     VitePWA({
       registerType: "autoUpdate",
+      // Registered by src/components/AppPrompt.tsx, which also watches for new builds
+      injectRegister: false,
       includeAssets: ["MISLogo.svg", "favicon.ico"],
       manifest: {
         name: "Disaster Risk Management Information system",
