@@ -12,6 +12,9 @@ import { Tooltip } from "@/components/ui";
 import { LuDownload } from "react-icons/lu";
 import { AreaSelect } from "./AreaSelect";
 import { CycloneSummaryBanner } from "./CycloneSummaryBanner";
+import { ImpactSummary } from "./ImpactSummary";
+import { SituationReportButton } from "@/components/SituationReport";
+import { useT } from "@/i18n";
 import { AttributeFilterSelect } from "./AttributeFilterSelect";
 import { TabularDatasetSelect } from "./TabularDatasetSelect";
 import { ContextPanelContent } from "../ContextPanel/ContextPanelContent";
@@ -29,6 +32,7 @@ const FloatingKpiCards = lazy(() =>
 
 const RightSidebar = () => {
   const [downloadDialogIsOpen, setDownloadDialogIsOpen] = useState(false);
+  const { t } = useT();
   const { context, hasActiveLayers, hasTabularInSelectedCluster } = usePanelContext();
   const scenarioId = useViewStore((s) => s.scenarioId);
   const selectedCluster = useUiStore((s) => s.selectedCluster);
@@ -41,7 +45,7 @@ const RightSidebar = () => {
   return (
     <Sidebar
       direction="right"
-      title="Context"
+      title={t("panel.context")}
       collapseWhen={!hasRelevantContent}
     >
       <div
@@ -52,6 +56,7 @@ const RightSidebar = () => {
       >
         <AreaSelect />
         <CycloneSummaryBanner />
+        <ImpactSummary />
       </div>
       <div
         className={cn(
@@ -113,13 +118,12 @@ const RightSidebar = () => {
             disabled={!hasActiveLayers}
           >
             <LuDownload className="size-4" />
-            Download Data
+            {t("download.button")}
           </Button>
         </Tooltip>
+        <SituationReportButton />
         <p className="mt-2 text-center text-[11px] leading-snug text-muted-foreground">
-          {hasActiveLayers
-            ? "Active layers for the selected area and year. Tables as Excel, map layers as GeoJSON."
-            : "Switch on a data layer to download it."}
+          {hasActiveLayers ? t("download.caption") : t("download.empty")}
         </p>
       </div>
       <DownloadDataDialog

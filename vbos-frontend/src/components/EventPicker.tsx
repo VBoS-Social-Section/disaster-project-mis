@@ -20,14 +20,17 @@ import { useLayerStore } from "@/store/layer-store";
 import { useEvents, useSelectEvent, useSelectedEvent } from "@/hooks/useEvents";
 import { HAZARD_ICONS, formatEventDates } from "@/config/disaster";
 import type { DisasterEvent } from "@/types/api";
+import { useT } from "@/i18n";
+import { cn } from "@/lib/utils";
 
 const MIN_YEAR = 2004;
 const MAX_YEAR = new Date().getFullYear();
 const NO_EVENT = "none";
 
 function EventOption({ event }: { event: DisasterEvent }) {
+  const { locale } = useT();
   const Icon = HAZARD_ICONS[event.hazard_type];
-  const dates = formatEventDates(event);
+  const dates = formatEventDates(event, locale);
   return (
     <SelectItem value={String(event.id)}>
       <Icon className="size-4 shrink-0" />
@@ -43,6 +46,8 @@ export function EventPicker() {
   const eventId = useEventStore((s) => s.eventId);
   const selected = useSelectedEvent();
   const selectEvent = useSelectEvent();
+  const { t } = useT();
+  const scenarioSelected = !!selected?.is_scenario;
 
   const eventsThisYear = useMemo(
     () => (events ?? []).filter((e) => !e.is_scenario && String(e.year) === year),
@@ -105,10 +110,17 @@ export function EventPicker() {
   const SelectedIcon = selected ? HAZARD_ICONS[selected.hazard_type] : null;
 
   return (
-    <div className="flex min-w-0 items-center gap-2" role="group" aria-label="Year and disaster event">
+    <div className="flex min-w-0 items-center gap-2" role="group" aria-label={t("picker.groupLabel")}>
       <Select value={year} onValueChange={handleYearChange}>
-        <SelectTrigger size="sm" className="shrink-0 bg-background/60" aria-label="Year" title="Year">
-          <span className="hidden text-xs text-muted-foreground sm:inline">Year</span>
+        <SelectTrigger
+          size="sm"
+          // Dimmed, not disabled, while a scenario is selected: a scenario has no year, but
+          // the year still chooses which baseline figures are shown
+          className={cn("shrink-0 bg-background/60", scenarioSelected && "opacity-60")}
+          aria-label={t("picker.year")}
+          title={scenarioSelected ? t("picker.yearScenarioHint") : t("picker.year")}
+        >
+          <span className="hidden text-xs text-muted-foreground sm:inline">{t("picker.year")}</span>
           {/* Plain text rather than SelectValue, which would repeat the event-count badge */}
           <span>{year}</span>
         </SelectTrigger>
@@ -120,7 +132,7 @@ export function EventPicker() {
               {y}
               {count > 0 && (
                 <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
-                  {count} {count === 1 ? "event" : "events"}
+                  {count === 1 ? t("picker.oneEvent") : t("picker.manyEvents", { n: count })}
                 </span>
               )}
             </SelectItem>
@@ -136,26 +148,26 @@ export function EventPicker() {
         <SelectTrigger
           size="sm"
           className="min-w-0 max-w-[11rem] bg-background/60 sm:max-w-[18rem]"
-          aria-label="Disaster event"
-          title={error ? "Could not load disaster events" : "Disaster event"}
+          aria-label={t("picker.event")}
+          title={error ? t("picker.loadError") : t("picker.event")}
         >
-          <span className="hidden text-xs text-muted-foreground sm:inline">Event</span>
+          <span className="hidden text-xs text-muted-foreground sm:inline">{t("picker.event")}</span>
           {/* The trigger shows a compact label; the list items carry dates as well */}
           <span className="flex min-w-0 items-center gap-1.5">
             {SelectedIcon && <SelectedIcon className="size-4 shrink-0 !text-foreground" />}
             <span className="truncate">
-              {isPending ? "Loading…" : selected ? selected.name : "No event (baseline)"}
+              {isPending ? t("picker.loading") : selected ? selected.name : t("picker.noEvent")}
             </span>
           </span>
         </SelectTrigger>
         <SelectContent position="popper" align="start" className="max-w-[min(24rem,calc(100vw-2rem))]">
-          <SelectItem value={NO_EVENT}>No event (baseline)</SelectItem>
+          <SelectItem value={NO_EVENT}>{t("picker.noEvent")}</SelectItem>
           <SelectSeparator />
           <SelectGroup>
-            <SelectLabel>Events in {year}</SelectLabel>
+            <SelectLabel>{t("picker.eventsIn", { year })}</SelectLabel>
             {eventsThisYear.length === 0 ? (
               <p className="px-2 py-1.5 text-sm text-muted-foreground">
-                No events recorded for {year}.
+                {t("picker.noneRecorded", { year })}
               </p>
             ) : (
               eventsThisYear.map((e) => <EventOption key={e.id} event={e} />)
@@ -165,7 +177,7 @@ export function EventPicker() {
             <>
               <SelectSeparator />
               <SelectGroup>
-                <SelectLabel>Scenarios</SelectLabel>
+                <SelectLabel>{t("picker.scenarios")}</SelectLabel>
                 {scenarios.map((e) => (
                   <EventOption key={e.id} event={e} />
                 ))}

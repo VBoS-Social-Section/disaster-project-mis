@@ -40,6 +40,29 @@ function resolvePmtilesUrl(url: string): string {
   return url;
 }
 
+/**
+ * Deepest zoom a PMTiles file holds, read from its header (byte 101 of the v3 format).
+ * Past that zoom the renderer must stretch the deepest tiles instead of asking for tiles
+ * that do not exist, otherwise the layer disappears when the user zooms in.
+ */
+const maxZoomCache = new Map<string, Promise<number | undefined>>();
+function readPmtilesMaxZoom(url: string): Promise<number | undefined> {
+  let cached = maxZoomCache.get(url);
+  if (!cached) {
+    cached = fetch(url, { headers: { Range: "bytes=0-126" } })
+      .then((r) => (r.ok ? r.arrayBuffer() : undefined))
+      .then((buf) => {
+        if (!buf || buf.byteLength < 102) return undefined;
+        const bytes = new Uint8Array(buf);
+        const isPmtiles = String.fromCharCode(...bytes.slice(0, 7)) === "PMTiles";
+        return isPmtiles ? bytes[101] : undefined;
+      })
+      .catch(() => undefined);
+    maxZoomCache.set(url, cached);
+  }
+  return cached;
+}
+
 export function PMTilesLayers() {
   const { layers } = useLayerStore();
   const pmTilesLayers = layers
@@ -113,18 +136,24 @@ function PMTilesMapLayer({ id }: PMTilesMapLayerProps) {
       },
     ];
 
-    const layer = leafletLayer({
-      url: resolvedUrl,
-      paintRules,
-      labelRules: [],
-      backgroundColor: "transparent",
-      pane: paneName,
+    let layer: L.Layer | undefined;
+    let cancelled = false;
+    void readPmtilesMaxZoom(resolvedUrl).then((maxDataZoom) => {
+      if (cancelled) return;
+      layer = leafletLayer({
+        url: resolvedUrl,
+        paintRules,
+        labelRules: [],
+        backgroundColor: "transparent",
+        pane: paneName,
+        ...(maxDataZoom != null && { maxDataZoom }),
+      }) as unknown as L.Layer;
+      layer.addTo(map);
     });
 
-    (layer as unknown as L.Layer).addTo(map);
-
     return () => {
-      map.removeLayer(layer as unknown as L.Layer);
+      cancelled = true;
+      if (layer) map.removeLayer(layer);
     };
   }, [map, metadata, year, opacity, mapPalette]);
 

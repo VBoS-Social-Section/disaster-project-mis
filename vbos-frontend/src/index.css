@@ -767,3 +767,189 @@ html[data-corners="rounded"] { --radius: 0.75rem; }
 html[data-font-size="small"]  { font-size: 87.5%; }
 html[data-font-size="large"]  { font-size: 112.5%; }
 html[data-font-size="xlarge"] { font-size: 125%; }
+
+/* Facility inside a hazard zone: ring in the category colour plus the category number,
+   so exposure reads on the map without relying on colour alone */
+.hazard-marker {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 3px var(--hazard), 0 0 0 4.5px rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.85);
+}
+.hazard-marker__badge {
+  position: absolute;
+  top: -9px;
+  right: -10px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  background: var(--hazard);
+  color: var(--hazard-text);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 12px;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------------------------------
+   Situation report
+   The report is this page printed: panels and controls are hidden, the map keeps the
+   extent the user set (scaled to the page width), and the report blocks appear above and
+   below it. On screen the report blocks are not rendered at all.
+   ------------------------------------------------------------------------------------ */
+.report-block {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  html,
+  body,
+  #root {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  .app-shell,
+  #main {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  /* Toasts, offline pill, hover ring, map controls: nothing interactive belongs on paper */
+  [data-sonner-toaster],
+  .right-panel-overlay,
+  .map-controls-cluster,
+  .leaflet-control-zoom,
+  .map-empty-state {
+    display: none !important;
+  }
+
+  .map-area {
+    /* On-screen pixel size, scaled to fit the page (set by printSituationReport) */
+    width: var(--report-map-width, 100%) !important;
+    height: var(--report-map-height, 120mm) !important;
+    zoom: var(--report-map-scale, 1);
+    border: 1px solid #6b7280;
+    break-inside: avoid;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .report-block {
+    display: block;
+    color: #111827;
+    font-size: 10pt;
+    line-height: 1.4;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .report-masthead {
+    display: flex;
+    align-items: center;
+    gap: 10pt;
+    padding-bottom: 6pt;
+    border-bottom: 1.5pt solid #111827;
+  }
+  .report-crest {
+    height: 34pt;
+    width: auto;
+  }
+  .report-gov {
+    font-size: 11pt;
+    font-weight: 700;
+  }
+  .report-agency,
+  .report-system {
+    font-size: 9pt;
+    color: #374151;
+  }
+  .report-title {
+    margin: 8pt 0 4pt;
+    font-size: 16pt;
+    font-weight: 700;
+  }
+  .report-scenario {
+    margin: 4pt 0;
+    padding: 5pt 8pt;
+    border: 1.5pt solid #b45309;
+    background: #fef3c7;
+    color: #451a03;
+  }
+  .report-facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2pt 14pt;
+    margin: 6pt 0 8pt;
+  }
+  .report-facts > div {
+    display: flex;
+    gap: 6pt;
+  }
+  .report-facts dt {
+    min-width: 62pt;
+    color: #4b5563;
+  }
+  .report-facts dd {
+    margin: 0;
+    font-weight: 600;
+  }
+  .report-body {
+    margin-top: 8pt;
+  }
+  .report-body h2 {
+    margin: 8pt 0 3pt;
+    font-size: 10.5pt;
+    font-weight: 700;
+  }
+  .report-impact {
+    background: #fff !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  .report-impact * {
+    color: inherit !important;
+  }
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    break-inside: avoid;
+  }
+  .report-table th,
+  .report-table td {
+    padding: 2pt 4pt;
+    border-bottom: 0.5pt solid #d1d5db;
+    font-weight: 400;
+    text-align: left;
+  }
+  .report-table th::first-letter {
+    text-transform: uppercase;
+  }
+  .report-table td {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+  .report-meta {
+    margin-top: 8pt;
+    font-size: 8.5pt;
+    color: #374151;
+  }
+  .report-disclaimer {
+    margin-top: 4pt;
+    font-style: italic;
+  }
+}

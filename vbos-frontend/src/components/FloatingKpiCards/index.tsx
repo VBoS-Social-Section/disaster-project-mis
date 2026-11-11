@@ -11,6 +11,7 @@ import { KpiCard } from "@/components/ui/KpiCard";
 import { KpiDrillDownSheet } from "@/components/ui/KpiDrillDownSheet";
 import type { TabularData } from "@/types/api";
 import { useDateStore } from "@/store/date-store";
+import { displayDatasetName } from "@/utils/displayDatasetName";
 import { findLayerForAttribute, findTotalAttribute } from "@/utils/matchLayerForAttribute";
 
 function getSparklineData(data: TabularData[], attr: string): number[] {
@@ -141,7 +142,7 @@ const FloatingKpiCards = () => {
           </p>
           {layerMetadata && (
             <p className="text-[11px] leading-snug text-muted-foreground">
-              {layerMetadata.name}
+              {displayDatasetName(layerMetadata.name, layerMetadata.cluster)}
               {year ? ` · ${year}` : ""}
               {layerMetadata.source ? ` · Source: ${layerMetadata.source}` : ""}
               {updatedLabel ? ` · Loaded ${updatedLabel}` : ""}

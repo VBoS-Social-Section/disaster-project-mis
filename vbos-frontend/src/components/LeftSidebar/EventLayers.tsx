@@ -5,15 +5,21 @@
 import { LayerSwitch } from "./LayerSwitch";
 import { useSelectedEvent } from "@/hooks/useEvents";
 import { HAZARD_ICONS, formatEventDates } from "@/config/disaster";
+import { useT } from "@/i18n";
 
 const DATA_TYPE = { p: "pmtiles", v: "vector" } as const;
 
 export function EventLayers() {
   const event = useSelectedEvent();
+  const { t } = useT();
   if (!event) return null;
 
   const Icon = HAZARD_ICONS[event.hazard_type];
   const dates = formatEventDates(event);
+  // "Scenario / Cyclone scenario / Cyclone" said the same thing three times: the hazard
+  // type is only added when the name does not already contain it
+  const nameHasType = event.name.toLowerCase().includes(event.hazard_type_label.toLowerCase());
+  const detail = [nameHasType ? "" : event.hazard_type_label, dates].filter(Boolean).join(" · ");
 
   return (
     <section
@@ -24,12 +30,10 @@ export function EventLayers() {
         <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            {event.is_scenario ? "Scenario" : "Event"}
+            {event.is_scenario ? t("event.scenario") : t("event.event")}
           </p>
           <p className="truncate text-sm font-medium">{event.name}</p>
-          <p className="text-xs text-muted-foreground">
-            {[event.hazard_type_label, dates].filter(Boolean).join(" · ")}
-          </p>
+          {detail && <p className="text-xs text-muted-foreground">{detail}</p>}
         </div>
       </div>
       {event.layers.length > 0 ? (
@@ -49,7 +53,7 @@ export function EventLayers() {
         </div>
       ) : (
         <p className="mt-2 border-t border-border pt-2 text-xs text-muted-foreground">
-          No hazard footprint layer has been uploaded for this event.
+          {t("event.noFootprint")}
         </p>
       )}
     </section>

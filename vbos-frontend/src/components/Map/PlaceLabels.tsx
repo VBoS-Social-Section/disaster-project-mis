@@ -62,7 +62,12 @@ function labelIcon(name: string, kind: "province" | "island" | "town") {
   });
 }
 
-export function PlaceLabels() {
+type PlaceLabelsProps = {
+  /** Keep the labels at every zoom: set when the basemap's own label tiles are not loaded. */
+  keepWhenZoomedIn?: boolean;
+};
+
+export function PlaceLabels({ keepWhenZoomedIn = false }: PlaceLabelsProps) {
   const map = useMapEvents({ zoomend: () => setZoom(map.getZoom()) });
   const [zoom, setZoom] = useState(() => map.getZoom());
 
@@ -76,7 +81,7 @@ export function PlaceLabels() {
     [],
   );
 
-  if (zoom >= BASEMAP_LABELS_FROM_ZOOM) return null;
+  if (zoom >= BASEMAP_LABELS_FROM_ZOOM && !keepWhenZoomedIn) return null;
 
   const visible = [
     ...(zoom <= 8 ? groups.provinces : []),

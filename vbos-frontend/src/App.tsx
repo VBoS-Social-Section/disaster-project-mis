@@ -20,6 +20,10 @@ import { MapEmptyState } from "./components/MapEmptyState";
 import { MapCursorRing } from "./components/Map/MapCursorRing";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { LayerAnnouncer } from "./components/LayerAnnouncer";
+import { AppFooter } from "./components/AppFooter";
+import { ScenarioTag } from "./components/Map/ScenarioTag";
+import { ReportBody, ReportHeader } from "./components/SituationReport";
+import { useT } from "@/i18n";
 import { LockScreen } from "./components/LockScreen";
 import { Login } from "./components/Login";
 
@@ -94,6 +98,7 @@ function App() {
   const { isMobile, mobileOpenPanel, setMobileOpenPanel, rightSidebarExpanded, leftSidebarIconMode } = useUiStore();
   const { isLocked } = useLockStore();
   const isTimeSeriesOpen = useUiStore((s) => s.isTimeSeriesOpen);
+  const { t } = useT();
   useUrlSync();
   useSmartDefaults();
   useSessionSave();
@@ -105,7 +110,13 @@ function App() {
     return <Login />;
   }
   return (
-    <div className="grid h-screen max-h-screen min-w-0 grid-rows-[max-content_1fr] overflow-hidden bg-background">
+    <div className="app-shell grid h-dvh max-h-dvh min-w-0 grid-rows-[max-content_1fr_max-content] overflow-hidden bg-background">
+      <a
+        href="#map"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[10000] focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
+      >
+        {t("app.skipToMap")}
+      </a>
       {isLocked && <LockScreen />}
       <OfflineIndicator />
       <LayerAnnouncer />
@@ -113,13 +124,14 @@ function App() {
       <div
         id="main"
         className={cn(
-          "grid h-[calc(100vh-3.5rem)] min-w-0 overflow-hidden md:grid-rows-1 grid-rows-[auto_1fr_auto]",
+          // Height comes from the shell's 1fr row, so the header may wrap on small screens
+          "grid min-h-0 min-w-0 overflow-hidden md:grid-rows-1 grid-rows-[auto_1fr_auto]",
           "md:grid-cols-[auto_1fr_auto]",
         )}
       >
         <div
           className={cn(
-            "min-h-0",
+            "min-h-0 print:hidden",
             rightSidebarExpanded && !leftSidebarIconMode && "z-[1060] relative",
           )}
         >
@@ -136,7 +148,10 @@ function App() {
             <LeftSidebar />
           </ErrorBoundary>
         </div>
+        <ReportHeader />
         <div
+          id="map"
+          tabIndex={-1}
           className="relative map-area min-w-0 min-h-0 overflow-hidden"
           onClick={() => {
             if (isMobile && mobileOpenPanel) setMobileOpenPanel(null);
@@ -149,6 +164,7 @@ function App() {
               <Suspense fallback={<MapLoadingSkeleton />}>
                 <Map ref={mapRef} />
               </Suspense>
+              <ScenarioTag />
               <MapEmptyState />
               {isTimeSeriesOpen && (
                 <Suspense fallback={null}>
@@ -158,7 +174,8 @@ function App() {
             </div>
           </ErrorBoundary>
         </div>
-        <div className="min-h-0">
+        <ReportBody />
+        <div className="min-h-0 print:hidden">
           <ErrorBoundary
             fallbackRender={(error, retry) => (
               <SidebarErrorFallback
@@ -173,6 +190,7 @@ function App() {
           </ErrorBoundary>
         </div>
       </div>
+      <AppFooter />
     </div>
   );
 }

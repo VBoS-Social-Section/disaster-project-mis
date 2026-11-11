@@ -53,7 +53,7 @@ export function MapControlsCluster({ map }: MapControlsClusterProps) {
   };
 
   return (
-    <div className="absolute right-4 top-4 z-[1000] flex flex-col gap-1 overflow-hidden rounded-lg border border-border p-1 shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface md:right-6 md:top-6">
+    <div className="map-controls-cluster absolute right-4 top-4 z-[1000] flex flex-col gap-1 overflow-hidden rounded-lg border border-border p-1 shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface md:right-6 md:top-6">
       <DropdownMenu>
         <Tooltip content={`Basemap: ${currentLabel}`} positioning={{ placement: "left" }}>
           <DropdownMenuTrigger asChild>
