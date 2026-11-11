@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { startTransition, useMemo, useState } from "react";
+import { LuMapPin, LuMapPinCheck } from "react-icons/lu";
 import { useFilteredTabularData } from "@/hooks/useFilteredTabularData";
 import { useLayerStore } from "@/store/layer-store";
 import { useUiStore } from "@/store/ui-store";
@@ -9,6 +10,8 @@ import { createTabularKpi } from "@/config/tabularKpis";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { KpiDrillDownSheet } from "@/components/ui/KpiDrillDownSheet";
 import type { TabularData } from "@/types/api";
+import { useDateStore } from "@/store/date-store";
+import { findLayerForAttribute, findTotalAttribute } from "@/utils/matchLayerForAttribute";
 
 function getSparklineData(data: TabularData[], attr: string): number[] {
   const byDate = data
@@ -66,7 +69,8 @@ function Sparkline({ data }: { data: number[] }) {
 }
 
 const FloatingKpiCards = () => {
-  const { layers, getLayerMetadata } = useLayerStore();
+  const { layers, getLayerMetadata, allDatasets, switchLayer } = useLayerStore();
+  const year = useDateStore((s) => s.year);
   const rightSidebarExpanded = useUiStore((s) => s.rightSidebarExpanded);
   const [drillDown, setDrillDown] = useState<{ title: string; rows: { label: string; value: string | number }[]; source?: string } | null>(null);
 
@@ -102,9 +106,26 @@ const FloatingKpiCards = () => {
   }
 
   const topAttributes = sortedAttributes.slice(0, 4);
-  const maxTotal = Math.max(
-    ...topAttributes.map((a) => getAttributeValueSum(filteredData, a)),
+
+  // Share bars are only shown where they mean something: parts of a "total …" attribute
+  const totalInfo = findTotalAttribute(sortedAttributes);
+  const totalValue = totalInfo
+    ? getAttributeValueSum(filteredData, totalInfo.attribute)
+    : 0;
+
+  // Map layers of the same cluster that a metric can switch on (e.g. Primary Schools)
+  const activeLayerIds = layers.split(",");
+  const mapLayers = allDatasets.filter(
+    (d) =>
+      (d.dataType === "vector" || d.dataType === "pmtiles") &&
+      (d.cluster ?? "") === (layerMetadata?.cluster ?? ""),
   );
+
+  const updated = layerMetadata?.updated ? new Date(layerMetadata.updated) : null;
+  const updatedLabel =
+    updated && !Number.isNaN(updated.getTime())
+      ? updated.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
+      : null;
 
   return (
     <>
@@ -114,9 +135,19 @@ const FloatingKpiCards = () => {
           rightSidebarExpanded && "rounded-xl border border-border/40 bg-card/95 p-5 shadow-sm",
         )}
       >
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          Key metrics
-        </p>
+        <div className="space-y-1">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Key metrics
+          </p>
+          {layerMetadata && (
+            <p className="text-[11px] leading-snug text-muted-foreground">
+              {layerMetadata.name}
+              {year ? ` · ${year}` : ""}
+              {layerMetadata.source ? ` · Source: ${layerMetadata.source}` : ""}
+              {updatedLabel ? ` · Loaded ${updatedLabel}` : ""}
+            </p>
+          )}
+        </div>
         <div
           className={cn(
             "grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3 md:gap-4",
@@ -134,7 +165,15 @@ const FloatingKpiCards = () => {
             const drillData = kpi.getDrillDown?.(ctx) ?? null;
             const total = getAttributeValueSum(filteredData, attr);
             const sparkData = getSparklineData(filteredData, attr);
-            const pct = maxTotal > 0 ? (total / maxTotal) * 100 : 0;
+            const share =
+              totalInfo && totalValue > 0 && totalInfo.isPartOfTotal(attr) && total <= totalValue
+                ? (total / totalValue) * 100
+                : null;
+            const linkedLayer = findLayerForAttribute(attr, mapLayers);
+            const linkedLayerId = linkedLayer
+              ? `${linkedLayer.dataType.slice(0, 1)}${linkedLayer.id}`
+              : null;
+            const layerOn = !!linkedLayerId && activeLayerIds.includes(linkedLayerId);
             return (
               <KpiCard
                 key={attr}
@@ -142,22 +181,54 @@ const FloatingKpiCards = () => {
                 result={result}
                 unit={unit ?? ""}
                 onClick={drillData ? () => setDrillDown(drillData) : undefined}
-                className="p-4"
+                className={cn("p-4", layerOn && "border-primary/60 ring-1 ring-primary/40")}
               >
-                <div className="mt-2 flex items-end justify-between gap-2">
-                  <div className="opacity-70">
-                    <Sparkline data={sparkData} />
-                  </div>
-                  <div
-                    className="h-1.5 w-12 overflow-hidden rounded-full bg-muted/50"
-                    title={`${pct.toFixed(0)}% of max`}
-                  >
-                    <div
-                      className="h-full rounded-full bg-primary transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
+                <div className="mt-2 opacity-70 empty:hidden">
+                  <Sparkline data={sparkData} />
                 </div>
+                {share !== null && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <div
+                      className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
+                      role="img"
+                      aria-label={`${share.toFixed(0)}% of ${totalInfo!.attribute.replace(/_/g, " ")}`}
+                    >
+                      <div
+                        className="h-full rounded-full bg-primary transition-all duration-500"
+                        style={{ width: `${share}%` }}
+                      />
+                    </div>
+                    <span className="shrink-0 text-[10px] text-muted-foreground">
+                      {share.toFixed(0)}% of total
+                    </span>
+                  </div>
+                )}
+                {linkedLayer && linkedLayerId && (
+                  <button
+                    type="button"
+                    aria-pressed={layerOn}
+                    title={`${layerOn ? "Hide" : "Show"} the ${linkedLayer.name} layer on the map`}
+                    className={cn(
+                      "mt-2 inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium transition-colors",
+                      layerOn
+                        ? "border-primary/40 bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                    )}
+                    onClick={(e) => {
+                      // The card itself opens the by-province breakdown
+                      e.stopPropagation();
+                      startTransition(() => switchLayer(linkedLayerId));
+                    }}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    {layerOn ? (
+                      <LuMapPinCheck className="size-3 shrink-0" aria-hidden />
+                    ) : (
+                      <LuMapPin className="size-3 shrink-0" aria-hidden />
+                    )}
+                    <span className="truncate">{layerOn ? "On map" : "Show on map"}</span>
+                  </button>
+                )}
               </KpiCard>
             );
           })}

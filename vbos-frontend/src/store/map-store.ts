@@ -12,6 +12,18 @@ const DEFAULT_VIEW: ViewState = {
   zoom: 6,
 };
 
+/**
+ * National extent. Longitudes are the real ones (166–170°E). The old values were the same
+ * place minus 360°, which Leaflet treats as a separate copy of the world where GeoJSON
+ * layers (province outlines, data layers) are not drawn.
+ */
+export const VANUATU_BOUNDS = {
+  west: 165.81665,
+  south: -20.50641,
+  east: 170.0354,
+  north: -12.84665,
+} as const;
+
 function getInitialViewState(): ViewState {
   if (typeof window === "undefined") return DEFAULT_VIEW;
   const params = new URLSearchParams(window.location.search);

@@ -20,8 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ColorModeButton } from "@/components/ui/color-mode";
 import { AppearanceButton } from "@/components/AppearancePanel";
+import { EventPicker } from "@/components/EventPicker";
 import {
   LuCircleHelp,
   LuLockKeyhole,
@@ -84,15 +84,20 @@ export const Header = () => {
           >
             DRMIS
           </h1>
-          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          {/* Hidden on narrower screens to leave room for the year and event picker */}
+          <span className="hidden text-[10px] font-medium uppercase tracking-wider text-muted-foreground xl:inline">
             Disaster Risk Management Information System
           </span>
         </div>
       </div>
 
-      {/* Right: Theme, Avatar */}
-      <div className="ml-auto flex shrink-0 items-center gap-1">
-        <ColorModeButton aria-label="Toggle light/dark theme" />
+      {/* Middle: the dashboard's starting point: year, then disaster event */}
+      <div className="flex min-w-0 flex-1 justify-center">
+        <EventPicker />
+      </div>
+
+      {/* Right: Appearance (theme, light/dark, text size), Avatar */}
+      <div className="flex shrink-0 items-center gap-1">
         <AppearanceButton />
 
         <DropdownMenu>

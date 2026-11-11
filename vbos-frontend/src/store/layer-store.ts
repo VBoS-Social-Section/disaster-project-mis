@@ -71,8 +71,16 @@ export const useLayerStore = create<LayersState>((set, get) => ({
 
   setAllDatasets: (datasets: Dataset[], options?: { replace?: boolean }) => {
     if (options?.replace !== false) {
-      // Replace when switching clusters so TabularDatasetSelect shows correct tabular
-      set({ allDatasets: datasets });
+      // Replace when switching clusters so TabularDatasetSelect shows correct tabular.
+      // Map layers that are still switched on (an event's hazard footprint, a layer from
+      // the previous sector) keep their metadata, or the legend and event banner lose them.
+      const key = (d: Dataset) => `${d.dataType[0]}${d.id}`;
+      const incoming = new Set(datasets.map(key));
+      const active = new Set(get().layers.split(","));
+      const stillActive = get().allDatasets.filter(
+        (d) => d.dataType !== "tabular" && active.has(key(d)) && !incoming.has(key(d)),
+      );
+      set({ allDatasets: [...datasets, ...stillActive] });
     } else {
       // Merge when prefetching (e.g. layers from URL on load)
       const { allDatasets } = get();

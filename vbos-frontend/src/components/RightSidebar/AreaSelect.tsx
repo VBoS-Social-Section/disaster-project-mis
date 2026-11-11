@@ -14,15 +14,8 @@ import { useAreaStore } from "@/store/area-store";
 import { useUiStore } from "@/store/ui-store";
 import { featureCollection } from "@turf/helpers";
 import { cn } from "@/lib/utils";
+import { PROVINCES } from "@/config/provinces";
 
-const PROVINCES = [
-  "Malampa",
-  "Penama",
-  "Sanma",
-  "Shefa",
-  "Tafea",
-  "Torba",
-];
 
 const AreaSelect = () => {
   const { provinces, acList, setProvinces, setAcList, setAcGeoJSON } =

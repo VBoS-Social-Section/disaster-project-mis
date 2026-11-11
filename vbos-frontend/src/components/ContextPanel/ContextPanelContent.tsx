@@ -93,7 +93,8 @@ export function ContextPanelContent() {
         {provinces.length === 0 && scenario.uiConfig.showStats && (
           <div className="rounded-md border border-border bg-muted px-3 py-2">
             <p className="text-xs text-muted-foreground">
-              Showing national data. Select a province above for area-level breakdown.
+              Showing national data. Pick a province above, or click one on the map, for an
+              area council breakdown.
             </p>
           </div>
         )}

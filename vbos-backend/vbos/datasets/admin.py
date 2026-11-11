@@ -15,6 +15,7 @@ from .forms import GeoJSONUploadForm, IconPickerWidget
 from .models import (
     AreaCouncil,
     Cluster,
+    DisasterEvent,
     PMTilesDataset,
     Province,
     RasterDataset,
@@ -56,6 +57,25 @@ class ClusterAdmin(SortableAdminMixin, admin.ModelAdmin):
     list_display = ["id", "name"]
 
 
+@admin.register(DisasterEvent)
+class DisasterEventAdmin(admin.ModelAdmin):
+    """Events offered in the dashboard's Year → Event picker.
+
+    To attach data to an event, open the layer or table (PMTiles, Vector or Tabular
+    dataset) and choose the event there.
+    """
+
+    list_display = ["name", "hazard_type", "start_date", "end_date", "is_scenario", "linked_data"]
+    list_filter = ["hazard_type", "is_scenario"]
+    search_fields = ["name"]
+    date_hierarchy = "start_date"
+
+    @admin.display(description="Linked layers / tables")
+    def linked_data(self, obj):
+        layers = obj.pmtilesdatasets.count() + obj.vectordatasets.count()
+        return f"{layers} / {obj.tabulardatasets.count()}"
+
+
 @admin.register(RasterFile)
 class RasterFileAdmin(admin.ModelAdmin):
     list_display = ["id", "name", "created", "file"]
@@ -94,8 +114,8 @@ class RasterDatasetAdmin(admin.ModelAdmin):
 
 @admin.register(PMTilesDataset)
 class PMTilesDatasetAdmin(admin.ModelAdmin):
-    list_display = ["id", "name", "cluster", "type", "updated"]
-    list_filter = ["cluster", "type"]
+    list_display = ["id", "name", "cluster", "type", "event", "updated"]
+    list_filter = ["cluster", "type", "event"]
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -109,8 +129,8 @@ class PMTilesDatasetAdmin(admin.ModelAdmin):
 
 @admin.register(VectorDataset)
 class VectorDatasetAdmin(admin.ModelAdmin):
-    list_display = ["id", "name", "cluster", "type", "icon", "color", "updated"]
-    list_filter = ["cluster", "type"]
+    list_display = ["id", "name", "cluster", "type", "icon", "color", "event", "updated"]
+    list_filter = ["cluster", "type", "event"]
     list_editable = ["icon", "color"]
     change_form_template = "admin/datasets/vectordataset/change_form.html"
 
@@ -266,8 +286,8 @@ class VectorItemAdmin(admin.GISModelAdmin):
 
 @admin.register(TabularDataset)
 class TabularDatasetAdmin(admin.ModelAdmin):
-    list_display = ["id", "name", "cluster", "type", "updated"]
-    list_filter = ["cluster", "type"]
+    list_display = ["id", "name", "cluster", "type", "event", "updated"]
+    list_filter = ["cluster", "type", "event"]
     actions = ["clean_redundant_items"]
 
     @admin.action(description="Clean redundant TabularItems for dataset")

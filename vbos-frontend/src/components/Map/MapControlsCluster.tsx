@@ -7,6 +7,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  LuHouse,
+  LuMap,
   LuMinus,
   LuMoon,
   LuPlus,
@@ -15,7 +17,8 @@ import {
   LuSun,
 } from "react-icons/lu";
 import type { MapRef } from "./index";
-import { useMapStore, BASEMAP_STYLES } from "@/store/map-store";
+import { useMapStore, BASEMAP_STYLES, VANUATU_BOUNDS } from "@/store/map-store";
+import { useAreaStore } from "@/store/area-store";
 import { Tooltip } from "@/components/ui";
 
 type MapControlsClusterProps = {
@@ -26,6 +29,17 @@ export function MapControlsCluster({ map }: MapControlsClusterProps) {
   const { mapStyle, setMapStyle } = useMapStore();
 
   const currentId = BASEMAP_STYLES.find((s) => s.url === mapStyle)?.id ?? "positron";
+  const currentLabel = BASEMAP_STYLES.find((s) => s.id === currentId)?.label ?? "Light";
+
+  // Back to the whole country: clear any province filter and refit the map
+  const resetView = () => {
+    const { provinces, setProvinces } = useAreaStore.getState();
+    if (provinces.length > 0) setProvinces([]);
+    map?.fitBounds([
+      [VANUATU_BOUNDS.west, VANUATU_BOUNDS.south],
+      [VANUATU_BOUNDS.east, VANUATU_BOUNDS.north],
+    ]);
+  };
 
   const basemapIcons: Record<string, ReactNode> = {
     positron: <LuSun className="size-4" />,
@@ -41,16 +55,16 @@ export function MapControlsCluster({ map }: MapControlsClusterProps) {
   return (
     <div className="absolute right-4 top-4 z-[1000] flex flex-col gap-1 overflow-hidden rounded-lg border border-border p-1 shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface md:right-6 md:top-6">
       <DropdownMenu>
-        <Tooltip content="Basemap (Light, Dark, Satellite…)" positioning={{ placement: "left" }}>
+        <Tooltip content={`Basemap: ${currentLabel}`} positioning={{ placement: "left" }}>
           <DropdownMenuTrigger asChild>
             <Button
               variant="secondary"
               size="icon-xs"
               className="h-9 w-full"
-              aria-label="Basemap (Light, Dark, Satellite)"
-              title="Basemap"
+              aria-label={`Change basemap (currently ${currentLabel})`}
             >
-              {basemapIcons[currentId] ?? basemapIcons.positron}
+              {/* A map icon, not sun/moon: this picks the basemap, not the app's colour mode */}
+              <LuMap className="size-4" />
             </Button>
           </DropdownMenuTrigger>
         </Tooltip>
@@ -69,6 +83,16 @@ export function MapControlsCluster({ map }: MapControlsClusterProps) {
       </DropdownMenu>
       <div className="mx-1 h-px bg-border" />
       <div className="flex flex-col gap-0">
+        <Tooltip content="Reset to national view" positioning={{ placement: "left" }}>
+          <Button
+            size="icon-xs"
+            variant="ghost"
+            aria-label="Reset to national view"
+            onClick={resetView}
+          >
+            <LuHouse className="size-4 icon-interactive" />
+          </Button>
+        </Tooltip>
         <Tooltip content="Zoom in" positioning={{ placement: "left" }}>
           <Button
             size="icon-xs"

@@ -92,7 +92,7 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
   }, [setIsMobile, setMobileOpenPanel]);
 
   const isOverlay = sideBarVisible && !isLeftSidebar && rightSidebarExpanded;
-  const overlayLeft = leftSidebarIconMode ? "3rem" : "20rem";
+  const overlayLeft = leftSidebarIconMode ? "3rem" : "18rem";
 
   const panelContent = (
     <>
@@ -110,8 +110,8 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
           "md:min-w-0",
           !sideBarVisible && iconMode && "md:w-12",
           !sideBarVisible && !iconMode && "md:w-0",
-          sideBarVisible && isLeftSidebar && "md:w-80",
-          sideBarVisible && !isLeftSidebar && (isOverlay ? "md:w-full" : "md:w-[28rem]"),
+          sideBarVisible && isLeftSidebar && "md:w-72",
+          sideBarVisible && !isLeftSidebar && (isOverlay ? "md:w-full" : "md:w-[25rem]"),
         )}
       >
         {(sideBarVisible || (iconMode && !isMobile && !sideBarVisible)) && (
@@ -274,7 +274,7 @@ export const Sidebar = ({ title, direction, children, badgeCount = 0, subtitle, 
           isLeftSidebar ? "border-l-0 border-r" : "border-r-0 border-l",
           floating && (isLeftSidebar ? "rounded-r-xl" : "rounded-l-xl"),
           iconMode && !sideBarVisible && "z-[1001]",
-          isOverlay && "md:invisible md:w-[28rem]",
+          isOverlay && "md:invisible md:w-[25rem]",
         )}
       >
         {panelContent}

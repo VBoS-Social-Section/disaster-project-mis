@@ -1,6 +1,7 @@
 import { getAreaCouncils } from "./getAreaCouncils";
 import { getProvinces } from "./getProvinces";
 import { getClusters } from "./getClusters";
+import { getEvents } from "./getEvents";
 import {
   getDatasets,
   getDatasetData,
@@ -13,6 +14,7 @@ export default {
   getProvinces,
   getAreaCouncils,
   getClusters,
+  getEvents,
   getDatasets,
   getDatasetData,
   getDatasetDetail,

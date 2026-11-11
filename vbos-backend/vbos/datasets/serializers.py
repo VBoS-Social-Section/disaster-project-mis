@@ -4,6 +4,7 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from .models import (
     AreaCouncil,
     Cluster,
+    DisasterEvent,
     PMTilesDataset,
     Province,
     RasterDataset,
@@ -18,6 +19,37 @@ class ClusterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cluster
         fields = ["id", "name"]
+
+
+class DisasterEventSerializer(serializers.ModelSerializer):
+    hazard_type_label = serializers.CharField(source="get_hazard_type_display", read_only=True)
+    year = serializers.SerializerMethodField()
+    layers = serializers.SerializerMethodField()
+
+    def get_year(self, obj):
+        return obj.start_date.year if obj.start_date else None
+
+    def get_layers(self, obj):
+        """Footprint layers; ids are in the dashboard's format (p = PMTiles, v = vector)."""
+        return [{"id": f"p{d.id}", "name": d.name} for d in obj.pmtilesdatasets.all()] + [
+            {"id": f"v{d.id}", "name": d.name} for d in obj.vectordatasets.all()
+        ]
+
+    class Meta:
+        model = DisasterEvent
+        fields = [
+            "id",
+            "name",
+            "hazard_type",
+            "hazard_type_label",
+            "start_date",
+            "end_date",
+            "year",
+            "is_scenario",
+            "description",
+            "source",
+            "layers",
+        ]
 
 
 class ProvinceSerializer(GeoFeatureModelSerializer):
@@ -75,6 +107,7 @@ class VectorDatasetSerializer(serializers.ModelSerializer):
             "icon",
             "color",
             "cyclone_name",
+            "event",
         ]
 
 
@@ -95,6 +128,7 @@ class PMTilesDatasetSerializer(serializers.ModelSerializer):
             "url",
             "source_layer",
             "cyclone_name",
+            "event",
         ]
 
 
@@ -145,6 +179,7 @@ class TabularDatasetSerializer(serializers.ModelSerializer):
             "type",
             "source",
             "unit",
+            "event",
         ]
 
 
