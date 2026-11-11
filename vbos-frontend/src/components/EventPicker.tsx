@@ -112,7 +112,9 @@ export function EventPicker() {
           {/* Plain text rather than SelectValue, which would repeat the event-count badge */}
           <span>{year}</span>
         </SelectTrigger>
-        <SelectContent>
+        {/* popper: the default item-aligned placement needs a SelectValue in the trigger
+            to measure against, and silently never shows the list without one */}
+        <SelectContent position="popper" align="start">
           {years.map(({ year: y, count }) => (
             <SelectItem key={y} value={y} textValue={y}>
               {y}
@@ -146,7 +148,7 @@ export function EventPicker() {
             </span>
           </span>
         </SelectTrigger>
-        <SelectContent className="max-w-[min(24rem,calc(100vw-2rem))]">
+        <SelectContent position="popper" align="start" className="max-w-[min(24rem,calc(100vw-2rem))]">
           <SelectItem value={NO_EVENT}>No event (baseline)</SelectItem>
           <SelectSeparator />
           <SelectGroup>
