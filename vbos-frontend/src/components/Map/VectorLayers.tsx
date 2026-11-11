@@ -18,6 +18,8 @@ import {
   getVectorIconKey,
 } from "./vectorIcons";
 import type { PopupInfo } from "./index";
+import { useEventIntensity } from "@/hooks/useEventIntensity";
+import { categoryStyle } from "@/config/disaster";
 
 type VectorLayersProps = {
   setPopupInfo: (info: PopupInfo | null) => void;
@@ -53,7 +55,9 @@ type VectorMapLayerProps = {
   bbox: string;
 };
 
-const CLUSTER_THRESHOLD = 200;
+const CLUSTER_THRESHOLD = 15;
+/** From this zoom every point is drawn on its own. */
+const UNCLUSTER_ZOOM = 16;
 const SIMPLIFY_ZOOM_THRESHOLD = 10;
 /** Max features to render; prevents browser freeze on large datasets (e.g. Roads). */
 const FEATURE_CAP = 2500;
@@ -66,6 +70,9 @@ function VectorMapLayer({ id, colorIndex, setPopupInfo, bbox }: VectorMapLayerPr
   const { getOpacity } = useOpacityStore();
   const { getEffectiveOpacity } = useFocusStore();
   const zoom = useMapStore((s) => s.viewState.zoom);
+  // With an event selected, a facility inside a wind zone is ringed in the category colour
+  // and badged with the category number
+  const { rankOf, hasData: hasIntensity, event } = useEventIntensity();
   const filters = useMemo(() => {
     const p = new URLSearchParams();
     p.set("in_bbox", bbox);
@@ -84,8 +91,9 @@ function VectorMapLayer({ id, colorIndex, setPopupInfo, bbox }: VectorMapLayerPr
       (f) => f.geometry?.type === "Point" || f.geometry?.type === "MultiPoint",
     ).length;
     
-    // Enable clustering based on both point count and zoom level
-    const useClustering = pointCount >= CLUSTER_THRESHOLD || (pointCount >= 50 && zoom < 12);
+    // Group points whenever there are enough to overlap; the cluster group itself stops
+    // grouping at street level (disableClusteringAtZoom) where icons no longer collide.
+    const useClustering = pointCount >= CLUSTER_THRESHOLD;
 
     // Cap features to prevent browser freeze on large datasets (e.g. Roads)
     if (features.length > FEATURE_CAP) {
@@ -173,9 +181,17 @@ function VectorMapLayer({ id, colorIndex, setPopupInfo, bbox }: VectorMapLayerPr
     };
   };
 
-  const pointToLayer = (_feature: GeoJSON.Feature, latlng: L.LatLng) => {
+  const pointToLayer = (feature: GeoJSON.Feature, latlng: L.LatLng) => {
+    const rank = hasIntensity
+      ? (rankOf(feature.properties?.area_council as string | undefined) ?? 0)
+      : 0;
+    let html = buildVectorMarkerIcon(layerColor, iconKey, opacity);
+    if (rank > 0) {
+      const { color, text } = categoryStyle(rank);
+      html = `<div class="hazard-marker" style="--hazard:${color};--hazard-text:${text}">${html}<span class="hazard-marker__badge">${rank}</span></div>`;
+    }
     const icon = L.divIcon({
-      html: buildVectorMarkerIcon(layerColor, iconKey, opacity),
+      html,
       className: "vector-marker-div-icon",
       iconSize: [24, 24],
       iconAnchor: [12, 12],
@@ -194,6 +210,8 @@ function VectorMapLayer({ id, colorIndex, setPopupInfo, bbox }: VectorMapLayerPr
     const lines: string[] = [];
     if (datasetName) lines.push(`<strong>${datasetName}</strong>`);
     if (featureId != null) lines.push(`<strong>ID ${featureId}</strong>`);
+    const rank = hasIntensity ? rankOf(props.area_council as string | undefined) : undefined;
+    if (rank && event) lines.push(`${event.name}: Category ${rank} zone`);
     Object.entries(props)
       .filter(([key]) => !["id", "ref", "metadata"].includes(key))
       .forEach(([key, value]) => {
@@ -251,7 +269,8 @@ function VectorMapLayer({ id, colorIndex, setPopupInfo, bbox }: VectorMapLayerPr
 
   const geoJson = (
     <GeoJSON
-      key={`${layerId}-opacity-${Math.round(opacity * 100)}`}
+      // Leaflet builds markers once per GeoJSON layer: re-key when the event changes
+      key={`${layerId}-opacity-${Math.round(opacity * 100)}-event-${hasIntensity ? event?.id : "none"}`}
       data={displayData}
       style={getStyle}
       pointToLayer={pointToLayer}
@@ -261,7 +280,12 @@ function VectorMapLayer({ id, colorIndex, setPopupInfo, bbox }: VectorMapLayerPr
 
   if (useClustering) {
     return (
-      <MarkerClusterGroup chunkedLoading>
+      <MarkerClusterGroup
+        chunkedLoading
+        maxClusterRadius={36}
+        disableClusteringAtZoom={UNCLUSTER_ZOOM}
+        showCoverageOnHover={false}
+      >
         {geoJson}
       </MarkerClusterGroup>
     );

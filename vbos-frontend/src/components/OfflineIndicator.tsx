@@ -29,7 +29,7 @@ export function OfflineIndicator() {
   return (
     <div
       className={cn(
-        "fixed bottom-4 left-1/2 z-[9998] flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium shadow-lg",
+        "fixed bottom-8 left-1/2 z-[9998] flex print:hidden -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium shadow-lg",
         "border border-border bg-card",
         !isOnline && "text-amber-600 dark:text-amber-400",
       )}

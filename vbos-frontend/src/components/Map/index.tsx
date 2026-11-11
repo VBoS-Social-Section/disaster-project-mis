@@ -38,6 +38,7 @@ import { TabularDeltaOverlay } from "./TabularDeltaOverlay";
 import { LandCoverLegend } from "./LandCoverLegend";
 import { CycloneNameMapOverlay } from "./CycloneNameMapOverlay";
 import { PlaceLabels } from "./PlaceLabels";
+import { useLowData } from "@/store/low-data-store";
 
 // Browsers leave hairline gaps between map tiles when the page is scaled (e.g. Windows
 // display scaling at 125%). Leaflet's known workaround: draw every tile 1px larger so
@@ -125,6 +126,7 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
 
   const currentStyle = BASEMAP_STYLES.find((s) => s.url === mapStyle) ?? BASEMAP_STYLES[0];
+  const { active: lowData } = useLowData();
 
   useEffect(() => {
     if (popupInfo && !layers.includes(popupInfo.datasetId)) setPopupInfo(null);
@@ -257,7 +259,7 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
       attributionControl={false}
     >
       <TileLayer
-        key={currentStyle.id}
+        key={`${currentStyle.id}-${lowData ? "low" : "full"}`}
         url={currentStyle.url}
         attribution={currentStyle.attribution}
         {...("subdomains" in currentStyle && {
@@ -266,8 +268,19 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
         {...("maxNativeZoom" in currentStyle && {
           maxNativeZoom: currentStyle.maxNativeZoom,
         })}
+        // Low-data mode: each tile covers four times the area (softer, a quarter of the
+        // requests), nothing is fetched until panning stops, and no spare tiles are kept
+        {...(lowData && {
+          tileSize: 512,
+          zoomOffset: -1,
+          updateWhenIdle: true,
+          updateWhenZooming: false,
+          keepBuffer: 0,
+        })}
       />
-      {"labelsUrl" in currentStyle && (
+      {/* The label overlay doubles the tile requests, so low-data mode leaves it out;
+          the dashboard's own place labels remain */}
+      {"labelsUrl" in currentStyle && !lowData && (
         <TileLayer
           key={`${currentStyle.id}-labels`}
           url={currentStyle.labelsUrl}
@@ -285,7 +298,7 @@ function Map(_props: object, ref: Ref<MapRef | undefined>) {
           onMoveEnd={onMoveEnd}
           onClick={onClick}
         />
-        {"labelsUrl" in currentStyle && <PlaceLabels />}
+        {"labelsUrl" in currentStyle && <PlaceLabels keepWhenZoomedIn={lowData} />}
         <AdminAreaMapLayers
           setPopupInfo={setPopupInfo}
           activeFeatureName={

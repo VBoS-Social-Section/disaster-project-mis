@@ -14,14 +14,22 @@ import type { DisasterEvent, HazardType } from "@/types/api";
 /**
  * Cyclone intensity categories and colors for map legend.
  * Matches RAP export: intensity_color in GeoJSON/PMTiles.
+ * `rank` is printed inside each swatch so categories can be told apart without relying on
+ * colour; `text` is the colour that reads on top of the swatch.
  */
 export const CYCLONE_INTENSITY_LEGEND = [
-  { label: "No intensity (0)", color: "#cccccc" },
-  { label: "Category 2", color: "#fbbf24" },
-  { label: "Category 3", color: "#f97316" },
-  { label: "Category 4", color: "#dc2626" },
-  { label: "Category 5", color: "#7f1d1d" },
+  { rank: 0, label: "No intensity (0)", color: "#cccccc", text: "#1f2937" },
+  { rank: 2, label: "Category 2", color: "#fbbf24", text: "#1f2937" },
+  { rank: 3, label: "Category 3", color: "#f97316", text: "#1f2937" },
+  { rank: 4, label: "Category 4", color: "#dc2626", text: "#ffffff" },
+  { rank: 5, label: "Category 5", color: "#7f1d1d", text: "#ffffff" },
 ] as const;
+
+/** Legend entry for a rank; ranks without their own entry (1) use a neutral swatch. */
+export function categoryStyle(rank: number): { color: string; text: string } {
+  const entry = CYCLONE_INTENSITY_LEGEND.find((l) => l.rank === rank);
+  return entry ?? { color: "#fde68a", text: "#1f2937" };
+}
 
 /** Parse intensity value to rank (0–5). Higher = stronger. */
 export function parseIntensityRank(value: string | number): number {
@@ -43,14 +51,12 @@ export function getHighestIntensity(
   for (const r of rows) {
     const rank = parseIntensityRank(r.intensity);
     if (rank > 0 && (!best || rank > best.rank)) {
-      const label =
-        String(r.intensity).trim() ||
-        CYCLONE_INTENSITY_LEGEND.find((l) => l.label.includes(String(rank)))?.label ||
-        `Category ${rank}`;
+      // Always "Category N": the raw value is often just the digit
+      const label = `Category ${rank}`;
       best = {
         rank,
         label,
-        color: r.intensityColor || CYCLONE_INTENSITY_LEGEND.find((l) => l.label.includes(String(rank)))?.color || "#cccccc",
+        color: r.intensityColor || categoryStyle(rank).color,
       };
     }
   }
@@ -69,16 +75,18 @@ export const HAZARD_ICONS: Record<HazardType, IconType> = {
   wildfire: LuFlameKindling,
 };
 
-const DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
-
 /** "24 Oct 2023" or "24 Oct 2023 – 26 Oct 2023"; empty for undated scenarios. */
-export function formatEventDates(event: Pick<DisasterEvent, "start_date" | "end_date">): string {
+export function formatEventDates(
+  event: Pick<DisasterEvent, "start_date" | "end_date">,
+  locale = "en-GB",
+): string {
   if (!event.start_date) return "";
+  const day = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" });
   // Date-only strings: parse as local midnight so the day does not shift with the timezone
   const parse = (d: string) => new Date(`${d}T00:00:00`);
-  const start = DAY.format(parse(event.start_date));
+  const start = day.format(parse(event.start_date));
   if (!event.end_date || event.end_date === event.start_date) return start;
-  return `${start} – ${DAY.format(parse(event.end_date))}`;
+  return `${start} – ${day.format(parse(event.end_date))}`;
 }
 
 /**

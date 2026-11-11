@@ -1,35 +1,33 @@
 /**
- * Links a tabular metric (e.g. "primary_students") to the map layer that shows the same
+ * Links a tabular metric (e.g. "primary_schools") to the map layer that shows the same
  * thing (e.g. "Primary Schools"), so a metric card can switch its layer on and off.
  *
- * Matching is deliberately strict: every distinctive word in the layer name must appear in
- * the attribute, and exactly one layer may match. Otherwise no link is offered.
+ * Matching is deliberately strict: every word of the layer name must appear in the
+ * attribute, and exactly one layer may match. "primary_students" is not linked to
+ * "Primary Schools": the layer shows schools, not students.
  */
 import type { Dataset } from "@/types/api";
 
-/** Words that describe the unit or the count rather than the subject. */
-const GENERIC_WORDS = new Set([
-  "total", "number", "no", "count", "all", "of", "the", "and", "in", "with", "per", "by",
-  "student", "students", "school", "schools", "facility", "facilities",
-  "household", "households", "people", "population", "site", "sites", "location", "locations",
-]);
+const STOP_WORDS = new Set(["total", "number", "no", "count", "all", "of", "the", "and", "in"]);
 
-function distinctiveWords(text: string): string[] {
+/** Lower-case words, plurals folded ("Schools" and "school" compare equal). */
+function words(text: string): string[] {
   return text
     .toLowerCase()
     .split(/[^a-z0-9]+/)
-    .filter((w) => w.length > 1 && !GENERIC_WORDS.has(w));
+    .filter((w) => w.length > 1 && !STOP_WORDS.has(w))
+    .map((w) => (w.length > 3 && w.endsWith("s") ? w.slice(0, -1) : w));
 }
 
 export function findLayerForAttribute(
   attribute: string,
   mapLayers: Dataset[],
 ): Dataset | undefined {
-  const attributeWords = new Set(distinctiveWords(attribute));
+  const attributeWords = new Set(words(attribute));
   if (attributeWords.size === 0) return undefined;
   const matches = mapLayers.filter((d) => {
-    const words = distinctiveWords(d.name);
-    return words.length > 0 && words.every((w) => attributeWords.has(w));
+    const layerWords = words(d.name);
+    return layerWords.length > 0 && layerWords.every((w) => attributeWords.has(w));
   });
   return matches.length === 1 ? matches[0] : undefined;
 }

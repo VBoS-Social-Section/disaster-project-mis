@@ -8,6 +8,8 @@ import { useComparisonStore } from "@/store/comparison-store";
 import { useLegendLayers } from "@/components/Map/Legend/hooks/useLegendLayers";
 import { useLandCoverRaster } from "@/hooks/useLandCoverRaster";
 import { LayerEntry } from "./LayerEntry";
+import { ClearAllLayersButton } from "./ClearAllLayersButton";
+import { useT } from "@/i18n";
 import { MAP_COLORS, getDeltaColor } from "@/components/colors";
 import { useColorMode } from "@/components/ui/color-mode";
 
@@ -18,6 +20,7 @@ type LegendProps = {
 
 export function Legend({ embedded = false }: LegendProps = {}) {
   const { colorMode } = useColorMode();
+  const { t } = useT();
   const mapPalette = MAP_COLORS[colorMode === "dark" ? "dark" : "light"];
   const { switchLayer, reorderLayers, layers } = useLayerStore();
   const { setOpacity } = useOpacityStore();
@@ -60,12 +63,13 @@ export function Legend({ embedded = false }: LegendProps = {}) {
       className={
         embedded
           ? "w-full overflow-hidden rounded-lg border border-border bg-muted/20 shadow-sm"
-          : "absolute left-2 bottom-4 z-[1000] w-[280px] overflow-hidden rounded-lg border border-border shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface md:w-[320px]"
+          : "legend-panel absolute left-2 bottom-4 z-[1000] flex max-h-[min(60%,26rem)] w-[260px] flex-col overflow-hidden rounded-lg border border-border shadow-[0_4px_20px_-4px_rgb(0_0_0_/0.08),0_0_0_1px_var(--border)] glass-surface md:w-[290px]"
       }
       role="list"
     >
       <div className="flex items-center justify-between gap-1 border-b border-border px-2 py-1.5">
-        <h2 className="text-sm font-semibold">Legend</h2>
+        <h2 className="mr-auto text-sm font-semibold">{t("legend.title")}</h2>
+        <ClearAllLayersButton />
         <Button
           variant="ghost"
           size="icon-xs"
@@ -137,7 +141,7 @@ export function Legend({ embedded = false }: LegendProps = {}) {
         </>
       )}
       {!collapsed && (
-      <ul className="m-0 flex w-full list-none flex-col gap-0 p-0 text-xs">
+      <ul className="scrollbar-thin m-0 flex min-h-0 w-full list-none flex-col gap-0 overflow-y-auto p-0 text-xs">
         {legendLayers.map((layer, index) => (
           <li
             key={`${layer.dataType}-${layer.id}`}

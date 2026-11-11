@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip } from "@/components/ui";
-import { LuX, LuInfo, LuFocus } from "react-icons/lu";
+import { LuX, LuInfo, LuFocus, LuSlidersHorizontal } from "react-icons/lu";
+import { useT } from "@/i18n";
+import { displayDatasetName } from "@/utils/displayDatasetName";
 import { LayerInfoModal } from "./LayerInfoModal";
 import type {
   LegendLayer,
@@ -33,6 +35,9 @@ export function LayerEntry(props: LayerEntryProps) {
     setOpacity: setOpacityStore,
   } = props;
   const [infoOpen, setInfoOpen] = useState(false);
+  // Entries open compact (name and key only); opacity and details are one click away
+  const [expanded, setExpanded] = useState(false);
+  const { t } = useT();
   const layerId = `${dataType.charAt(0)}${id}`;
   const { getOpacity } = useOpacityStore();
   const { focusedLayerId, setFocusedLayerId } = useFocusStore();
@@ -53,9 +58,21 @@ export function LayerEntry(props: LayerEntryProps) {
       <div className="flex w-full flex-col items-start gap-2">
         <div className="flex w-full flex-shrink-0">
           <p className="mr-auto line-clamp-1 text-sm font-semibold leading-snug">
-            {name}
+            {displayDatasetName(name)}
           </p>
           <div className="flex shrink-0 gap-0">
+            <Tooltip content={t("legend.details")} positioning={{ placement: "top" }}>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                aria-label={t("legend.details")}
+                aria-expanded={expanded}
+                onClick={() => setExpanded((v) => !v)}
+                className={expanded ? "text-primary" : undefined}
+              >
+                <LuSlidersHorizontal className="size-4" />
+              </Button>
+            </Tooltip>
             <Tooltip
               content={isFocused ? "Exit focus mode" : "Focus this layer"}
               positioning={{ placement: "top" }}
@@ -92,6 +109,7 @@ export function LayerEntry(props: LayerEntryProps) {
             </Tooltip>
           </div>
         </div>
+        {expanded && (
         <div className="flex w-full min-w-[60px] flex-1 items-center gap-2">
           <span className="shrink-0 text-xs text-muted-foreground">
             Opacity
@@ -107,12 +125,13 @@ export function LayerEntry(props: LayerEntryProps) {
             {opacity}%
           </span>
         </div>
+        )}
         <div className="min-w-0 w-full flex-1 [&:empty]:hidden">
           {dataType === "tabular" && (
             <TabularEntry {...(props as TabularLegendLayer)} />
           )}
           {["vector", "pmtiles"].includes(dataType) && (
-            <VectorEntry {...(props as VectorLegendLayer)} />
+            <VectorEntry {...(props as VectorLegendLayer)} expanded={expanded} />
           )}
           {dataType === "raster" && (
             <RasterEntry {...(props as RasterLegendLayer)} />
@@ -183,8 +202,8 @@ function TabularEntry(props: TabularLegendLayer) {
   );
 }
 
-function VectorEntry(props: VectorLegendLayer) {
-  const { name, geometryType, color, iconKey, unit, cyclone_name } = props;
+function VectorEntry(props: VectorLegendLayer & { expanded: boolean }) {
+  const { name, geometryType, color, iconKey, unit, cyclone_name, expanded } = props;
   const isPoint = geometryType.includes("Point");
   const isLine = geometryType.includes("Line");
   const formattedUnit = unit === "number" ? undefined : abbreviateUnit(unit);
@@ -193,22 +212,37 @@ function VectorEntry(props: VectorLegendLayer) {
     cyclone_name || name?.toLowerCase().includes("cyclone intensity");
 
   if (isCycloneIntensity) {
-    return (
-      <div className="flex w-full flex-col gap-2">
-        <div className="flex flex-col gap-1.5">
-          {CYCLONE_INTENSITY_LEGEND.map(({ label, color: c }) => (
-            <div
-              key={label}
-              className="flex items-center gap-2"
-            >
-              <div
-                className="h-3 w-4 shrink-0 rounded-sm border border-border/60"
-                style={{ backgroundColor: c }}
-              />
-              <span className="text-[13px] leading-tight text-foreground/80">{label}</span>
-            </div>
+    // The category number is printed in each swatch, so the key does not rely on colour.
+    // Compact: one row of numbered swatches. Expanded: one labelled line per category.
+    const swatch = (rank: number, c: string, text: string) => (
+      <span
+        className="flex h-4 w-5 shrink-0 items-center justify-center rounded-sm border border-black/20 text-[10px] font-bold leading-none"
+        style={{ backgroundColor: c, color: text }}
+        aria-hidden
+      >
+        {rank}
+      </span>
+    );
+    if (!expanded) {
+      return (
+        <div className="flex items-center gap-1.5" role="img" aria-label="Cyclone category 0 to 5">
+          <span className="text-[11px] text-muted-foreground">Category</span>
+          {CYCLONE_INTENSITY_LEGEND.map(({ rank, color: c, text, label }) => (
+            <span key={label} title={label}>
+              {swatch(rank, c, text)}
+            </span>
           ))}
         </div>
+      );
+    }
+    return (
+      <div className="flex flex-col gap-1.5">
+        {CYCLONE_INTENSITY_LEGEND.map(({ rank, label, color: c, text }) => (
+          <div key={label} className="flex items-center gap-2">
+            {swatch(rank, c, text)}
+            <span className="text-[13px] leading-tight text-foreground/80">{label}</span>
+          </div>
+        ))}
       </div>
     );
   }

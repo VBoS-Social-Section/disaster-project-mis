@@ -16,9 +16,10 @@ import { useUiStore } from "@/store/ui-store";
 import { SelectedClusterPanel } from "./SelectedClusterPanel";
 import { RasterSection } from "./RasterSection";
 import { EventLayers } from "./EventLayers";
-import { ActiveLayersList } from "./ActiveLayersList";
+import { useT } from "@/i18n";
 
 const LeftSidebar = () => {
+  const { t } = useT();
   const rightSidebarExpanded = useUiStore((s) => s.rightSidebarExpanded);
   const {
     data: allClusters,
@@ -46,7 +47,7 @@ const LeftSidebar = () => {
 
   if (clustersError) {
     return (
-      <Sidebar direction="left" title="Data Layers" transparent collapseWhen={rightSidebarExpanded}>
+      <Sidebar direction="left" title={t("panel.dataLayers")} transparent collapseWhen={rightSidebarExpanded}>
         <div className="p-4 text-sm text-amber-600 dark:text-amber-400">
           Error loading data: {String(clustersError)}
         </div>
@@ -56,7 +57,7 @@ const LeftSidebar = () => {
 
   if (clustersLoading) {
     return (
-      <Sidebar direction="left" title="Data Layers" transparent collapseWhen={rightSidebarExpanded}>
+      <Sidebar direction="left" title={t("panel.dataLayers")} transparent collapseWhen={rightSidebarExpanded}>
         <div className="space-y-3 px-2 py-3" role="status" aria-label="Loading clusters">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="rounded-lg border border-border bg-muted/30 p-4">
@@ -77,8 +78,8 @@ const LeftSidebar = () => {
     <>
       <div className="border-b border-border px-4 py-3 md:px-5 md:py-3">
         <Select value={selectedCluster} onValueChange={setSelectedCluster}>
-          <SelectTrigger className="w-full rounded-md border-border bg-muted/50">
-            <SelectValue placeholder="Select sector..." />
+          <SelectTrigger className="w-full rounded-md border-border bg-muted/50" aria-label={t("panel.sector")}>
+            <SelectValue placeholder={t("panel.selectSector")} />
           </SelectTrigger>
           <SelectContent>
             {clusters?.map((cluster) => (
@@ -102,7 +103,6 @@ const LeftSidebar = () => {
           </p>
         )}
       </div>
-      <ActiveLayersList />
       <div className="shrink-0 border-t border-border px-4 py-2 md:px-5">
         <a
           href="https://vbos-social-section.github.io/disaster-mis-user-manual/"
@@ -111,7 +111,7 @@ const LeftSidebar = () => {
           className="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
           <LuBookOpen className="size-3.5 shrink-0" />
-          <span>User manual</span>
+          <span>{t("panel.userManual")}</span>
         </a>
       </div>
     </>
@@ -146,7 +146,7 @@ const LeftSidebar = () => {
       >
         <div className="flex h-10 shrink-0 items-center border-b border-border bg-muted px-4">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Data Layers
+            {t("panel.dataLayers")}
           </span>
         </div>
         {layersBody}
@@ -157,7 +157,7 @@ const LeftSidebar = () => {
   return (
     <Sidebar
       direction="left"
-      title="Data Layers"
+      title={t("panel.dataLayers")}
       badgeCount={activeLayerCount}
       collapsedIcons={collapsedIcons}
       transparent

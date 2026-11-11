@@ -17,6 +17,7 @@ import { useLayerStore } from "@/store/layer-store";
 import { useUiStore } from "@/store/ui-store";
 import { useViewStore } from "@/store/view-store";
 import { useScenario } from "@/hooks/useScenario";
+import { displayDatasetName } from "@/utils/displayDatasetName";
 import { isDatasetInEvent } from "@/hooks/useEvents";
 import { useEventStore } from "@/store/event-store";
 
@@ -190,7 +191,7 @@ export function TabularDatasetSelect() {
               <SelectContent>
                 {datasetsInType.map((d) => (
                   <SelectItem key={`t${d.id}`} value={`t${d.id}`}>
-                    {d.name}
+                    {displayDatasetName(d.name, d.cluster)}
                   </SelectItem>
                 ))}
               </SelectContent>

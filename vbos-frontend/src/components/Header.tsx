@@ -13,8 +13,11 @@ import {
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -24,6 +27,7 @@ import { AppearanceButton } from "@/components/AppearancePanel";
 import { EventPicker } from "@/components/EventPicker";
 import {
   LuCircleHelp,
+  LuLanguages,
   LuLockKeyhole,
   LuLock,
   LuLogOut,
@@ -38,6 +42,9 @@ import { useLockStore } from "@/store/lock-store";
 import { ProfileSettingsDialog } from "@/components/ProfileSettingsDialog";
 import { toast } from "@/utils/toast";
 import { cn } from "@/lib/utils";
+import { SITE } from "@/config/site";
+import { LANGUAGES, useLangStore, useT, type Lang } from "@/i18n";
+import { useLowData, useLowDataStore } from "@/store/low-data-store";
 
 export const Header = () => {
   const [shareDialogIsOpen, setShareDialogIsOpen] = useState(false);
@@ -45,6 +52,10 @@ export const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const { user, clearAuth } = useAuthStore();
   const { lock, pinHash, resetLockOnLogout } = useLockStore();
+  const { t, lang } = useT();
+  const setLang = useLangStore((s) => s.setLang);
+  const lowData = useLowData();
+  const setLowDataPreference = useLowDataStore((s) => s.setPreference);
 
   const handleLogout = () => {
     resetLockOnLogout();
@@ -64,40 +75,66 @@ export const Header = () => {
   return (
     <header
       className={cn(
-        "sticky top-0 z-[100] flex h-14 min-h-14 min-w-0 items-center gap-4 overflow-hidden px-4 transition-shadow duration-200",
+        // Below md the picker drops to a second row so both dropdowns stay full size
+        "sticky top-0 z-[100] flex min-h-14 min-w-0 flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-1.5 transition-shadow duration-200 md:h-14 md:flex-nowrap md:overflow-hidden md:py-0 print:hidden",
         "border-b border-border glass-surface-strong",
         "shadow-[0_1px_0_0_var(--border)]",
         scrolled && "shadow-[0_1px_0_0_var(--border),0_4px_12px_-2px_rgba(0,0,0,0.08)] dark:shadow-[0_1px_0_0_var(--border),0_4px_12px_-2px_rgba(0,0,0,0.25)]",
       )}
     >
-      {/* Left: Logo + Title */}
+      {/* Left: crest (when configured), logo and title */}
       <div className="flex shrink-0 items-center gap-3">
+        {SITE.crestUrl && (
+          <img src={SITE.crestUrl} alt={SITE.government} className="h-9 w-auto shrink-0" />
+        )}
         <img
           src="/MISLogo.svg"
-          alt="DRMIS Logo"
+          alt=""
           className="size-8 shrink-0"
         />
         <div className="flex flex-col gap-0">
           <h1
             className="font-sans text-sm font-bold tracking-tight text-foreground"
-            title="Disaster Risk Management Information System"
+            title={t("app.title")}
           >
-            DRMIS
+            {SITE.shortName}
           </h1>
           {/* Hidden on narrower screens to leave room for the year and event picker */}
-          <span className="hidden text-[10px] font-medium uppercase tracking-wider text-muted-foreground xl:inline">
-            Disaster Risk Management Information System
+          <span className="hidden max-w-[22rem] truncate text-[10px] font-medium uppercase tracking-wider text-muted-foreground xl:inline">
+            {SITE.agency || t("app.title")}
           </span>
         </div>
       </div>
 
       {/* Middle: the dashboard's starting point: year, then disaster event */}
-      <div className="flex min-w-0 flex-1 justify-center">
+      <div className="order-last flex min-w-0 basis-full justify-center md:order-none md:flex-1 md:basis-auto">
         <EventPicker />
       </div>
 
       {/* Right: Appearance (theme, light/dark, text size), Avatar */}
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="ml-auto flex shrink-0 items-center gap-1 md:ml-0">
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-xs font-semibold uppercase text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            aria-label={`${t("lang.label")}: ${LANGUAGES.find((l) => l.code === lang)?.name}`}
+            title={t("lang.label")}
+          >
+            <LuLanguages className="size-4" aria-hidden />
+            {lang}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel className="font-normal text-muted-foreground">
+              {t("lang.label")}
+            </DropdownMenuLabel>
+            <DropdownMenuRadioGroup value={lang} onValueChange={(v) => setLang(v as Lang)}>
+              {LANGUAGES.map((l) => (
+                <DropdownMenuRadioItem key={l.code} value={l.code} lang={l.code}>
+                  {l.name}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <AppearanceButton />
 
         <DropdownMenu>
@@ -126,6 +163,14 @@ export const Header = () => {
               <LuShare2 className="size-4" />
               Share
             </DropdownMenuItem>
+            <DropdownMenuCheckboxItem
+              checked={lowData.active}
+              onCheckedChange={(on) => setLowDataPreference(on ? "on" : "off")}
+              onSelect={(e) => e.preventDefault()}
+              title={lowData.automatic ? t("lowData.auto") : t("lowData.help")}
+            >
+              {t("lowData.label")}
+            </DropdownMenuCheckboxItem>
             {pinHash && (
               <DropdownMenuItem onSelect={() => lock()}>
                 <LuLock className="size-4" />

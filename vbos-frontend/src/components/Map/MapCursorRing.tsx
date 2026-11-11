@@ -7,14 +7,20 @@ import { useUiStore } from "@/store/ui-store";
 export function MapCursorRing() {
   const mapHoverFeature = useUiStore((s) => s.mapHoverFeature);
   const [pos, setPos] = useState({ x: -100, y: -100 });
+  // A feature's mouseout is missed when the pointer leaves the map quickly, which left the
+  // ring following the cursor over the side panels. Only draw it while over the map.
+  const [overMap, setOverMap] = useState(false);
 
   useEffect(() => {
-    const handleMove = (e: MouseEvent) => setPos({ x: e.clientX, y: e.clientY });
+    const handleMove = (e: MouseEvent) => {
+      setPos({ x: e.clientX, y: e.clientY });
+      setOverMap(e.target instanceof Element && !!e.target.closest(".leaflet-container"));
+    };
     window.addEventListener("mousemove", handleMove, { passive: true });
     return () => window.removeEventListener("mousemove", handleMove);
   }, []);
 
-  if (!mapHoverFeature) return null;
+  if (!mapHoverFeature || !overMap) return null;
 
   return (
     <div
