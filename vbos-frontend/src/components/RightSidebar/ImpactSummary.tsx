@@ -48,9 +48,10 @@ export function ImpactSummary({ className }: { className?: string }) {
   if (worstRank === 0) {
     headline = t("impact.headlineNone", { area });
   } else {
-    const figures = exposure
-      .filter((r) => (r.byRank[worstRank] ?? 0) > 0)
-      .slice(0, 2)
+    // A "total …" figure already includes its parts, so it is quoted on its own
+    const inWorst = exposure.filter((r) => (r.byRank[worstRank] ?? 0) > 0);
+    const total = inWorst.find((r) => /^total\b/.test(r.label));
+    const figures = (total ? [total] : inWorst.slice(0, 2))
       .map((r) => `${number(r.byRank[worstRank])} ${r.label}`);
     const items =
       figures.length > 0

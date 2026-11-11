@@ -56,7 +56,6 @@ const RightSidebar = () => {
       >
         <AreaSelect />
         <CycloneSummaryBanner />
-        <ImpactSummary />
       </div>
       <div
         className={cn(
@@ -74,6 +73,8 @@ const RightSidebar = () => {
               province and area council to filter its map layers.
             </p>
           )}
+        {/* Inside the scrolling area so it moves with the charts instead of pinning them out */}
+        <ImpactSummary className={rightSidebarExpanded ? "mb-6" : undefined} />
         {rightSidebarExpanded ? (
           <div className="w-full space-y-6">
             <div className="flex flex-wrap items-end gap-6 rounded-xl border border-border/40 bg-card/95 p-5 shadow-sm">
