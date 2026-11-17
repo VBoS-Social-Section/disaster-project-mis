@@ -49,6 +49,34 @@
         </div>
     </div>
 
+    <div id="step-event" class="import-step" style="display:none;">
+        <h3>{% trans "New event (optional)" %}</h3>
+        <p class="help">{% trans "Leave empty to import into the datasets chosen above. Fill in the name to create a new disaster event instead: each damage, resources and financial file goes into a new copy of its dataset named '<dataset> - <event>', and earlier events keep their data. Baseline files are skipped. Everything is imported or nothing is." %}</p>
+        <div style="display:flex; gap:1.5em; flex-wrap:wrap; align-items:flex-end;">
+            <div><label for="event-name">{% trans "Event name:" %}</label><br>
+                <input type="text" id="event-name" placeholder="Cyclone Zara" maxlength="155" style="width:220px;"></div>
+            <div><label for="event-hazard">{% trans "Hazard:" %}</label><br>
+                <select id="event-hazard">
+                    <option value="cyclone">Cyclone</option>
+                    <option value="earthquake">Earthquake</option>
+                    <option value="flood">Flood</option>
+                    <option value="volcano">Volcano</option>
+                    <option value="tsunami">Tsunami</option>
+                    <option value="drought">Drought</option>
+                    <option value="landslide">Landslide</option>
+                    <option value="wildfire">Wildfire</option>
+                </select></div>
+            <div><label for="event-start">{% trans "Start date:" %}</label><br><input type="date" id="event-start"></div>
+            <div><label for="event-end">{% trans "End date (optional):" %}</label><br><input type="date" id="event-end"></div>
+        </div>
+        <div style="display:flex; gap:1.5em; flex-wrap:wrap; margin-top:1em;">
+            <div><label for="event-pmtiles">{% trans "Intensity tiles (.pmtiles, optional):" %}</label><br>
+                <input type="file" id="event-pmtiles" accept=".pmtiles"></div>
+            <div><label for="event-geojson">{% trans "Intensity GeoJSON (optional):" %}</label><br>
+                <input type="file" id="event-geojson" accept=".geojson,.json"></div>
+        </div>
+    </div>
+
     <div id="step-submit" class="import-step" style="display:none; margin-top:1.5em;">
         <button type="button" id="import-btn" class="default">{% trans "Import Files" %}</button>
     </div>
@@ -98,6 +126,7 @@
     const stepSelect = document.getElementById('step-select');
     const stepMapping = document.getElementById('step-mapping');
     const stepOptions = document.getElementById('step-options');
+    const stepEvent = document.getElementById('step-event');
     const stepSubmit = document.getElementById('step-submit');
     const tbody = document.getElementById('mapping-tbody');
     const clearBtn = document.getElementById('clear-files');
@@ -113,6 +142,7 @@
         renderMapping();
         stepMapping.style.display = 'block';
         stepOptions.style.display = 'block';
+        stepEvent.style.display = 'block';
         stepSubmit.style.display = 'block';
     });
 
@@ -154,6 +184,7 @@
         renderMapping();
         stepMapping.style.display = 'none';
         stepOptions.style.display = 'none';
+        stepEvent.style.display = 'none';
         stepSubmit.style.display = 'none';
     });
 
@@ -179,6 +210,17 @@
         formData.append('format_style', document.getElementById('format-style').value);
         formData.append('year', document.getElementById('import-year').value);
         formData.append('file_count', String(pairs.length));
+        const eventName = document.getElementById('event-name').value.trim();
+        if (eventName) {
+            formData.append('event_name', eventName);
+            formData.append('event_hazard', document.getElementById('event-hazard').value);
+            formData.append('event_start', document.getElementById('event-start').value);
+            formData.append('event_end', document.getElementById('event-end').value);
+            const tiles = document.getElementById('event-pmtiles').files[0];
+            const geo = document.getElementById('event-geojson').files[0];
+            if (tiles) formData.append('pmtiles', tiles);
+            if (geo) formData.append('geojson', geo);
+        }
         pairs.forEach((p, i) => {
             formData.append('file_' + i, p.file);
             formData.append('dataset_' + i, p.datasetId);

@@ -1,16 +1,26 @@
 import csv
+import datetime
 import json
+import os
 from io import TextIOWrapper
 
 from adminsortable2.admin import SortableAdminMixin
 from django import forms
 from django.contrib.admin import SimpleListFilter
 from django.contrib import messages
+from django.core.cache import cache
 from django.contrib.gis import admin
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import redirect, render, reverse
 from django.urls import path
 
+from .event_import import (
+    EventImportError,
+    create_event,
+    create_event_layer,
+    dataset_for_event,
+)
 from .forms import GeoJSONUploadForm, IconPickerWidget
 from .models import (
     AreaCouncil,
@@ -345,6 +355,97 @@ class TabularItemAdmin(admin.GISModelAdmin):
         extra_context["upload_file"] = reverse("admin:datasets_tabularitem_import_file")
         return super().changelist_view(request, extra_context=extra_context)
 
+    @staticmethod
+    def _read_csv(uploaded_file, dataset, format_style, year):
+        """Import one CSV into a dataset. Returns (created, errors, first error)."""
+        reader = csv.DictReader(TextIOWrapper(uploaded_file.file, encoding="utf-8-sig"))
+        if format_style == "wide":
+            return import_wide_format_csv(reader, dataset, year)
+        created = errors = 0
+        first_error = None
+        for row in reader:
+            try:
+                create_tabular_item(CSVRow(row), dataset)
+                created += 1
+            except Exception as e:
+                errors += 1
+                if first_error is None:
+                    first_error = str(e)
+        return created, errors, first_error
+
+    @staticmethod
+    def _optional_date(value):
+        try:
+            return datetime.date.fromisoformat(value or "")
+        except ValueError:
+            return None
+
+    def _import_as_event(self, request, pairs, format_style, year, upload_url):
+        """Create a new disaster event and import the files into new datasets of it.
+
+        Every damage / resources / financial table goes into a copy of its dataset named
+        "<dataset> - <event>", so earlier events keep their data. Baseline files are
+        skipped. All or nothing: any problem rolls everything back.
+        """
+        tile_target = None
+        problems = []
+        try:
+            with transaction.atomic():
+                event = create_event(
+                    request.POST.get("event_name"),
+                    request.POST.get("event_hazard") or "cyclone",
+                    self._optional_date(request.POST.get("event_start")),
+                    self._optional_date(request.POST.get("event_end")),
+                )
+                tables, total, skipped = 0, 0, []
+                for uploaded_file, dataset in pairs:
+                    if not uploaded_file.name.endswith(".csv"):
+                        problems.append(f"{uploaded_file.name}: not a CSV file")
+                        continue
+                    target = dataset_for_event(dataset, event)
+                    if target is None:
+                        skipped.append(uploaded_file.name)
+                        continue
+                    created, errors, first = self._read_csv(
+                        uploaded_file, target, format_style, year
+                    )
+                    if errors:
+                        problems.append(
+                            f"{uploaded_file.name}: {errors} rows failed (first: {first})"
+                        )
+                    tables += 1
+                    total += created
+                pm, gj = request.FILES.get("pmtiles"), request.FILES.get("geojson")
+                pm_bytes = pm.read() if pm else None
+                layer, tile_target = create_event_layer(
+                    event, pm_bytes, gj.read() if gj else None
+                )
+                if problems:
+                    raise EventImportError(problems)
+                if tile_target:
+                    os.makedirs(os.path.dirname(tile_target), exist_ok=True)
+                    with open(tile_target, "wb") as fh:
+                        fh.write(pm_bytes)
+        except EventImportError as e:
+            messages.error(request, "Nothing was imported. " + " | ".join(e.problems))
+        except ValidationError as e:
+            messages.error(request, "Nothing was imported. " + " ".join(e.messages))
+        except OSError as e:
+            messages.error(request, f"Nothing was imported. Could not save the tile file: {e}")
+        else:
+            messages.success(
+                request,
+                f"Created event {event.name!r} with {tables} tables ({total} values)"
+                + (f" and the map layer {layer.url}." if layer else "."),
+            )
+            if skipped:
+                messages.info(
+                    request,
+                    "Skipped baseline files (not tied to an event): " + ", ".join(skipped),
+                )
+            cache.clear()
+        return redirect(upload_url)
+
     def import_file(self, request):
         upload_url = reverse("admin:datasets_tabularitem_import_file")
         datasets = list(
@@ -378,6 +479,12 @@ class TabularItemAdmin(admin.GISModelAdmin):
                     except (TabularDataset.DoesNotExist, ValueError):
                         pass
 
+            event_name = (request.POST.get("event_name") or "").strip()
+            if pairs and event_name:
+                return self._import_as_event(
+                    request, pairs, format_style, year, upload_url
+                )
+
             if not pairs:
                 messages.error(
                     request,
@@ -396,28 +503,11 @@ class TabularItemAdmin(admin.GISModelAdmin):
                         )
                         continue
                     try:
-                        decoded_file = TextIOWrapper(
-                            uploaded_file.file, encoding="utf-8"
+                        created_count, error_count, err = self._read_csv(
+                            uploaded_file, dataset, format_style, year
                         )
-                        reader = csv.DictReader(decoded_file)
-                        created_count = 0
-                        error_count = 0
-                        if format_style == "wide":
-                            created_count, error_count, err = (
-                                import_wide_format_csv(reader, dataset, year)
-                            )
-                            if err and first_error is None:
-                                first_error = err
-                        else:
-                            for row in reader:
-                                try:
-                                    csv_row = CSVRow(row)
-                                    create_tabular_item(csv_row, dataset)
-                                    created_count += 1
-                                except Exception as e:
-                                    error_count += 1
-                                    if first_error is None:
-                                        first_error = str(e)
+                        if err and first_error is None:
+                            first_error = err
                         total_created += created_count
                         total_errors += error_count
                     except Exception as e:
