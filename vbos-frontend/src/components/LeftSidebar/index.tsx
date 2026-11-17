@@ -105,7 +105,7 @@ const LeftSidebar = () => {
       </div>
       <div className="shrink-0 border-t border-border px-4 py-2 md:px-5">
         <a
-          href="https://vbos-social-section.github.io/disaster-mis-user-manual/"
+          href="https://drmis-vbos.github.io/drmis-frontend-manual/"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
