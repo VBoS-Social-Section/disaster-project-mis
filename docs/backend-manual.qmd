@@ -1,0 +1,636 @@
+---
+title: "DRMIS Backend Manual"
+subtitle: "Disaster Risk Management Information System — Administration and Data Guide"
+format:
+  html:
+    embed-resources: true
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    number-sections: false
+    theme: cosmo
+---
+
+## Introduction
+
+The **DRMIS backend** is the part of the system that stores the data and serves it to the dashboard. Staff use it through the **administration site** (the *admin*) to:
+
+- create the **disaster events** and **scenarios** that appear in the dashboard's year and event pickers;
+- load **tables** (population, damage, resources needed, financial damage) and **map layers** (schools, health centres, roads, cyclone intensity);
+- organise data into **clusters** (sectors);
+- keep the **land accounts** up to date;
+- manage **user accounts** and what each person may change;
+- refresh data from the RAP pipeline and look after the server.
+
+The dashboard itself is explained in the separate *DRMIS User Manual*. This manual is for **data administrators** and **technical staff**.
+
+::: {.callout-note}
+## Who is this manual for?
+
+- **Data administrators** need Sections 1–10. No programming is needed; everything is done in the web browser.
+- **Technical staff** also need Sections 11–15 (commands, server, API, troubleshooting).
+:::
+
+### How the pieces fit together
+
+| Part | What it does |
+|---|---|
+| **Admin site** (`/admin/`) | Where staff add and edit data. |
+| **API** (`/api/v1/`) | What the dashboard reads. Requires a signed-in user. |
+| **Database** (PostgreSQL + PostGIS) | Stores tables, map features and accounts. |
+| **Media folder** | Holds map tile files (`.pmtiles`) and raster files. |
+| **Cache** | Keeps recent API answers for up to 15 minutes. Cleared automatically when data changes in the admin (see [Section 12](#cache)). |
+
+---
+
+## 1. Signing in to the admin {#signing-in}
+
+1. Open `https://<your-server>/admin/` in your browser.
+2. Enter your **username** and **password** and press **Log in**.
+3. You arrive at the **Site administration** page. The left side lists the groups of data you may edit; you only see the menus your account has permission for.
+
+To sign out, use **Log out** at the top right. To change your password, use **Change password** in the same place.
+
+::: {.callout-tip}
+Use the same username for the dashboard and the admin. Only accounts marked **Staff** can open the admin (see [Section 9](#users)).
+:::
+
+---
+
+## 2. Concepts you need {#concepts}
+
+Understanding these terms makes the rest of the manual easy.
+
+### Cluster
+
+A **cluster** is a sector such as *Education*, *Health*, *Food security* or *Disaster*. Every table and map layer belongs to a cluster. Clusters appear in the dashboard's left menu, in the order you set in the admin.
+
+### Dataset and item
+
+- A **dataset** describes one table or layer: its name, cluster, type, source and unit.
+- An **item** is one row or feature inside it: one number for a province, or one school on the map.
+
+There are four kinds of dataset:
+
+| Kind | Admin menu | Contains |
+|---|---|---|
+| **Tabular dataset** | *Tabular datasets* / *Tabular items* | Numbers by province or area council and year (population, damage, cost…). |
+| **Vector dataset** | *Vector datasets* / *Vector items* | Points, lines or polygons drawn on the map (schools, towers, roads). |
+| **PMTiles dataset** | *PMTiles datasets* | A pre-built tile file, used for the cyclone intensity layer. |
+| **Raster dataset** | *Raster datasets* / *Raster files* | Gridded data such as land cover, shown in Climate mode. |
+
+### Dataset type
+
+Each tabular, vector and PMTiles dataset has a **type** that decides where it shows in the dashboard:
+
+| Type | Meaning |
+|---|---|
+| **Baseline** | The situation before any disaster (population, number of schools). Not tied to an event. |
+| **Estimated Hazard Damage** | Damage caused by an event. |
+| **Immediate Response Resources** | Aid and resources needed. |
+| **Estimated Financial Damage** | Cost of the damage, normally in Vatu. |
+
+### Disaster event
+
+A **disaster event** is a real disaster (for example *Cyclone Lola, October 2023*) or a modelled **scenario**. The dashboard first asks for a **year**, then one of that year's events. Choosing an event:
+
+- switches on the event's map layers, and
+- shows the damage, resources and financial tables linked to that event.
+
+Scenarios have no date and are offered under **every** year.
+
+### Provinces and area councils
+
+Vanuatu's six provinces and their area councils are loaded once and are used to place every number and map feature. Import files refer to them **by name**. Matching ignores capital letters, spaces and punctuation, so `Canal - Fanafo` and `Canal Fanafo` are the same place.
+
+---
+
+## 3. Tour of the admin site {#tour}
+
+The Site administration page groups the data menus:
+
+![The Site administration page with the Datasets, Land accounts and Users menus](screenshots-backend/01-admin-home.jpg){fig-align="center"}
+
+| Menu | Use it to |
+|---|---|
+| **Clusters** | Add, rename and drag-to-reorder sectors. |
+| **Disaster events** | Create events and scenarios; see how many layers and tables each has. |
+| **Tabular datasets** / **Tabular items** | Define tables, then import or edit their numbers. |
+| **Vector datasets** / **Vector items** | Define map layers, then import or edit their features. |
+| **PMTiles datasets** | Register tile layers such as cyclone intensity. |
+| **Raster datasets** / **Raster files** | Register land-cover rasters and their files. |
+| **Provinces** / **Area councils** | Reference boundaries (rarely changed). |
+| **Land accounts data** | Edit the land accounts tables (Section 8). |
+| **Users**, **Groups** | Manage accounts and permissions (Section 9). |
+
+Common actions on every list:
+
+- **Add** button (top right) to create a record.
+- Click a row to **edit** it; **Save** stores the change.
+- **Search** box and the **Filter** panel on the right narrow long lists.
+- Tick rows and use the **Action** drop-down to delete several, or run a special action.
+
+::: {.callout-warning}
+## Deleting is permanent
+Deleting a dataset also deletes all its items. Clusters that still contain datasets cannot be deleted. Take a backup first if unsure (see [Section 13](#backups)).
+:::
+
+---
+
+## 4. Clusters {#clusters}
+
+1. Open **Clusters**.
+2. To add a cluster, press **Add cluster**, type the **name** (must be unique) and **Save**.
+3. To change the order shown in the dashboard, **drag the rows** up or down using the handle at the left of each row.
+
+![The Clusters list; drag the Order handle to reorder](screenshots-backend/02-clusters.jpg){fig-align="center"}
+
+Changes appear in the dashboard immediately; the cache is cleared automatically.
+
+---
+
+## 5. Disaster events and scenarios {#events}
+
+![The Disaster events list with the Linked layers / tables column](screenshots-backend/03-events-list.jpg){fig-align="center"}
+
+### Create an event by hand
+
+1. Open **Disaster events** → **Add disaster event**.
+2. Fill in:
+
+![The Add disaster event form](screenshots-backend/04-event-add.jpg){fig-align="center"}
+
+| Field | What to enter |
+|---|---|
+| **Name** | The name shown in the dashboard, e.g. *Cyclone Lola*. |
+| **Hazard type** | Cyclone, volcano, flood, earthquake, tsunami, landslide, drought or wildfire. |
+| **Start date** | First day of the event. It decides which **year** the event is listed under. |
+| **End date** | Optional. Must not be before the start date. |
+| **Is scenario** | Tick for a modelled or exercise scenario. Scenarios need no dates and appear under every year. |
+| **Description**, **Source** | Optional text. |
+
+3. **Save**. A real event **must** have a start date.
+
+### Attach data to an event
+
+An event on its own shows nothing. Link data to it by opening the layer or table and choosing the **event**:
+
+![The PMTiles datasets list; the cyclone intensity layer is linked to its event](screenshots-backend/12-pmtiles-datasets.jpg){fig-align="center"}
+
+- **PMTiles dataset** or **Vector dataset** (the hazard footprint): the layer switches on when the event is chosen.
+- **Tabular dataset** (damage, resources, financial): the figures show **only while that event is selected**. Leave the event empty for **baseline** data.
+
+The **Linked layers / tables** column in the *Disaster events* list shows how many of each an event has, so you can spot an empty event.
+
+::: {.callout-tip}
+The fastest way to add a whole new event with its tables and map layer is the **Import** page described in [Section 7](#import-event).
+:::
+
+---
+
+## 6. Loading data {#loading}
+
+### 6.1 Create the dataset first {#create-dataset}
+
+Before importing numbers or features, the table or layer must exist.
+
+**Tabular dataset**
+
+1. **Tabular datasets** → **Add**.
+2. Enter the **name** (e.g. *Primary schools damaged*), choose the **cluster** and **type**, and optionally the **source**, **unit** (e.g. *students*, *Vatu*) and **description**.
+3. **Save**.
+
+![The Add tabular dataset form](screenshots-backend/06-tabular-dataset-add.jpg){fig-align="center"}
+
+![The Tabular datasets list; the Event column shows which event a table belongs to](screenshots-backend/05-tabular-datasets.jpg){fig-align="center"}
+
+The combination of **name + type + cluster** must be unique.
+
+**Vector dataset**
+
+1. **Vector datasets** → **Add**.
+2. Enter **name**, **cluster** and **type**.
+3. Choose an **icon**. Press **Browse icons** to open the picker, or type a name such as `fi-sr-hospital`.
+4. Choose a **colour** for the map markers. Leave icon and colour empty for automatic styling.
+5. Optionally set the **event** and a **cyclone name**. **Save**.
+
+![The Add vector dataset form with the icon picker and colour](screenshots-backend/10-vector-dataset-add.jpg){fig-align="center"}
+
+![The Vector datasets list with icon and colour editable in the list](screenshots-backend/09-vector-datasets.jpg){fig-align="center"}
+
+The icon and colour can also be edited directly in the list.
+
+### 6.2 Import a CSV into tables {#import-csv}
+
+1. Open **Tabular items** and press **Import File** (top right).
+2. **Step 1:** press **Select CSV files…** and pick one or more `.csv` files.
+3. **Step 2:** each file is matched to a dataset by its name. Check every row and change the drop-down where the guess is wrong.
+4. **Step 3:** choose the **CSV format** and, for wide files, the **year**.
+5. Press **Import Files**. A progress window appears, then a green message reports how many records were created.
+
+![The Tabular items list; Import File is at the top right](screenshots-backend/07-tabular-items.jpg){fig-align="center"}
+
+If some rows fail, an orange message gives the count and the **first error**. Rows that worked are kept; fix the file and import only the failed rows again.
+
+#### Long format
+
+One row per value. Recognised columns (not case sensitive for the common spellings):
+
+![The CSV import page showing the file-to-dataset mapping, import options and the optional New event section](screenshots-backend/08-csv-import.jpg){fig-align="center"}
+
+| Column | Meaning |
+|---|---|
+| `Province` | Province name. |
+| `Area Council` | Area council name. Optional. |
+| `Attribute` (or `Indicator`, `Variable`) | What is measured, e.g. *Students*. |
+| `Value` | The number. Commas and spaces are removed. |
+| `Year`, `Month` | When the value applies. Month is optional (defaults to January). |
+
+Any other column is kept as extra information with the value. Columns `Unit`, `Source`, `National` and similar are ignored.
+
+```text
+Province,Area Council,Attribute,Year,Value
+Sanma,Canal - Fanafo,Students,2024,1250
+```
+
+#### Wide format
+
+One row per place, one column per measure. This is the format the RAP pipeline produces.
+
+- The first column (or the column named `Region`) holds the **place**: a province or an area council.
+- Every other column is an **attribute** and holds numbers.
+- The **year** you enter in Step 3 is used for all values.
+
+```text
+Region,Girls,Boys
+Sanma,5200,5400
+Canal - Fanafo,310,295
+```
+
+Rules in wide format:
+
+- A `National` row is skipped.
+- Empty cells are skipped.
+- Once area-council rows are loaded, province rows of the same dataset are removed. The dashboard adds up the rows it receives, so keeping both would count everything twice.
+- A place that is not a known province or area council counts as an **error** ("Unknown region").
+- Values such as `N/A`, `-` or `null` count as errors.
+
+::: {.callout-note}
+Only files ending in `.csv` are accepted. Save Excel files as **CSV UTF-8**.
+:::
+
+### 6.3 Import GeoJSON into map layers {#import-geojson}
+
+1. Open **Vector items** → **Import File**.
+2. Choose the **GeoJSON file** (`.geojson`) and the **dataset** it belongs to.
+3. Optionally set the **icon** and **colour**; they are saved on the dataset and pre-filled the next time you choose it.
+4. Press **Import File**.
+
+![The Import GeoJSON File page](screenshots-backend/11-geojson-import.jpg){fig-align="center"}
+
+Each feature in the file becomes one item:
+
+- The **name** is taken from `Name`, or from a column such as `School name`, `Road_Name`, `NAME` or `Facility`.
+- The **province** and **area council** are read from properties such as `Province`, `Pname` or `acname`, and matched to the reference boundaries.
+- All other properties are stored with the feature and shown in the map popup.
+- A feature **without geometry** is rejected; all others are still imported. The message shows how many failed and the first error.
+
+### 6.4 Correct or remove data {#edit-items}
+
+- **Tabular items** and **Vector items** can be searched, filtered (by dataset, province, area council, year or attribute) and edited one by one.
+- In *Vector items*, **name** and **attribute** can be edited straight in the list. Use the *Location* and *Coords* columns to identify an item against the map.
+- To remove duplicate or redundant rows from tables, select the dataset(s) in **Tabular datasets** and choose the action **Clean redundant TabularItems for dataset**. This deletes province-level rows when area-council rows exist (and national rows when province rows exist).
+- To delete a whole load, delete the **dataset's items** (filter by dataset, select all, delete), or delete the dataset.
+
+---
+
+## 7. Adding a new disaster event in one go {#import-event}
+
+When a new disaster happens, use the event section of the CSV import page. It creates the event, its tables and its map layer together, and **either everything is imported or nothing is**.
+
+1. Open **Tabular items** → **Import File**.
+2. Select the CSV files (damage, resources needed, financial damage) and match each to its dataset, as in [6.2](#import-csv).
+3. In **New event (optional)** fill in:
+
+| Field | What to enter |
+|---|---|
+| **Event name** | e.g. *Cyclone Zara*. Must be new for that year. |
+| **Hazard** | Cyclone, earthquake, flood… |
+| **Start date** | Required. Decides the year. |
+| **End date** | Optional. |
+| **Intensity tiles (.pmtiles)** | Optional. The tile file for the intensity map. |
+| **Intensity GeoJSON** | Optional. The same areas as GeoJSON; its properties feed the right-hand intensity panel. |
+
+4. Press **Import Files**.
+
+What happens:
+
+- The **event** is created.
+- For every damage, resources or financial file, a **new copy** of the chosen dataset is created, named `<dataset> - <event>`, linked to the event. Earlier events keep their own data.
+- **Baseline** files are skipped, because baseline data is not tied to an event. The page tells you which files were skipped.
+- If a `.pmtiles` file is given, it is saved in the media folder as `<event_name>_intensity.pmtiles` and a **PMTiles dataset** called *Cyclone Intensity - <event>* is created in the *Disaster* cluster and linked to the event.
+- The cache is cleared, so the event is visible straight away.
+
+If anything is wrong (no start date, an event with that name already exists for the year, a failed row, a tile file with that name already on the server), a red message begins with **"Nothing was imported."** and gives the reasons. Fix them and try again; nothing was left half-done.
+
+---
+
+## 8. Land accounts {#land-accounts}
+
+Land accounts show how land cover changed between two years for each province, and feed the Land Accounts view of the dashboard.
+
+Open **Land accounts data** (the page is a custom form, not the usual list). Each record covers one period and holds, for the six provinces (Torba, Sanma, Penama, Malampa, Shefa, Tafea) and six land categories (Water Bodies, Grassland, Mangrove, Bareland, Built Up, Forest):
+
+![The Land Accounts Data page with Add, Download template and Import from Excel](screenshots-backend/13-land-accounts.jpg){fig-align="center"}
+
+- the **physical account**: opening, additions, reductions, net change and closing (km²);
+- the **change matrix**: how much land moved from each category to each other category.
+
+### Add or edit by form
+
+1. Press **+ Add Land Accounts** to create a record.
+2. Open it with **Edit** (all tables) or **Edit (simple)** (opening and closing values only) and fill in the numbers per province.
+3. **Save**. With the simple form the change matrix is computed from the opening and closing values.
+
+### Import from Excel (recommended)
+
+1. On the list page press **Download template**. The workbook has an *Instructions* sheet and a *Land Accounts* sheet with the columns **Province**, **Category**, **Opening (km²)**, **Closing (km²)**.
+2. Fill in **Opening** and **Closing** for every province and category. **Do not change** the province and category names.
+3. Back on the list page choose the file and press **Import from Excel**. The additions, reductions, net change and **change matrix** are calculated automatically.
+
+![The simple edit form: opening and closing values per province](screenshots-backend/14-land-accounts-simple.jpg){fig-align="center"}
+
+Only `.xlsx` files are accepted. Rows with a name that is not one of the listed provinces or categories are ignored; a missing or non-numeric number becomes 0.
+
+To remove a record, use **Delete** on its row and confirm.
+
+---
+
+## 9. Users and permissions {#users}
+
+### Create a user
+
+1. **Users** → **Add user**. Enter a username and password, then **Save**.
+2. On the next page add first name, last name and email.
+3. Under **Permissions**, tick **Active**. Tick **Staff status** only if the person must use the admin.
+4. **Save**.
+
+![The Add user form](screenshots-backend/15-user-add.jpg){fig-align="center"}
+
+Anyone with an account can sign in to the dashboard. Only **Staff** can open the admin.
+
+### Give staff access to the data menus only
+
+Do **not** make data administrators superusers. Use the ready-made **Data Admin** group instead; it gives full add / change / delete / view rights on the *Datasets* menus (clusters, events, datasets, items, rasters) and nothing else.
+
+1. A technical person creates or refreshes the group (see [Section 11](#commands)):
+
+```bash
+./manage.py create_data_admin_group
+```
+
+2. Edit the user: tick **Staff status**, leave **Superuser status** unticked, and add the user to the group **Data Admin**.
+3. **Save**.
+
+![The Data Admin group and its chosen permissions](screenshots-backend/16-data-admin-group.jpg){fig-align="center"}
+
+::: {.callout-warning}
+**Superuser** accounts can change everything, including other users. Keep their number small.
+:::
+
+### Reset a password or disable an account
+
+- Open the user and use the link **this form** under *Password* to set a new password.
+- To stop someone signing in without deleting their history, untick **Active**.
+
+### Appearance
+
+Each person chooses their own theme, mode, corner style and text size in the dashboard. Staff can also set an organisation-wide default there; the server only accepts known values.
+
+---
+
+## 10. Checking your work {#checking}
+
+After a load:
+
+1. **Count.** In the admin list, filter by dataset and check the number of items is what you expect.
+2. **Look in the dashboard.** Sign in, choose the year and event, and open the cluster. Check that the table, chart and map layer show.
+3. **Try the API.** Signed in to the same browser, open `/api/v1/docs/` (see [Section 14](#api)).
+4. **Event with no data?** Look at *Disaster events* → **Linked layers / tables**. `0 / 0` means nothing is attached.
+
+If a change does not show, see [Section 12](#cache) and [Section 15](#troubleshooting).
+
+---
+
+## 11. Management commands (technical) {#commands}
+
+Commands run on the server inside the web container. On the DRMIS server:
+
+```bash
+sudo docker compose -f deploy/vm/docker-compose.yml exec web ./manage.py <command>
+```
+
+| Command | Purpose |
+|---|---|
+| `createsuperuser` | Create the first administrator. |
+| `create_data_admin_group` | Create or refresh the **Data Admin** group. |
+| `load_drmis_data --rap DIR --shapes DIR [--year 2024] [--replace] [--dry-run]` | Load tables, intensity layer and map layers from the RAP and shape-file folders. All or nothing. |
+| `import_datasets FILE.csv` | Create dataset definitions from a CSV with columns `Indicator`, `Cluster`, `Type`, `Unit`, `Source`. |
+| `import_tabular_data FILE.csv` | Load long-format rows from a local CSV file. |
+| `clean_tabular_data` | Remove redundant rows from every table. |
+| `simplify_vector_polygons [--dataset ID] [--tolerance 0.01]` | Reduce the points in heavy polygons (over 500 points) so the browser does not slow down. |
+| `clear_cache` | Clear the API cache. |
+| `migrate` | Apply database upgrades (done automatically on start-up). |
+
+### Loading from the RAP pipeline {#load-rap}
+
+The RAP produces CSV files and the shape-file repository holds the map layers. On the server one script fetches both, **backs up the database**, and loads them:
+
+```bash
+deploy/vm/load-data.sh             # load anything not yet loaded
+deploy/vm/load-data.sh --dry-run   # check everything, change nothing
+deploy/vm/load-data.sh --replace   # reload every table and layer
+```
+
+How it decides what to do:
+
+- File names in the RAP `output` folder choose the cluster and type: `…_01_…` baseline, `…_02_…` damage, `…_03_…` resources needed, `…_04_…` financial damage. Files starting with `QC_` are skipped.
+- Each folder in the shape-file repository becomes a map layer with a fixed name, icon and colour where known; an unknown folder still loads with automatic styling.
+- If a file cannot be matched to a cluster or dataset, the command stops, **changes nothing** and lists the problems.
+- Run with `--dry-run` first when unsure.
+
+A backup is written to `/opt/drmis-backups` (or `$BACKUP_DIR`) before every load.
+
+---
+
+## 12. The cache {#cache}
+
+To keep the dashboard fast, the API remembers some answers (clusters, provinces, area councils, dataset lists) for **15 minutes**. Saving or deleting a cluster or any dataset clears the cache automatically, and so does the event import and `load_drmis_data`.
+
+If a change still does not appear:
+
+1. Run `./manage.py clear_cache`.
+2. If the server runs several worker processes with a local (in-memory) cache, restart the web container. The DRMIS server uses a shared **Redis** cache, so this is normally not needed.
+3. In the browser, refresh the page (**Ctrl + F5**).
+
+---
+
+## 13. Server, settings and backups (technical) {#server}
+
+### Folders
+
+| Path | Contents |
+|---|---|
+| `vbos-backend/` | The Django application (this backend). |
+| `vbos-frontend/` | The dashboard. |
+| `deploy/vm/` | Docker Compose file, nginx configuration and scripts for the server. |
+| `vbos-backend/media/` | Tile files and rasters. Mounted into the container. |
+| `docs/` | Manuals. |
+
+### Running services
+
+The server runs as Docker containers: **postgres** (database), **redis** (cache), **web** (Django with gunicorn), **nginx** (public entry point, serves the dashboard and forwards `/api/`, `/admin/` and `/media/` to Django), and optionally **titiler** (raster tiles).
+
+```bash
+sudo docker compose -f deploy/vm/docker-compose.yml ps        # status
+sudo docker compose -f deploy/vm/docker-compose.yml logs -f web   # follow the web log
+sudo docker compose -f deploy/vm/docker-compose.yml restart web   # restart Django
+```
+
+### Settings
+
+Settings are chosen with `DJANGO_CONFIGURATION` (`Local` for development, `Vm` for the server). They are read from environment variables, kept in `vbos-backend/.env` (never commit this file).
+
+| Variable | Meaning |
+|---|---|
+| `DJANGO_SECRET_KEY` | Long random secret. Required. |
+| `DJANGO_DEBUG` | `false` on the server. |
+| `DJANGO_DB_URL` | Database connection, e.g. `postgis://user:pass@host:5432/vbos`. |
+| `DJANGO_VM_HOST` | Public address of the site, e.g. `https://drmis.info`. Used for trusted origins and secure cookies. |
+| `DJANGO_CACHE_BACKEND`, `DJANGO_CACHE_LOCATION`, `DJANGO_CACHE_TIMEOUT` | Cache type, location and lifetime in seconds. |
+| `DJANGO_PAGINATION_LIMIT` | Default page size of API lists. |
+
+### Backups and restore {#backups}
+
+Create a backup (the load script does this for you before loading):
+
+```bash
+sudo docker compose -f deploy/vm/docker-compose.yml exec -T postgres \
+  pg_dump -U postgres -Fc vbos > /opt/drmis-backups/manual-$(date +%Y%m%d-%H%M%S).dump
+```
+
+Also copy `vbos-backend/media/` — it holds tile files that are **not** in the database.
+
+Restore (this **replaces** current data; stop the web container first):
+
+```bash
+sudo docker compose -f deploy/vm/docker-compose.yml exec -T postgres \
+  pg_restore -U postgres -d vbos --clean --if-exists < /opt/drmis-backups/<file>.dump
+```
+
+### Updating the system
+
+After code changes are pulled, rebuild and restart:
+
+```bash
+sudo docker compose -f deploy/vm/docker-compose.yml up -d --build web
+```
+
+Database upgrades (`migrate`) and static files (`collectstatic`) run automatically when the web container starts.
+
+---
+
+## 14. The API {#api}
+
+The dashboard reads everything through a REST API under `/api/v1/`. Almost every endpoint requires a signed-in user (browser session or token).
+
+### Interactive documentation
+
+- **`/api/v1/docs/`** — Swagger page: browse every endpoint, see its parameters and try it.
+- **`/api/v1/schema/`** — the machine-readable OpenAPI schema.
+
+![The interactive API documentation at /api/v1/docs/](screenshots-backend/17-api-docs.jpg){fig-align="center"}
+
+### Signing in from a script
+
+Every account has an API token. Obtain it with:
+
+```bash
+curl -X POST https://<server>/api-token-auth/ \
+  -d "username=<user>" -d "password=<password>"
+```
+
+Then send it in each request:
+
+```bash
+curl -H "Authorization: Token <token>" https://<server>/api/v1/cluster/
+```
+
+### Main endpoints
+
+| Endpoint | Returns |
+|---|---|
+| `GET /api/v1/cluster/` | Clusters, in display order. |
+| `GET /api/v1/events/` | Disaster events and scenarios. |
+| `GET /api/v1/datasets/` | Datasets grouped by cluster. |
+| `GET /api/v1/provinces/` | Province boundaries (GeoJSON). |
+| `GET /api/v1/provinces/<province>/area-councils/` | Area councils of a province. |
+| `GET /api/v1/tabular/`, `/tabular/<id>/` | Table definitions. |
+| `GET /api/v1/tabular/<id>/data/` | Table rows. Filters: `attribute`, `province`, `area_council`, `date`. |
+| `GET /api/v1/tabular/<id>/aggregate/` | Totals by place. See below. |
+| `GET /api/v1/tabular/<id>/data-xlsx/` | The same rows as an Excel file. |
+| `GET /api/v1/vector/`, `/vector/<id>/`, `/vector/<id>/data/` | Map layers and their features (GeoJSON). |
+| `GET /api/v1/pmtiles/`, `/pmtiles/<id>/`, `/pmtiles/<id>/intensity/` | Tile layers and cyclone intensity. |
+| `GET /api/v1/raster/`, `/raster/<id>/` | Raster layers. |
+| `GET /api/v1/land-accounts/` | Land accounts (anyone signed in). `PUT` replaces them (staff only). |
+| `GET /api/v1/appearance/` | The signed-in user's and the organisation's appearance. |
+
+Dataset list endpoints accept filters `name`, `source`, `type`, `cluster`, `created`, `updated` and `order_by`.
+
+**Aggregate:** `GET /api/v1/tabular/<id>/aggregate/?group_by=province&year=2024&attribute=Students&agg=sum`
+
+| Parameter | Meaning |
+|---|---|
+| `group_by` | `province` or `area_council`. |
+| `province` | Required with `area_council`. |
+| `year` | Only values of this year. |
+| `attribute` | Only this attribute. |
+| `agg` | `sum` (default), `count` or `avg`. |
+
+---
+
+## 15. Troubleshooting {#troubleshooting}
+
+| Problem | What to check |
+|---|---|
+| **I cannot open the admin.** | Is your account **Staff**? Is it **Active**? Ask an administrator to check. |
+| **A menu is missing.** | Your account lacks permission for it. Ask to be added to **Data Admin** (Section 9). |
+| **Import says "Please add at least one file and select a dataset".** | Every file needs a dataset in Step 2. |
+| **"Unknown region: …".** | The place name is not a known province or area council. Check spelling against the *Provinces* / *Area councils* lists. |
+| **"Cannot convert to number" / "Value is empty".** | The value cell is blank, text, or `N/A`. Fix the cell or leave it empty in a wide file. |
+| **Numbers look doubled.** | Province and area-council rows were both loaded. Run **Clean redundant TabularItems** on the dataset. |
+| **"Nothing was imported …" when adding an event.** | Read the reasons. Common ones: no start date, event name already used that year, tile file name already exists in `media/`. |
+| **An event shows nothing in the dashboard.** | Open its tables and layers and make sure the **event** field is set. Check **Linked layers / tables**. |
+| **Map layer missing.** | The dataset has no items, or it is a *PMTiles dataset* whose file is missing in `media/`. |
+| **A new dataset or cluster does not appear.** | Wait for the cache or run `clear_cache` (Section 12), then refresh the browser. |
+| **Page freezes on a heavy polygon layer.** | Run `simplify_vector_polygons --dataset <id>`. |
+| **Login works but the dashboard shows no data.** | Check the web log (`logs -f web`) for errors; check the database container is healthy. |
+| **"CSRF verification failed" on the admin.** | `DJANGO_VM_HOST` does not match the address in the browser (http vs https, or a different host name). |
+
+Still stuck? Note the exact message, the file name and the time, and send them to the technical team.
+
+---
+
+## Quick reference {#quick-reference}
+
+| I want to… | Go to |
+|---|---|
+| Add a new disaster with its data | Tabular items → Import File → *New event* ([Section 7](#import-event)) |
+| Add one table's numbers | Tabular items → Import File ([6.2](#import-csv)) |
+| Add schools, towers, roads | Vector items → Import File ([6.3](#import-geojson)) |
+| Change a map icon or colour | Vector datasets → edit icon / colour ([6.1](#create-dataset)) |
+| Reorder sectors | Clusters → drag rows ([Section 4](#clusters)) |
+| Update land accounts | Land accounts data → Import from Excel ([Section 8](#land-accounts)) |
+| Give a colleague data access | Users → Staff + group *Data Admin* ([Section 9](#users)) |
+| Refresh everything from RAP | `deploy/vm/load-data.sh` ([11](#load-rap)) |
+| Make a change show now | `clear_cache` ([Section 12](#cache)) |
