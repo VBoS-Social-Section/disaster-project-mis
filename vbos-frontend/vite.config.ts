@@ -44,6 +44,16 @@ export default defineConfig({
       },
         workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Server-owned paths must reach the backend, not be answered with index.html
+        navigateFallbackDenylist: [
+          /^\/admin/,
+          /^\/api/,
+          /^\/api-auth/,
+          /^\/api-token-auth/,
+          /^\/static/,
+          /^\/media/,
+          /^\/titiler/,
+        ],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/(server\.arcgisonline\.com|tile\.openstreetmap\.org)\/.*/i,
