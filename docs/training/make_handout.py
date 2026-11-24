@@ -147,18 +147,29 @@ S += [P("When a Cyclone Strikes", h1),
       P("Before you start: tick each one", h2),
       check("<b>R 4.0 or later and Quarto.</b> Check with <font face='Courier-Bold'>Rscript --version</font> and "
             "<font face='Courier-Bold'>quarto --version</font>."),
-      check("<b>The RAP repository.</b> <font face='Courier-Bold'>git clone https://github.com/DRMIS-VBoS/disaster-project-rap.git</font>, "
-            "then open a terminal in that folder. All commands run from there."),
+      check("<b>The RAP repository</b> is cloned on the analyst's computer (see the next section)."),
       check("<b>tippecanoe</b> turns GeoJSON into the map tile file. Check with <font face='Courier-Bold'>tippecanoe --version</font>."),
       check("<b>A DRMIS backend login</b> at https://drmis.info/admin/ for a staff account in the Data Admin group."),
-      P("How the data moves", h2),
-      P("NDMO intensity per council &gt; RAP report &gt; CSV tables and a map file &gt; one Disaster event in DRMIS &gt; "
-        "public dashboard. Both tables and map layer are tied to one event, so visitors see them only when that event is picked."),
+      P("Get the RAP repository (once)", h2),
+      codebox(["git clone https://github.com/DRMIS-VBoS/disaster-project-rap.git",
+               "cd disaster-project-rap",
+               "ls"]),
+      Spacer(1, 3),
+      grid([["Inside", "What it holds"],
+            ["data/", "Input CSVs. Only Ex_hazard_areas.csv changes for each cyclone"],
+            ["index.qmd", "The RAP report. Run with quarto render"],
+            ["scripts/", "Export scripts for the DRMIS import and map layer"],
+            ["output/", "The CSVs, map files and QC files that RAP writes"]],
+           [32 * mm, CW - 32 * mm]),
+      Spacer(1, 3),
+      check("<font face='Courier-Bold'>ls</font> shows data, scripts, output and index.qmd. I run all RAP commands from here."),
+      P("Before each new cyclone, run <font face='Courier-Bold'>git pull</font> in this folder to get the latest scripts and inputs.", small),
       PageBreak()]
 
 # ---------------------------------------------------------------- exercise 1, analyst
 S += [banner("EXERCISE 1", "Cyclone Zara, as written: Steps 0 to 3 (Analyst)"), Spacer(1, 4)]
 S += [P("Step 0 and 1: set the intensity per Area Council", h3),
+      check("In the RAP folder I ran <font face='Courier-Bold'>git pull</font> (latest scripts and inputs)."),
       check("I have NDMO's bulletin and saved a copy next to the inputs as evidence."),
       check("<font face='Courier-Bold'>cp data/Ex_hazard_areas_template.csv data/Ex_hazard_areas.csv</font> "
             "(the template is never edited)."),
