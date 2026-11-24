@@ -275,6 +275,40 @@ S += [banner("EXERCISE 2", "A mistake"), Spacer(1, 4),
       lines(1),
       PageBreak()]
 
+# ---------------------------------------------------------------- exercise 5, users
+S += [banner("EXERCISE 5", "A new user (a superuser does this one)"), Spacer(1, 4),
+      P("Only a <b>superuser</b> sees the Users menu. A Data Admin cannot add users or reset passwords. "
+        "Use a practice name such as <b>practice.analyst</b> and disable the account when you finish.", base),
+      P("The three levels of access", h3),
+      grid([["Account", "What it can do"],
+            ["Active only", "Signs in to the dashboard. Cannot open the admin."],
+            ["Staff", "Opens the admin and sees only the menus their permissions allow."],
+            ["Superuser", "Changes everything, including other users. Keep these few."]],
+           [34 * mm, CW - 34 * mm]),
+      Spacer(1, 3),
+      P("A <b>group</b> is a named bundle of permissions. <b>Data Admin</b> gives full add, change, delete and view rights on "
+        "the Datasets menus (clusters, events, datasets, items, rasters) and nothing else. "
+        "A technical person creates or refreshes it with <font face='Courier-Bold'>./manage.py create_data_admin_group</font>.", small),
+      P("Add the user", h3),
+      check("Users, <b>Add user</b>. Username <b>practice.analyst</b>, password entered twice (at least 8 characters, not only "
+            "numbers, not a common password, not like the username). Saved."),
+      check("Next page: first name, last name and email filled in. <b>Active</b> ticked. <b>Staff status</b> ticked. "
+            "<b>Superuser status unticked</b>."),
+      check("Under <b>Groups</b>, added <b>Data Admin</b>. Saved."),
+      P("Test the account (private browser window)", h3),
+      check("Signed in at https://drmis.info/admin/ as the new user."),
+      field("Menus I can see on the left", 62 * mm),
+      check("I can see the <b>Datasets</b> menu but <b>not</b> Users or Groups."),
+      P("Reset the password", h3),
+      check("As superuser: Users, open the user, under Password click <b>this form</b>, type a new password twice, Save."),
+      check("The old password is refused and the new one works."),
+      P("Disable the account", h3),
+      check("Unticked <b>Active</b> and saved. The user can no longer sign in."),
+      field("What the sign-in page said", 52 * mm),
+      field("Why is a data administrator not made a superuser?", 88 * mm),
+      lines(1),
+      PageBreak()]
+
 # ---------------------------------------------------------------- troubleshooting + sign-off
 S += [P("When things go wrong", h2),
       grid([["Symptom", "Likely cause and fix"],
@@ -300,6 +334,7 @@ S += [P("When things go wrong", h2),
       check("Map layer created and linked to the event; cache cleared if needed."),
       check("Public site verified in a private window and the check written down."),
       check("Old tile file and a database dump kept for rollback."),
+      check("New users are Staff in the Data Admin group, never superusers, and passwords were shared privately."),
       Spacer(1, 10),
       field("Participant (name and signature)", 62 * mm), field("Reviewer (name and signature)", 62 * mm),
       field("Date and time", 62 * mm)]
