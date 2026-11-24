@@ -236,8 +236,9 @@ class Common(Configuration):
             "rest_framework.permissions.IsAuthenticated",
         ],
         "DEFAULT_AUTHENTICATION_CLASSES": (
-            "rest_framework.authentication.SessionAuthentication",
+            # Token first: DRF answers 401 (not 403) using the first class's challenge
             "vbos.users.authentication.ExpiringTokenAuthentication",
+            "rest_framework.authentication.SessionAuthentication",
         ),
         "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     }
