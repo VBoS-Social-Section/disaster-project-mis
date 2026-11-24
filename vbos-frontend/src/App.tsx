@@ -9,6 +9,7 @@ import { useSmartDefaults } from "./hooks/useSmartDefaults";
 import { useSessionSave } from "./hooks/useSessionSave";
 import { usePrefetchLayerMetadata } from "./hooks/usePrefetchLayerMetadata";
 import { useAuth } from "./hooks/useAuth";
+import { useSessionTimeout } from "./hooks/useSessionTimeout";
 import { useAutoLock } from "./hooks/useAutoLock";
 import { useUiStore } from "@/store/ui-store";
 import { useLockStore } from "@/store/lock-store";
@@ -106,6 +107,7 @@ function App() {
   usePrefetchLayerMetadata();
   useKeyboardShortcuts();
   useAutoLock();
+  useSessionTimeout();
 
   if (!isAuthenticated) {
     return <Login />;

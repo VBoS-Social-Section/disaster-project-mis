@@ -210,6 +210,15 @@ class Common(Configuration):
         }
     }
 
+    # Sign-in session limits (API token and Django admin)
+    AUTH_IDLE_TIMEOUT_SECONDS = int(os.getenv("AUTH_IDLE_TIMEOUT_SECONDS", 30 * 60))
+    AUTH_ABSOLUTE_TIMEOUT_SECONDS = int(
+        os.getenv("AUTH_ABSOLUTE_TIMEOUT_SECONDS", 8 * 60 * 60)
+    )
+    # Admin cookie session: sliding idle timeout (renewed on every request)
+    SESSION_COOKIE_AGE = AUTH_IDLE_TIMEOUT_SECONDS
+    SESSION_SAVE_EVERY_REQUEST = True
+
     # Django Rest Framework
     REST_FRAMEWORK = {
         "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
@@ -228,7 +237,7 @@ class Common(Configuration):
         ],
         "DEFAULT_AUTHENTICATION_CLASSES": (
             "rest_framework.authentication.SessionAuthentication",
-            "rest_framework.authentication.TokenAuthentication",
+            "vbos.users.authentication.ExpiringTokenAuthentication",
         ),
         "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     }

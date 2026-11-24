@@ -43,3 +43,16 @@ export async function getCurrentUser(): Promise<AuthUser> {
   console.log("User data fetched:", data.username);
   return data;
 }
+
+/** Ends the session server-side so the token can't be reused. Failures are ignored. */
+export async function logout(token: string | null): Promise<void> {
+  if (!token) return;
+  try {
+    await fetch(`${API_HOST}/api/v1/auth/logout/`, {
+      method: "POST",
+      headers: { Authorization: `Token ${token}` },
+    });
+  } catch {
+    // Offline or server down: the token still expires on its own.
+  }
+}

@@ -32,6 +32,15 @@ class OrgAppearance(models.Model):
         return obj
 
 
+class TokenActivity(models.Model):
+    """Last time an API token was used; drives the idle-timeout check."""
+
+    token = models.OneToOneField(
+        Token, on_delete=models.CASCADE, related_name="activity"
+    )
+    last_used = models.DateTimeField()
+
+
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:

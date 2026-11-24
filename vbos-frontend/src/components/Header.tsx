@@ -39,6 +39,7 @@ import {
   LuCheck,
 } from "react-icons/lu";
 import { useAuthStore } from "@/store/auth-store";
+import { logout } from "@/api/auth";
 import { useLockStore } from "@/store/lock-store";
 import { ProfileSettingsDialog } from "@/components/ProfileSettingsDialog";
 import { toast } from "@/utils/toast";
@@ -59,6 +60,7 @@ export const Header = () => {
   const setLowDataPreference = useLowDataStore((s) => s.setPreference);
 
   const handleLogout = () => {
+    void logout(useAuthStore.getState().token);
     resetLockOnLogout();
     clearAuth();
   };

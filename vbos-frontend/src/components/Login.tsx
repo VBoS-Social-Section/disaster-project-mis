@@ -13,6 +13,7 @@ export function Login() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const setAuth = useAuthStore((s) => s.setAuth);
+  const signOutMessage = useAuthStore((s) => s.signOutMessage);
   const usernameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -63,6 +64,11 @@ export function Login() {
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
+            {signOutMessage && (
+              <p role="status" className="rounded-md border border-border bg-muted p-3 text-sm text-foreground">
+                {signOutMessage}
+              </p>
+            )}
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input

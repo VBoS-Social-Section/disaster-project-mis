@@ -16,10 +16,38 @@ from vbos.land_accounts.admin_views import (
     list_land_accounts,
 )
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from rest_framework.authtoken import views
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.response import Response
+
+from vbos.users.models import TokenActivity
 
 admin.site.site_header = "VBoS MIS"
 API_BASE_URL = "api/v1"
+
+
+class TokenLoginView(ObtainAuthToken):
+    """Dashboard sign-in: exchange username + password for an API token.
+
+    Session authentication is switched off here. Otherwise a browser that is also signed
+    in to /admin/ sends its session cookie and DRF demands a CSRF token, so the dashboard
+    login fails with "CSRF Failed: CSRF token missing".
+    """
+
+    authentication_classes = []
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+        # Issue a fresh token on every sign-in so the 8h limit counts from login
+        # and any previously issued token stops working.
+        Token.objects.filter(user=user).delete()
+        token = Token.objects.create(user=user)
+        TokenActivity.objects.create(token=token, last_used=token.created)
+        return Response({"token": token.key})
 
 
 def admin_append_slash_redirect(request, path):
@@ -58,7 +86,7 @@ urlpatterns = [
     path("admin/land-accounts/<int:object_id>/delete/", admin.site.admin_view(delete_land_accounts), name="admin_land_accounts_delete"),
     path("admin/", admin.site.urls),
     path("", include(api_urls)),
-    path("api-token-auth/", views.obtain_auth_token),
+    path("api-token-auth/", TokenLoginView.as_view()),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     # API-Docs
     path(f"{API_BASE_URL}/schema/", SpectacularAPIView.as_view(), name="schema"),
